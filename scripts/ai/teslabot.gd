@@ -1078,6 +1078,8 @@ const ARMOR_BUDGET := {"head": 60.0, "torso": 170.0, "core": 50.0, "arm_R": 80.0
 var _armor := {}       # zone -> Array[Node3D] (remaining)
 var _armor_n := {}     # zone -> initial count
 var _armor_dmg := {}   # zone -> accumulated damage
+const MAX_DEBRIS := 36
+static var _debris: Array = []   # shared across all units
 
 
 func _collect_armor() -> void:
@@ -1131,6 +1133,14 @@ func _pop_plate(zone: String, dir: Vector3, preferred := "") -> void:
 	rb.mass = 4.0
 	var piece: Node3D = plate.duplicate()
 	plate.visible = false
+	# Debris budget: oldest pieces are removed first; debris casts no shadows.
+	_debris.append(rb)
+	while _debris.size() > MAX_DEBRIS:
+		var old = _debris.pop_front()
+		if is_instance_valid(old):
+			old.queue_free()
+	for mi in piece.find_children("*", "MeshInstance3D", true, true) + ([piece] if piece is MeshInstance3D else []):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	get_tree().current_scene.add_child(rb)
 	rb.global_transform = xf
 	rb.add_child(piece)
@@ -1156,7 +1166,7 @@ func _pop_plate(zone: String, dir: Vector3, preferred := "") -> void:
 	Sfx.play_3d("robot_armor_break" if ResourceLoader.exists("res://assets/audio/robot_armor_break_0.wav") else "impact_metal", xf.origin, 2.0, 0.1, 5.0)
 	# Debris settles, then is cleaned up.
 	var t := rb.create_tween()
-	t.tween_interval(6.0)
+	t.tween_interval(3.5)
 	t.tween_callback(func(): if is_instance_valid(rb): rb.freeze = true)
 	t.tween_interval(24.0)
 	t.tween_callback(rb.queue_free)
