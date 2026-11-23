@@ -112,11 +112,12 @@ class CapacitorStack extends StaticBody3D:
 		if intact: intact.visible = false
 		if broken: broken.visible = true
 		if glow: glow.visible = false
-		if not silent:
-			var c := global_position + Vector3.UP * 1.3
-			Fx.overload(c)
-			Sfx.play_3d("capacitor_destroyed" if ResourceLoader.exists("res://assets/audio/capacitor_destroyed.wav") else "robot_death", c, 4.0, 0.0, 12.0)
-			Game.emit_noise(c, 30.0, Game.player)
+		if silent:
+			return   # checkpoint restore: state only, no events
+		var c := global_position + Vector3.UP * 1.3
+		Fx.overload(c)
+		Sfx.play_3d("capacitor_destroyed" if ResourceLoader.exists("res://assets/audio/capacitor_destroyed.wav") else "robot_death", c, 4.0, 0.0, 12.0)
+		Game.emit_noise(c, 30.0, Game.player)
 		destroyed.emit()
 
 
@@ -143,7 +144,7 @@ class BlastDoor extends Node3D:
 		cs.shape = bs
 		cs.position = Vector3(0, size.y * 0.5, 0)
 		body.add_child(cs)
-		_rest = body.position
+		_rest = offset   # with sync_to_physics the position reads back stale until the next tick
 
 	func open_now(instant := false) -> void:
 		if opened:

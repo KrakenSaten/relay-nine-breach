@@ -472,6 +472,8 @@ func _update_interact(delta: float) -> void:
 				c = null
 		target = c
 	if target != _focus:
+		if _focus and is_instance_valid(_focus) and _focus.has_method("hold"):
+			_focus.hold(self, -1.0)   # looking away resets a hold in progress
 		_hold_progress = 0.0
 		_focus = target
 	if _focus == null:
@@ -558,7 +560,7 @@ func pick_up_shield() -> void:
 
 
 func take_damage(amount: float, from_pos: Vector3) -> void:
-	if not alive:
+	if not alive or Game.state == Game.State.COMPLETE:
 		return
 	if Game.autotest and bot_input.get("god", false):
 		Game.stats["god_absorbed"] = Game.stats.get("god_absorbed", 0.0) + amount

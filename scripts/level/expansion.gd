@@ -763,6 +763,20 @@ func set_lockdown_released() -> void:
 func _lift_panel() -> void:
 	lift_panel = _station("[HOLD F] CALL FREIGHT LIFT 2", 2.0, Vector3(0.15, 0.0, 8.6), 90.0, Vector3(0.86, 2.0, 0.55), Vector3(0, 1.0, 0.28))
 	lift_panel.active = false
-	if kp("pump_control_panel", Vector3(0, 0, 0.28), 0.0, false, false, lift_panel) == null:
+	var vis := kp("pump_control_panel", Vector3(0, 0, 0.28), 0.0, false, false, lift_panel)
+	if vis == null:
 		_station_box(lift_panel, Vector3(0.6, 1.3, 0.35), Vector3(0, 0.65, 0.2), MatLib.flat(Color(0.75, 0.6, 0.1), 0.4, 0.5))
+	else:
+		# The kit panel's (merged) nameplate reads "CW PUMP 2": cover it with a
+		# blank plate and re-title it.
+		_station_box(lift_panel, Vector3(0.46, 0.095, 0.008), Vector3(0, 1.79, 0.28 + 0.264), MatLib.flat(Color(0.86, 0.87, 0.86), 0.0, 0.4))
+		var lbl := Label3D.new()
+		lbl.text = "FREIGHT LIFT 2"
+		lbl.font_size = 28
+		lbl.pixel_size = 0.0017
+		lbl.modulate = Color(0.12, 0.12, 0.13)
+		lbl.outline_size = 0
+		lbl.shaded = true
+		lbl.position = Vector3(0, 1.79, 0.28 + 0.27)
+		lift_panel.add_child(lbl)
 	b.place_sign("FREIGHT LIFT 2 - CALL", Vector3(0.17, 2.3, 8.6), 90, 28, Color(0.9, 0.75, 0.2), 0.0035)

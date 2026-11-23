@@ -67,6 +67,9 @@ func _ready() -> void:
 			break
 	director.cover_points = level.build_cover_points()
 	director.setup_doors(level.doors)
+	var space := get_world_3d().direct_space_state
+	for d in level.doors.values():
+		d.fit_swing(space)
 	mission.spawn_start()
 	# Shader warm-up in front of the camera while the briefing covers the screen.
 	var cam_t := player.camera.global_transform

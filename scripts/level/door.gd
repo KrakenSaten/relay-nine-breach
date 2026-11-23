@@ -14,6 +14,10 @@ var base_yaw := 0.0
 var width := 1.08
 var led: MeshInstance3D
 var _breach_t := 0.0
+## Widest clear swing per side (+1 / -1), fitted against the level at load so
+## a leaf never swings into a wall or a prop (fit_swing).
+var max_open := {1: deg_to_rad(100.0), -1: deg_to_rad(100.0)}
+var _push_t := -100.0   # last time a robot changed the swing (rate limit)
 
 
 func build(props_root: Node3D, w := 1.08) -> void:
@@ -57,6 +61,29 @@ func set_locked(v: bool, reason := "LOCKED") -> void:
 	_update_led()
 
 
+func fit_swing(space: PhysicsDirectSpaceState3D) -> void:
+	var len := width - 0.25
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(len, 1.9, 0.07)
+	for s in [1, -1]:
+		var best := deg_to_rad(65.0)
+		for deg in range(100, 64, -5):
+			var a: float = s * deg_to_rad(float(deg))
+			var q := PhysicsShapeQueryParameters3D.new()
+			q.shape = shape
+			q.transform = global_transform * Transform3D(Basis(Vector3.UP, a), Vector3.ZERO) * Transform3D(Basis(), Vector3(0.25 + len * 0.5, 1.05, 0.0))
+			q.collision_mask = 1
+			q.exclude = [body.get_rid()]
+			if space.intersect_shape(q, 1).is_empty():
+				best = deg_to_rad(float(deg))
+				break
+		max_open[s] = best
+
+
+func _swing(side: float, limit_deg := 100.0) -> float:
+	return side * minf(deg_to_rad(limit_deg), max_open[int(side)])
+
+
 func is_open() -> bool:
 	return absf(target) > 0.1
 
@@ -82,7 +109,7 @@ func interact(p: Node3D) -> void:
 		speed = 2.0
 	else:
 		# Swing away from the user: user on +Z side pushes door to -Z side.
-		target = _side_sign(p.global_position) * deg_to_rad(100)   # rotation +Y swings the leaf toward -Z: away from a +Z user
+		target = _swing(_side_sign(p.global_position))   # rotation +Y swings the leaf toward -Z: away from a +Z user
 		speed = 2.0
 	Sfx.play_3d("door_open", global_position + Vector3.UP, -4.0)
 	Game.emit_noise(global_position, 7.0, p)
@@ -93,9 +120,13 @@ func interact(p: Node3D) -> void:
 func bot_open(bot: Node3D) -> void:
 	if locked:
 		return
-	var away := _side_sign(bot.global_position) * deg_to_rad(100)
+	var away := _swing(_side_sign(bot.global_position))
 	if is_open() and signf(target) == signf(away):
 		return
+	var now := Time.get_ticks_msec() / 1000.0
+	if is_open() and now - _push_t < 2.5:
+		return   # another unit just set this swing; do not flip-flop
+	_push_t = now
 	target = away
 	speed = 1.6
 	Sfx.play_3d("door_open", global_position + Vector3.UP, -3.0)
@@ -109,7 +140,7 @@ func breach(p: Node3D) -> void:
 	if is_open():
 		return
 	var side := _side_sign(p.global_position)
-	target = side * deg_to_rad(105)
+	target = _swing(side, 105.0)
 	speed = 11.0
 	_breach_t = 0.35
 	Sfx.play_3d("door_breach", global_position + Vector3.UP, 4.0, 0.05, 8.0)

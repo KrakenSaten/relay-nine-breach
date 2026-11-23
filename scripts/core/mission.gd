@@ -261,6 +261,8 @@ func _on_console_connected() -> void:
 
 # ------------------------------------------------------------------ complication
 func _on_console_completed() -> void:
+	if Game.player and not Game.player.alive:
+		return
 	flags.upload = true
 	_set_stage("core")
 	Game.set_state(Game.State.CORE)
@@ -326,12 +328,14 @@ func _emergency_lighting(on: bool) -> void:
 ## Interior reflection probes were captured under the normal lighting; capture
 ## them again after a lighting change so metal stops reflecting dead lamps.
 func _refresh_probes() -> void:
-	# A changed property marks an update-once probe dirty; stagger them so the
-	# re-captures spread over ~1.5 s instead of stalling a frame.
+	# Moving an update-once probe re-captures it; stagger them over ~1.5 s
+	# through the event queue (no coroutine can outlive a scene reload).
+	var i := 0
 	for rp in level.find_children("*", "ReflectionProbe", true, false):
-		await get_tree().create_timer(0.12).timeout
-		if is_instance_valid(rp):
-			rp.position.y += 0.002 if int(rp.position.y * 1000.0) % 2 == 0 else -0.002   # moving it re-captures
+		i += 1
+		_queue(0.12 * i, func():
+			if is_instance_valid(rp):
+				rp.position.y += 0.002 if int(rp.position.y * 1000.0) % 2 == 0 else -0.002, "probe")
 
 
 func _alarm(on: bool) -> void:
@@ -366,6 +370,8 @@ func _update_core_objective(loud := false) -> void:
 
 
 func _on_capacitor(i: int) -> void:
+	if flags.caps[i]:
+		return
 	flags.caps[i] = true
 	var n: int = flags.caps.count(true)
 	if n < 3:
@@ -427,6 +433,8 @@ func _blackout(silent := false) -> void:
 		main.env.fog_light_color = Color(0.05, 0.05, 0.055)
 	_refresh_probes()
 	if silent:
+		return
+	if Game.player and not Game.player.alive:
 		return
 	Game.set_state(Game.State.EXTRACT)
 	_set_stage("extract")

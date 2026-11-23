@@ -1128,16 +1128,22 @@ func _try_open_doors(desired: Vector3) -> void:
 			var c: Vector3 = dd.center
 			if Vector2(c.x - global_position.x, c.z - global_position.z).length() > 2.6:
 				continue
+			var n: Vector3 = dd.normal
 			var prev := global_position
 			for k in range(i0, mini(i0 + 6, path.size())):
-				var q := Geometry3D.get_closest_point_to_segment(c, prev, path[k])
-				if Vector2(q.x - c.x, q.z - c.z).length() < 0.9:
-					var was: float = d.target
-					d.bot_open(self)
-					if d.target != was:
-						_door_cd = 1.5
-						return
-					break
+				# The segment must cross the door plane near the opening (a unit
+				# that has already crossed leaves the door alone).
+				var sa := (prev - c).dot(n)
+				var sb := (path[k] - c).dot(n)
+				if sa * sb < 0.0:
+					var cross := prev.lerp(path[k], sa / (sa - sb))
+					if Vector2(cross.x - c.x, cross.z - c.z).length() < 0.9:
+						var was: float = d.target
+						d.bot_open(self)
+						if d.target != was:
+							_door_cd = 1.5
+							return
+						break
 				prev = path[k]
 	var from := global_position + Vector3.UP * 1.0
 	var q := PhysicsRayQueryParameters3D.create(from, from + desired.normalized() * 1.6, 1)
