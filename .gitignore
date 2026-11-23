@@ -28,3 +28,4 @@ captures/*
 !captures/m3_bench/
 !captures/m3_ai/
 !captures/m3_compare/
+!captures/m31_fixes/

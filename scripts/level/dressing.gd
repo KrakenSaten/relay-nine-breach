@@ -151,7 +151,7 @@ func _architecture() -> void:
 	var s6 := Vector3(1, 1.5, 1)
 	for x in spaced(r[0], r[2], 4.0, [[6.75, 8.25], [12.0, 14.5]]):
 		kitp("wall_rib_4", Vector3(x, 0, r[1]), 0, s6)
-	for x in spaced(r[0], r[2], 4.0, [[9.0, 14.0]]):
+	for x in spaced(r[0], r[2], 4.0, [[9.0, 14.0], [0.6, 5.4]]):
 		kitp("wall_rib_4", Vector3(x, 0, r[3]), 180, s6)
 	for z in spaced(r[1], r[3], 3.5, [[9.4, 14.0]]):
 		kitp("wall_rib_4", Vector3(r[0], 0, z), 90, s6)
@@ -159,6 +159,10 @@ func _architecture() -> void:
 		kitp("wall_rib_4", Vector3(r[2], 0, z), -90, s6)
 	for z in [3.5, 7.0, 10.5]:
 		for x in [2.0, 6.0, 10.0, 14.0]:
+			if z > 10.0 and x < 7.0:
+				continue   # the freight-lift rig occupies this bay
+			if absf(z - 7.0) < 0.1 and ResourceLoader.exists(DOCK_KIT):
+				continue   # the gantry crane track replaces this beam
 			kitp("ibeam_4", Vector3(x, r[4] - 0.17, z), 0, Vector3.ONE, false, false)
 	# Corridor: slimmer ribs every 3 m (scaled), keeps the long run readable.
 	r = ROOMS.corridor
@@ -174,7 +178,7 @@ func _architecture() -> void:
 		kitp("wall_rib_4", Vector3(x, 0, r[1]), 0, s45)
 	for z in spaced(r[1], r[3], 3.0, [[-32.75, -31.25]]):
 		kitp("wall_rib_4", Vector3(r[0], 0, z), 90, s45)
-	for z in spaced(r[1], r[3], 3.0, [[-39.2, -37.2], [-28.6, -27.4]]):
+	for z in spaced(r[1], r[3], 3.0, [[-39.2, -37.2], [-28.6, -27.4], [-35.8, -29.4]]):   # no ribs behind the mimic board
 		kitp("wall_rib_4", Vector3(r[2], 0, z), -90, s45)
 
 
@@ -183,23 +187,24 @@ func _services() -> void:
 	# Corridor: cable tray and pipe bundle along the length.
 	for z in range(-28, 0, 4):
 		kitp("cable_tray_4", Vector3(6.75, 3.0, z + 0.0), 90, Vector3.ONE, false, false)
-		kitp("pipe_bundle_4", Vector3(8.85, 2.65, z + 0.0), -90, Vector3.ONE, false, false)
+		kitp("pipe_bundle_4", Vector3(8.58, 2.65, z + 0.0), -90, Vector3.ONE, false, false)
 	# Hall: pipe bundles high on the south and north walls, duct across, trays.
 	for x in range(11, 31, 4):
-		kitp("pipe_bundle_4", Vector3(x + 0.0, 5.0, -2.15), 180, Vector3.ONE, false, false)
-		kitp("pipe_bundle_4", Vector3(x + 0.0, 5.8, -25.85), 0, Vector3.ONE, false, false)
-		kitp("duct_4", Vector3(x + 0.0, 7.6, -20.0), 0, Vector3.ONE, false, false)
+		kitp("pipe_bundle_4", Vector3(x + 0.0, 5.0, -2.42), 180, Vector3.ONE, false, false)
+		kitp("pipe_bundle_4", Vector3(x + 0.0, 5.8, -25.58), 0, Vector3.ONE, false, false)
+		kitp("duct_4", Vector3(x + 0.6, 7.6, -20.0), 0, Vector3.ONE, false, false)
 		kitp("cable_tray_4", Vector3(x + 0.0, 6.6, -8.0), 0, Vector3.ONE, false, false)
 	# Dock: ducts and pipes.
-	for x in [2.0, 6.0, 10.0, 14.0]:
+	for x in [9.2, 13.2]:
 		kitp("duct_4", Vector3(x, 5.2, 12.0), 0, Vector3.ONE, false, false)
-		kitp("pipe_bundle_4", Vector3(x, 3.4, 0.15), 0, Vector3.ONE, false, false)
+	for x in [2.0, 6.0, 10.0, 14.0]:
+		kitp("pipe_bundle_4", Vector3(x, 3.4, 0.42), 0, Vector3.ONE, false, false)
 	# Servers: overhead cable trays above each rack row, duct along the wall.
 	for row in [-29.5, -32.5, -35.5]:
 		for x in [12.0, 16.0, 19.0]:
 			kitp("cable_tray_4", Vector3(x, 2.55, row), 0, Vector3(0.75, 1, 1), false, false)
 	for x in [11.0, 15.0, 19.0]:
-		kitp("duct_4", Vector3(x, 3.05, -37.3), 0, Vector3.ONE, false, false)
+		kitp("duct_4", Vector3(x, 3.05, -37.45), 0, Vector3.ONE, false, false)
 	# Control: duct + tray.
 	for x in [23.0, 27.0, 31.0]:
 		kitp("duct_4", Vector3(x, 3.9, -27.0), 0, Vector3.ONE, false, false)
@@ -236,7 +241,7 @@ func _doors() -> void:
 ## CC0 Poly Haven props: equipment that makes the rooms read as a real site.
 func _props() -> void:
 	# Dock: logistics.
-	ph("hand_truck", Vector3(13.6, 0, 4.2), -60)
+	ph("hand_truck", Vector3(11.9, 0, 3.0), -60)
 	ph("barrel_03", Vector3(13.8, 0, 2.6), 0, true, true)
 	ph("cardboard_box_01", Vector3(2.4, 0, 6.0), 15)
 	ph("cardboard_box_01", Vector3(2.8, 0, 6.5), -20)
@@ -249,7 +254,7 @@ func _props() -> void:
 	ph("utility_box_01", Vector3(6.35, 0.9, -5.5), 90, false)
 	ph("fire_alarm", Vector3(6.17, 1.4, -10.0), 90, false)
 	ph("industrial_wall_lamp", Vector3(8.82, 2.2, -21.0), -90, false)
-	ph("security_camera_02", Vector3(8.6, 3.2, -29.5), 30, false)
+	ph("security_camera_02", Vector3(8.5, 2.3, -29.75), 30, false)
 	# Office
 	ph("metal_office_desk", Vector3(-1.0, 0, -12.1), 0, true, true)
 	ph("SchoolChair_01", Vector3(-1.2, 0, -11.2), 170)
@@ -257,12 +262,12 @@ func _props() -> void:
 	ph("cardboard_box_01", Vector3(4.8, 0, -3.8), 10)
 	ph("utility_box_02", Vector3(5.6, 0.7, -6.0), -90, false)
 	# Hall
-	ph("utility_box_02", Vector3(9.5, 0.6, -16.0), 90, false)
+	ph("utility_box_02", Vector3(9.5, 0.6, -17.0), 90, false)
 	ph("utility_box_01", Vector3(9.5, 0.7, -18.0), 90, false)
 	ph("power_box_01", Vector3(26.0, 1.2, -2.4), 180, false)
 	ph("metal_tool_chest", Vector3(23.6, 0, -6.0), 180, true, true)
-	ph("modular_industrial_pipes_01", Vector3(31.6, 0.0, -22.0), -90, false)
-	ph("modular_electric_cables", Vector3(31.75, 3.5, -16.0), -90, false)
+	ph("modular_industrial_pipes_01", Vector3(31.6, 1.0, -22.0), -90, false)   # kit origin is mid-height
+	ph("modular_electric_cables", Vector3(31.75, 3.5, -17.9), -90, false)
 	ph("hanging_industrial_lamp", Vector3(19.0, 7.6, -11.5), 0, false)
 	ph("security_camera_02", Vector3(31.5, 6.0, -2.5), -135, false)
 	# Servers
@@ -271,9 +276,9 @@ func _props() -> void:
 	# Control
 	if not ResourceLoader.exists(DOCK_KIT):
 		ph("utility_box_02", Vector3(32.6, 0.7, -31.0), -90, false)
-	ph("power_box_01", Vector3(21.4, 1.3, -38.5), 90, false)
+	ph("power_box_01", Vector3(21.4, 1.3, -39.45), 90, false)
 	ph("SchoolChair_01", Vector3(24.2, 0, -31.0), -100)
-	ph("security_camera_02", Vector3(32.5, 3.8, -26.6), -135, false)
+	ph("security_camera_02", Vector3(32.5, 3.2, -26.6), -135, false)
 
 
 ## Story beats: a scorched breach in the hall, cut cables sparking, an
@@ -335,17 +340,17 @@ func _dock_m3() -> void:
 	# 20 ft container along the east wall (hard cover, landmark).
 	k3(DOCK_KIT, "container_20ft", Vector3(14.35, 0.0, 7.6), 0, true, true)
 	# Forklift parked by the bay, pallets and stock.
-	k3(DOCK_KIT, "forklift", Vector3(13.0, 0.0, 10.4), 160, true, true)   # parked by the bay, clear of the spawn
-	k3(DOCK_KIT, "wheel_chock", Vector3(12.6, 0.0, 11.8), 160)
+	k3(DOCK_KIT, "forklift", Vector3(5.9, 0.0, 2.4), 200, true, true)   # parked in the open bay area, clear of container and spawn
+	k3(DOCK_KIT, "wheel_chock", Vector3(6.4, 0.0, 1.0), 200)
 	k3(DOCK_KIT, "pallet_stack", Vector3(6.6, 0.0, 12.9), 4, true, true)
 	k3(DOCK_KIT, "pallet_boxes", Vector3(5.5, 0.0, 6.5), -8, true, true)
-	k3(DOCK_KIT, "pallet", Vector3(5.6, 0.0, 9.6), 22, false)
+	k3(DOCK_KIT, "pallet", Vector3(6.3, 0.0, 9.0), 22, false)
 	# Overhead crane and services.
-	k3(DOCK_KIT, "gantry_beam_8", Vector3(8.0, 5.55, 7.0), 0)
+	k3(DOCK_KIT, "gantry_beam_8", Vector3(8.0, 5.55, 7.0), 0)   # runs on its own track; the z=7 roof beam is omitted
 	k3(DOCK_KIT, "cable_reel", Vector3(10.2, 0.0, 1.0), 90, true)
 	for x in [2.0, 10.0]:
-		k3(DOCK_KIT, "wall_cable_run_4", Vector3(x, 2.2, 0.15), 0)
-	k3(DOCK_KIT, "fire_hose_cabinet", Vector3(0.15, 1.25, 5.2), 90)
+		k3(DOCK_KIT, "wall_cable_run_4", Vector3(x, 2.2, 0.42), 0)   # stands off the wall ribs
+	k3(DOCK_KIT, "fire_hose_cabinet", Vector3(0.15, 1.25, 3.65), 90)   # between wall ribs (z 1.9 / 5.4)
 
 
 func _control_m3() -> void:
@@ -358,10 +363,10 @@ func _control_m3() -> void:
 	# Mimic board along the east wall: the room's landmark.
 	k3(CONTROL_KIT, "mimic_panel", Vector3(32.85, 2.35, -32.6), -90)
 	# Instrument racks and relay cabinets.
-	k3(CONTROL_KIT, "instrument_rack", Vector3(21.45, 0.0, -36.6), 90, true)
-	k3(CONTROL_KIT, "instrument_rack", Vector3(21.45, 0.0, -35.75), 90, true)
-	k3(CONTROL_KIT, "relay_cabinet", Vector3(22.7, 0.0, -39.5), 0, true)
-	k3(CONTROL_KIT, "relay_cabinet", Vector3(30.9, 0.0, -39.5), 0, true)
+	k3(CONTROL_KIT, "instrument_rack", Vector3(21.45, 0.0, -37.25), 90, true)
+	k3(CONTROL_KIT, "instrument_rack", Vector3(21.45, 0.0, -36.45), 90, true)
+	k3(CONTROL_KIT, "relay_cabinet", Vector3(23.5, 0.0, -39.5), 0, true)
+	k3(CONTROL_KIT, "relay_cabinet", Vector3(30.65, 0.0, -39.5), 0, true)
 	k3(CONTROL_KIT, "emergency_stop", Vector3(28.7, 0.0, -35.9), 0, true)
 	k3(CONTROL_KIT, "wall_clock", Vector3(24.0, 3.3, -26.15), 180)
 	k3(CONTROL_KIT, "whiteboard", Vector3(30.8, 1.7, -26.15), 180)
@@ -414,8 +419,8 @@ func _decals_m3() -> void:
 		return
 	# Floors: [texture, position, size, yaw]
 	var floor := [
-		["oil_stain_1", Vector3(12.8, 0, 9.8), 2.2, 20], ["oil_stain_2", Vector3(11.8, 0, 11.6), 1.6, 70],
-		["tire_marks_1", Vector3(11.6, 0, 8.6), 4.0, 70], ["floor_scuffs_1", Vector3(6.5, 0, 6.0), 3.0, 0],
+		["oil_stain_1", Vector3(5.5, 0, 2.0), 2.2, 20], ["oil_stain_2", Vector3(11.8, 0, 11.6), 1.6, 70],
+		["tire_marks_1", Vector3(7.2, 0, 4.2), 4.0, 30], ["floor_scuffs_1", Vector3(6.5, 0, 6.0), 3.0, 0],
 		["footprints_dust_1", Vector3(7.5, 0, 2.5), 2.0, 0], ["stencil_lift_2", Vector3(3.0, 0.09, 9.4), 1.6, 0],
 		["cracks_1", Vector3(13.0, 0, 3.5), 2.5, 45], ["puddle_1", Vector3(1.6, 0, 3.2), 1.8, 10],
 		["floor_scuffs_1", Vector3(20.0, 0, -11.5), 3.5, 90], ["oil_stain_2", Vector3(19.5, 0, -6.2), 1.4, 0],

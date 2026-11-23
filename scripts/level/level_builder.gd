@@ -528,8 +528,9 @@ func _dock() -> void:
 	dyn.add_child(extraction_area)
 	extraction_area.position = Vector3(3.0, 1.5, 11.8)
 	# Pipes along the north wall
-	var pipe := prop("pipe", Vector3(3.0, 5.2, 0.5), 90, false, "metal", false)
-	var pipe2 := prop("pipe", Vector3(10.0, 5.2, 0.5), 90, false, "metal", false)
+	if not m3:
+		prop("pipe", Vector3(3.0, 5.2, 0.5), 90, false, "metal", false)
+		prop("pipe", Vector3(10.0, 5.2, 0.5), 90, false, "metal", false)
 	terminal(Vector3(15.7, 1.3, 3.4), 90, "SHIFT LOG 2207", PackedStringArray([
 		"SHIFT LOG 22:07 - Relay Nine sync fault. Security units",
 		"rejected manual override and sealed the control wing.",
@@ -540,14 +541,13 @@ func _corridor() -> void:
 	floor_overlay(6.15, -29.85, 8.85, -0.15, MatLib.diamond_plate())
 	# Cable tray + pipes along ceiling
 	box(Vector3(6.2, 3.2, -29.8), Vector3(6.6, 3.28, -0.2), MatLib.flat(Color(0.25, 0.25, 0.25), 0.8, 0.5), "metal", false)
-	prop("pipe", Vector3(8.6, 3.25, -4), 0, false, "metal", false)
-	prop("pipe", Vector3(8.6, 3.25, -8), 0, false, "metal", false)
-	prop("pipe", Vector3(8.6, 3.25, -16), 0, false, "metal", false)
-	prop("pipe", Vector3(8.6, 3.25, -24), 0, false, "metal", false)
+	if not ResourceLoader.exists("res://assets/models/env_kit.glb"):
+		for z in [-4.0, -8.0, -16.0, -24.0]:
+			prop("pipe", Vector3(8.6, 3.25, z), 0, false, "metal", false)
 	# Obstacles break the long sightline
 	prop("locker", Vector3(8.6, 0, -14.5), -90, true)
-	prop("crate", Vector3(6.75, 0, -19.5), 90, true)
-	prop("barrel", Vector3(8.5, 0, -22.0), 0, false)
+	prop("crate", Vector3(6.85, 0, -19.5), 90, true)
+	prop("barrel", Vector3(8.45, 0, -23.7), 0, false)   # between corridor ribs
 	prop("locker", Vector3(6.4, 0, -25.5), 90, true)
 	place_sign("SERVICE CORRIDOR C", Vector3(7.5, 2.7, -0.17), 180, 40)
 	place_sign("SECURITY", Vector3(6.17, 2.5, -8.5), 90, 40)
@@ -624,18 +624,12 @@ func _hall() -> void:
 	MatLib.remap_scene(dead)
 	dead.position = Vector3(30.6, 0, -9.2)
 	dead.rotation.y = PI / 2
-	var dp: Node3D = dead.find_child("pelvis", true, false)
-	if dp:
-		dp.position.y -= 0.55
-		dp.rotation.x = -0.35
-	for kn in ["knee_L", "knee_R"]:
-		var k: Node3D = dead.find_child(kn, true, false)
-		if k: k.rotation.x = -1.2
-	for hp in ["hip_L", "hip_R"]:
-		var h: Node3D = dead.find_child(hp, true, false)
-		if h: h.rotation.x = 1.1
+	# Powered-down unit docked upright in its bay (head drooped, optics dark),
+	# feet measured onto the floor.
+	var dead_aabb := _world_aabb(dead)
+	dead.position.y -= dead_aabb.position.y
 	var dh: Node3D = dead.find_child("head", true, false)
-	if dh: dh.rotation = Vector3(0.6, 0.3, 0)
+	if dh: dh.rotation = Vector3(0.45, 0.25, 0)
 	for mi in dead.find_children("eye*", "MeshInstance3D", true, false):
 		mi.visible = false
 	# Overhead crane beam + pipes + hanging chain
@@ -723,7 +717,7 @@ func _lights() -> void:
 	# DOCK
 	light_spot(Vector3(4, 5.7, 4), sodium, 11.0, 10.0, 60, true, "dock")
 	light_spot(Vector3(12, 5.7, 4), sodium, 11.0, 10.0, 60, false, "dock")
-	light_spot(Vector3(4, 5.7, 11), cool, 8.0, 10.0, 60, false, "dock")
+	light_spot(Vector3(6.6, 5.7, 11.5), cool, 8.0, 10.0, 60, false, "dock")   # clear of the lift rig
 	light_spot(Vector3(12, 5.7, 10), sodium, 11.0, 10.0, 60, true, "dock")
 	light_omni(Vector3(8, 2.5, 7), Color(0.75, 0.82, 1.0), 0.8, 12.0, false, "dock", false)
 	light_spot(Vector3(8, 5.6, 3.0), warm, 2.5, 9.0, 70, false, "dock", Vector3(0, -0.75, -1).normalized(), "")
@@ -754,7 +748,7 @@ func _lights() -> void:
 	light_omni(Vector3(15.0, 2.4, -8.0), Color(1.0, 0.55, 0.1), 0.9, 3.0, false, "hall", false)
 	light_omni(Vector3(15.0, 2.4, -15.0), Color(1.0, 0.55, 0.1), 0.9, 3.0, false, "hall", false)
 	# SERVERS: cold strips + rack glow
-	for z in [-28.0, -31.0, -34.0, -37.0]:
+	for z in [-28.0, -31.0, -34.0, -36.6]:
 		light_spot(Vector3(15.0, 3.5, z), cool, 3.0, 5.0, 80, z == -31.0 or z == -37.0, "servers", Vector3.DOWN, "strip")
 	light_omni(Vector3(12.5, 1.0, -31.0), Color(0.3, 0.5, 1.0), 0.5, 4.0, false, "servers", false)
 	light_omni(Vector3(18.0, 1.0, -34.0), Color(0.3, 0.5, 1.0), 0.5, 4.0, false, "servers", false)

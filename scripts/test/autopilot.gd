@@ -30,6 +30,10 @@ func run(m: Node) -> void:
 		await _bench()
 	elif "--showcase" in OS.get_cmdline_user_args():
 		await _showcase()
+	elif "--spots" in OS.get_cmdline_user_args():
+		await _spots()
+	elif "--audit" in OS.get_cmdline_user_args():
+		await _audit()
 	elif "--aitest2" in OS.get_cmdline_user_args():
 		await _aitest2()
 	elif "--aitest" in OS.get_cmdline_user_args():
@@ -724,3 +728,93 @@ func _aitest2() -> void:
 		if i % 4 == 0:
 			L("  t+%.1f hidden_for=%.1f engaged=%d %s" % [(i + 1) * 0.5, main.director.hidden_for, main.director.engaged().size(), line])
 	L("AITEST2 role samples while hidden: %s" % [roles])
+
+
+# ------------------------------------------------------------------ environment audit
+## Lists placed props (top-level nodes with meshes) whose world AABBs
+## intersect walls or other props, float above / sink into the floor, and
+## checks key navigation routes.
+func _audit() -> void:
+	var lvl: Node3D = main.level
+	var items := []   # [name, aabb, is_struct]
+	for parent in [lvl, lvl.nav]:
+		for c in parent.get_children():
+			if not (c is Node3D) or c.name == "Dynamic" or c is Light3D or c is Decal or c is NavigationRegion3D or c is StaticBody3D or c is ReflectionProbe or c is Area3D:
+				continue
+			if not (c as Node3D).visible:
+				continue
+			var aabb: AABB = lvl._world_aabb(c)
+			if aabb.size.length() < 0.05:
+				continue
+			var is_box: bool = c is MeshInstance3D and (c as MeshInstance3D).mesh is BoxMesh
+			var nm: String = c.name if not is_box else "box"
+			items.append([nm, aabb, is_box])
+	L("AUDIT items: %d" % items.size())
+	# Prop vs prop / prop vs wall-box overlaps (skip floors/ceilings/huge boxes)
+	var hits := []
+	for i in items.size():
+		var a: Array = items[i]
+		if a[2]:
+			continue
+		for j in items.size():
+			if i == j:
+				continue
+			var b: Array = items[j]
+			if not b[2] and j < i:
+				continue
+			var bb: AABB = b[1]
+			if b[2] and (bb.size.y < 0.06 or bb.size.x * bb.size.z > 60.0):
+				continue   # floor overlays, slabs, ceilings
+			var ia: AABB = (a[1] as AABB).intersection(bb)
+			var vol := ia.size.x * ia.size.y * ia.size.z
+			if vol > 0.004:
+				hits.append([vol, "%s @%s  x  %s @%s  vol=%.3f" % [a[0], (a[1] as AABB).get_center().snapped(Vector3.ONE * 0.05), b[0], bb.get_center().snapped(Vector3.ONE * 0.05), vol]])
+	hits.sort_custom(func(x, y): return x[0] > y[0])
+	for h in hits.slice(0, 70):
+		L("  OVERLAP " + h[1])
+	# Floating / sunk props (not wall- or ceiling-mounted by intent)
+	for it in items:
+		if it[2]:
+			continue
+		var bb: AABB = it[1]
+		if bb.position.y < -0.06 and bb.end.y < 2.0:
+			L("  SUNK %s @%s bottom=%.2f" % [it[0], bb.get_center().snapped(Vector3.ONE * 0.05), bb.position.y])
+		elif bb.position.y > 0.04 and bb.position.y < 0.6 and bb.size.y < 2.5:
+			L("  FLOAT? %s @%s bottom=%.2f" % [it[0], bb.get_center().snapped(Vector3.ONE * 0.05), bb.position.y])
+	# Navigation: key routes and patrol points
+	var map := get_viewport().world_3d.navigation_map
+	var routes := [["dock->console", Vector3(8, 0, 11), Vector3(27, 0, -35.5)], ["dock->office", Vector3(8, 0, 11), Vector3(-2, 0, -8)],
+		["hall->servers", Vector3(20, 0, -11.5), Vector3(15.3, 0, -33)], ["corridor->control", Vector3(7.5, 0, -20), Vector3(27, 0, -29)],
+		["control->lift", Vector3(27, 0, -29), Vector3(3, 0, 11.5)]]
+	for r in routes:
+		var path := NavigationServer3D.map_get_path(map, r[1], r[2], true)
+		var endd: float = path[path.size() - 1].distance_to(r[2]) if path.size() > 0 else 999.0
+		L("  NAV %s points=%d end_gap=%.2f %s" % [r[0], path.size(), endd, "OK" if endd < 1.0 else "BLOCKED"])
+	for s in main.level.spawns:
+		for pp in s.patrol:
+			var sp := NavigationServer3D.map_get_closest_point(map, pp)
+			if sp.distance_to(pp) > 0.8:
+				L("  NAV patrol point off-mesh %s -> %s" % [pp, sp])
+
+
+# ------------------------------------------------------------------ fix verification spots
+func _spots() -> void:
+	main.hud.visible = false
+	player.weapons[0].visible = false
+	player.arms.visible = false
+	for b in main.director.bots:
+		b.set_physics_process(false)
+		b.global_position += Vector3(0, -50, 0)
+	await _wait(5.0)
+	var poses := [
+		["v1_hose_cabinet", Vector3(3.2, 0.05, 4.0), Vector3(0.15, 1.2, 4.4)],
+		["v2_dock_container_forklift", Vector3(7.5, 0.05, 6.0), Vector3(12.5, 1.2, 9.0)],
+		["v3_dock_lift_overhead", Vector3(9.5, 0.05, 6.5), Vector3(3.0, 4.2, 11.5)],
+		["v4_corridor_pipes", Vector3(7.4, 0.05, -5.5), Vector3(8.8, 2.8, -12.0)],
+		["v5_control_mimic_racks", Vector3(25.0, 0.05, -30.5), Vector3(31.5, 2.0, -36.0)],
+		["v6_slumped_unit", Vector3(27.6, 0.05, -9.5), Vector3(30.6, 0.6, -9.2)],
+	]
+	for p in poses:
+		teleport(p[1], p[2])
+		await _wait(1.2)
+		await shot(p[0])
