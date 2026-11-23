@@ -40,7 +40,7 @@ const NV_DRAIN := 1.0 / 75.0
 const NV_RECHARGE := 1.0 / 40.0
 var _nv_light: OmniLight3D
 var deployed_shield: Node3D = null
-var arms: FPArms
+var arms: Node3D   # FPArmsSkinned (M3) or FPArms (M2 fallback)
 
 var input_enabled := true
 var _pitch := 0.0
@@ -128,10 +128,21 @@ func _ready() -> void:
 		w.visible = false
 		weapons.append(w)
 	weapons[0].visible = true
-	arms = FPArms.new()
-	arms.name = "Arms"
-	weapon_holder.add_child(arms)
-	arms.setup()
+	# M3 skinned arms when available, else the M2 rigid arms.
+	var sk := FPArmsSkinned.new()
+	sk.name = "ArmsSkinned"
+	weapon_holder.add_child(sk)
+	sk.player_ref = self
+	sk.setup()
+	if sk.ok:
+		arms = sk
+	else:
+		sk.queue_free()
+		var rigid := FPArms.new()
+		rigid.name = "Arms"
+		weapon_holder.add_child(rigid)
+		rigid.setup()
+		arms = rigid
 	Game.player = self
 
 
@@ -391,6 +402,8 @@ func _physics_process(delta: float) -> void:
 	var ht := w.hand_targets()
 	arms.visible = not ht.is_empty() and w.visible
 	if arms.visible:
+		if arms is FPArmsSkinned:
+			(arms as FPArmsSkinned).weapon_ref = w
 		arms.solve(ht, ht.get("kind", "open"))
 	# Interaction
 	_update_interact(delta)
