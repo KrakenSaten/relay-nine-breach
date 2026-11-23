@@ -3,10 +3,10 @@
 # single hand_R pose fits both weapons.
 import math
 from mathutils import Vector, Matrix
-from m2lib import (MB, V, X, Y, Z, rrect, circle2, stadium, boolean, union_parts, finish, join, set_origin, empty,
+from wpn_lib import (MB, V, X, Y, Z, rrect, circle2, stadium, boolean, union_parts, finish, join, set_origin, empty,
                    set_parent, xform, tris)
-from parts import picatinny, socket_screw
-import specs as S
+from wpn_parts import picatinny, socket_screw
+import wpn_specs as S
 
 SLIDE_L = 0.188
 MAG_LEN = 0.114
@@ -127,13 +127,32 @@ def _frame():
     for sx in (-1, 1):
         cc = S.PG_TOP + g * 0.066 + X * sx * 0.0168
         c.prism(rrect(0.028, 0.050, 0.006, 3), a0=-0.0019, a1=0.004, off=cc, basis=(f, g, X * sx))
+    # front-strap serrations
+    for i in range(7):
+        cc = S.PG_TOP + g * (0.040 + i * 0.0085) + f * 0.0232
+        c.box(cc, (0.040, 0.0030, 0.0016), rot=Matrix((tuple(X), tuple(f), tuple(g))).transposed())
     # magwell opening at the base
     sb = S.PG_STATIONS[-1][0]
     cb = S.PG_TOP + g * (sb + 0.002)
-    c.prism(rrect(2 * MAG_HW + 0.0016, 2 * MAG_HD + 0.0016, 0.003, 2), a0=-0.02, a1=0.01, off=cb + f * 0.0005, basis=(X, f, g))
+    c.prism(rrect(2 * MAG_HW + 0.0016, 2 * MAG_HD + 0.0016, 0.003, 2), a0=-0.02, a1=0.01, off=cb + f * 0.0035, basis=(X, f, g))
     boolean(gr, c)
     finish(gr, 0.0007, 2, 35)
     parts.append(gr)
+    # flared magwell lip
+    rings = []
+    hw, fwd, bk = S.PG_STATIONS[-1][1:]
+    for ds, sc in ((-0.0060, 1.0), (-0.0010, 1.07), (0.0005, 1.07)):
+        cc = S.PG_TOP + g * (S.PG_STATIONS[-1][0] + ds)
+        rings.append([cc + X * x * sc + f * ff * sc for x, ff in S.grip_ring2d(hw, fwd, bk, 24)])
+    m = MB()
+    m.loft(rings, cap0=True, cap1=True)
+    lip = m.obj("magwell_lip", "polymer")
+    c = MB()
+    c.prism(rrect(2 * MAG_HW + 0.0016, 2 * MAG_HD + 0.0016, 0.003, 2), a0=-0.02, a1=0.01,
+            off=S.PG_TOP + g * (S.PG_STATIONS[-1][0] + 0.002) + f * 0.0035, basis=(X, f, g))
+    boolean(lip, c)
+    finish(lip, 0.0005, 1, 35)
+    parts.append(lip)
     parts.append(picatinny("p_rail", 0.128, 0.172, -0.0255, sign=-1.0, material="polymer"))
     # controls: slide stop (left), takedown tabs, mag release
     m = MB()
@@ -204,7 +223,7 @@ def mag_matrix():
 
 
 def build():
-    import poses
+    import wpn_poses as poses
     root = empty("Pistol", loc=(0, 0, 0), size=0.04)
     sl = _slide()
     fr = _frame()

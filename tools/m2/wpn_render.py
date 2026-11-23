@@ -1,7 +1,7 @@
 # Preview rendering: neutral studio (three-point + soft environment), glb re-import helpers.
 import bpy, math, os
 from mathutils import Vector, Matrix
-from m2lib import reset, V
+from wpn_lib import reset, V
 
 
 def import_glb(path):

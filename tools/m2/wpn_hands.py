@@ -8,7 +8,7 @@ import math
 import bmesh, bpy
 from mathutils import Vector, Matrix
 from mathutils.bvhtree import BVHTree
-from m2lib import V, mat, link, smooth_all, apply_mods, MIRROR_X
+from wpn_lib import V, mat, link, smooth_all, apply_mods, MIRROR_X
 
 # ---------------------------------------------------------------- anatomy (gloved, metres)
 # palm rings: ys per column, xs per column, dorsal z, ventral z (columns = finger-port boundaries)
@@ -23,10 +23,10 @@ PALM_BOTTOM = 0.0150   # nominal ventral surface depth used to seat grips
 
 FINGERS = [
     # name, MCP joint, phalanx lengths, base width, base thickness
-    ("index", V((-0.0314, 0.0935, 0.0006)), (0.0440, 0.0262, 0.0236), 0.0212, 0.0200),
-    ("middle", V((-0.0104, 0.0975, 0.0008)), (0.0482, 0.0298, 0.0252), 0.0212, 0.0202),
-    ("ring", V((0.0100, 0.0935, 0.0006)), (0.0452, 0.0288, 0.0242), 0.0200, 0.0194),
-    ("little", V((0.0290, 0.0850, 0.0000)), (0.0362, 0.0216, 0.0222), 0.0180, 0.0176),
+    ("index", V((-0.0314, 0.0935, 0.0006)), (0.0440, 0.0262, 0.0236), 0.0216, 0.0190),
+    ("middle", V((-0.0104, 0.0975, 0.0008)), (0.0482, 0.0298, 0.0252), 0.0216, 0.0192),
+    ("ring", V((0.0100, 0.0935, 0.0006)), (0.0452, 0.0288, 0.0242), 0.0204, 0.0184),
+    ("little", V((0.0290, 0.0850, 0.0000)), (0.0362, 0.0216, 0.0222), 0.0184, 0.0168),
 ]
 TAPER = (1.0, 0.95, 0.88, 0.80)        # width/thickness factor at MCP, PIP, DIP, tip
 THUMB_CMC = V((-0.0280, 0.0150, -0.0050))
@@ -123,61 +123,6 @@ class Grip:
         q2 = V((q.x, q.y)) + n2 * (margin - d)
         return self.F @ V((q2.x, q2.y, q.z)), d
 
-    def section_points(self, origin, s_axis, d0, u0, radius, ring=8):
-        """Cross-section of the prism in the finger plane (normal s_axis through origin), dilated by
-        radius, returned as 2D points (along d0, along u0)."""
-        a = self.F.col[2].to_3d().normalized()
-        uu = self.F.col[0].to_3d()
-        vv = self.F.col[1].to_3d()
-        P = self.F.col[3].to_3d()
-        den = a.dot(s_axis)
-        pts = []
-        if abs(den) < 1e-4:
-            return pts
-        for sp in self.shape:
-            base = P + uu * sp.x + vv * sp.y
-            t = (origin - base).dot(s_axis) / den
-            Q = base + a * t
-            rel = Q - origin
-            x2, y2 = rel.dot(d0), rel.dot(u0)
-            for k in range(ring):
-                ang = 2 * math.pi * k / ring
-                pts.append(V((x2 + radius * math.cos(ang), y2 + radius * math.sin(ang))))
-        return pts
-
-
-def wrap_finger(grip, mcp, R0, lens, radius, flex_default=(0.25, 0.25, 0.2), flex_max=(1.65, 1.85, 1.45),
-                hyper=0.12, tip_extra=0.0):
-    """Tangent-walk: each phalanx turns until it just touches the dilated grip section."""
-    s_axis = R0.col[0]
-    d0 = R0.col[1]
-    u0 = R0.col[2]
-    cloud = grip.section_points(V(mcp), s_axis, d0, u0, radius)
-    pos = V((0.0, 0.0))
-    beta = 0.0
-    flex = []
-    for k, L in enumerate(lens):
-        best = None
-        for q in cloud:
-            r = q - pos
-            dist = r.length
-            if dist > L + radius * 0.5 or dist < 1e-6:
-                continue
-            th = math.atan2(r.y, r.x)
-            dl = (th - beta + math.pi) % (2 * math.pi) - math.pi
-            if dl < -flex_max[k] - 0.6 or dl > hyper + 0.6:
-                continue
-            if best is None or dl > best:
-                best = dl
-        want = best if best is not None else -flex_default[k]
-        want = max(-flex_max[k], min(hyper, want))
-        f = -want
-        if k == len(lens) - 1:
-            f += tip_extra
-        flex.append(f)
-        beta -= f
-        pos = pos + V((math.cos(beta), math.sin(beta))) * L
-    return flex
 
 
 class Poly2:
@@ -466,6 +411,56 @@ def make_pad(bm_target_obj_bvh, name, center, R, ws, ls, h, mi_mat="rubber", rin
     return o
 
 
+def knuckle_guard(bvh, info, sink=0.0007):
+    """One molded guard across the four MCP knuckles: a boss over each joint that hugs the glove
+    (per-vertex raycast), bridged between joints, tapered at the ends."""
+    names = [f[0] for f in FINGERS]
+    prof = [(-1.0, 0.0), (-0.85, 0.65), (-0.35, 1.0), (0.35, 1.0), (0.85, 0.65), (1.0, 0.0), (0.45, -0.35), (-0.45, -0.35)]
+    knuck = []
+    for n in names:
+        c, R, w, t, us = info["fingers"][n]["rings"][0]
+        d, u = R.col[1], R.col[2]
+        ring = []
+        for x, y in prof:
+            q = c + d * (x * 0.0088)
+            hit = bvh.ray_cast(q + u * 0.03, -u, 0.06)
+            surf = hit[0] if hit[0] is not None else q + u * t * 0.45
+            ring.append(surf + u * (y * 0.0042 - sink * 0.5))
+        knuck.append((ring, R, w))
+    rings = []
+    r0, R0, w0 = knuck[0]
+    rings.append([p - R0.col[0] * w0 * 0.55 - R0.col[2] * 0.0012 for p in r0])
+    for i, (ring, R, w) in enumerate(knuck):
+        rings.append(ring)
+        if i < len(knuck) - 1:
+            ring2, R2, w2 = knuck[i + 1]
+            um = (R.col[2] + R2.col[2]).normalized()
+            rings.append([(a + b) * 0.5 - um * 0.0010 for a, b in zip(ring, ring2)])
+    r3, R3, w3 = knuck[-1]
+    rings.append([p + R3.col[0] * w3 * 0.55 - R3.col[2] * 0.0012 for p in r3])
+    bm = bmesh.new()
+    vs = [[bm.verts.new(p) for p in ring] for ring in rings]
+    n = len(prof)
+    for k in range(len(vs) - 1):
+        for i in range(n):
+            j = (i + 1) % n
+            bm.faces.new((vs[k][i], vs[k][j], vs[k + 1][j], vs[k + 1][i]))
+    bm.faces.new(vs[0][::-1])
+    bm.faces.new(vs[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new("knuckle_guard")
+    bm.to_mesh(me)
+    bm.free()
+    o = bpy.data.objects.new("knuckle_guard", me)
+    link(o)
+    me.materials.append(mat("rubber"))
+    md = o.modifiers.new("s", "SUBSURF")
+    md.levels = 1
+    apply_mods(o)
+    smooth_all(o)
+    return o
+
+
 def build_hand(name, pose, grips=(), mirror=False, margin=0.0005, pads=True):
     """Build the hand mesh object. grips: Grip objects in design space used for conform."""
     bm, info = build_cage(pose)
@@ -495,17 +490,18 @@ def build_hand(name, pose, grips=(), mirror=False, margin=0.0005, pads=True):
         bm2.from_mesh(o.data)
         bvh = BVHTree.FromBMesh(bm2)
         bm2.free()
+        parts.append(knuckle_guard(bvh, info))
         for fname, fd in info["fingers"].items():
-            c, Rb, w, t, us = fd["rings"][0]
-            parts.append(make_pad(bvh, "knuckle_" + fname, c, Rb, w * 0.40, 0.0062, 0.0042))
             c2, R2, w2, t2, _ = fd["rings"][1]
-            parts.append(make_pad(bvh, "fpad_" + fname, c2, R2, w2 * 0.33, 0.0068, 0.0028))
-        # back-of-hand plate
-        Rh = Matrix.Identity(3)
-        parts.append(make_pad(bvh, "backplate", _cup(V((-0.006, 0.050, 0.0)), pose.get("cup", 0.0)), Rh, 0.024, 0.017, 0.0030, ring_n=12))
+            parts.append(make_pad(bvh, "fpad_" + fname, c2, R2, w2 * 0.34, 0.0072, 0.0026, ring_n=6))
+        # back-of-hand vented bars (molded TPR)
+        cup = pose.get("cup", 0.0)
+        for k, (yy, ww) in enumerate(((0.036, 0.020), (0.049, 0.024), (0.062, 0.026))):
+            p0 = _cup(V((-0.004, yy, 0.0)), cup)
+            parts.append(make_pad(bvh, "backbar%d" % k, p0, rz(0.06), ww, 0.0040, 0.0017, ring_n=8, pw=4.0))
         th = info["thumb"]
-        parts.append(make_pad(bvh, "thumbpad", th["joints"][1] + (th["joints"][2] - th["joints"][1]) * 0.45, th["segs"][1], 0.0062, 0.0085, 0.0026))
-    from m2lib import join
+        parts.append(make_pad(bvh, "thumbpad", th["joints"][1] + (th["joints"][2] - th["joints"][1]) * 0.45, th["segs"][1], 0.0062, 0.0085, 0.0026, ring_n=6))
+    from wpn_lib import join
     o = join(parts, name)
     if mirror:
         o.data.transform(MIRROR_X)

@@ -6,9 +6,9 @@
 import math
 from functools import lru_cache
 from mathutils import Vector, Matrix
-import specs as S
-import hands as H
-from m2lib import V, frame_matrix, MIRROR_X
+import wpn_specs as S
+import wpn_hands as H
+from wpn_lib import V, frame_matrix, MIRROR_X
 
 
 def hull2(pts):
@@ -176,8 +176,14 @@ def solve_hand(pose_def):
         c += sum((pr[i] - tt["init"][i]) ** 2 for i in range(5)) * tt.get("reg", 0.05)
         return c
 
+    tdir = tt.get("dir")
+
     def extrat(joints, segs):
-        return _penetration_cost(th_grips, joints[1:], th_rad)
+        c = _penetration_cost(th_grips, joints[1:], th_rad)
+        if tdir is not None:
+            d = (joints[3] - joints[1]).normalized()
+            c += (1.0 - d.dot(tdir)) * tt.get("dir_w", 3.0)
+        return c
 
     pr, cst = H.solve_chain(H.THUMB_CMC, rbt, H.THUMB_LENS, tt["target"], tt["init"], reg=regt, pt=tt.get("pt", 0.6), extra=extrat)
     thumb = (H.thumb_R0(pr[0], pr[1], pr[2]), [0.0, pr[3], pr[4]])
@@ -203,9 +209,8 @@ def hand_R_def():
         "grip": grip, "cup": 0.55,
         "splay": {"index": 0.02, "middle": 0.02, "ring": 0.04, "little": 0.07},
         "index_target": (tgt, nrm),
-        "flex_default": (0.3, 0.4, 0.3),
         "thumb": {"target": Ti @ th_w, "init": [0.55, 0.65, -1.25, 0.25, 0.25], "pt": 0.55,
-                  "avoid": [grip]},
+                  "avoid": [grip], "dir": (Ti.to_3x3() @ V((0.0, 0.94, 0.34))).normalized(), "dir_w": 4.0},
     }
     return {"Fw": Fw, "Fh": Fh, "shape": shape, "grip": grip, "T": T, "pose": solve_hand(pose)}
 
@@ -222,8 +227,8 @@ def hand_L_def():
     pose = {
         "grip": grip, "cup": 0.30,
         "splay": {"index": 0.06, "middle": 0.01, "ring": -0.03, "little": -0.07},
-        "flex_default": (0.15, 0.25, 0.2),
-        "thumb": {"target": th_h, "init": [0.35, 0.35, -1.0, 0.1, 0.15], "pt": 0.6, "avoid": [grip], "reg": 0.02},
+        "thumb": {"target": th_h, "init": [0.35, 0.35, -1.0, 0.1, 0.15], "pt": 0.6, "avoid": [grip], "reg": 0.02,
+                  "dir": (MIRROR_X.to_3x3() @ (T.inverted().to_3x3() @ V((0.0, 1.0, 0.0)))).normalized(), "dir_w": 2.0},
     }
     return {"Fw": Fw, "Fh": Fh, "shape": shape, "grip": grip, "T": T, "pose": solve_hand(pose)}
 
@@ -233,15 +238,16 @@ def hand_fist_def():
     shape = circle_shape(S.VG_R)
     Fh = design_frame(shape, gamma_deg=16.0, front_y=0.098, squeeze=0.0008)
     grip = H.Grip(Fh, shape)
-    # thumb wraps over the index/middle on the far side: ride on a cylinder grown by finger thickness
+    # thumb wraps over the index/middle on the far side: ride on a cylinder grown by finger thickness;
+    # it must also stay clear of a magazine body extending behind the grip axis (reload grab)
     big = H.Grip(Fh, circle_shape(S.VG_R + 0.0175))
+    magbox = H.Grip(Fh, [(-0.0131, -0.0480), (0.0098, -0.0480), (0.0098, 0.0125), (-0.0131, 0.0125)])
     # target: far side of the cylinder, ahead of the index plane
     th = Fh @ V((0.018, 0.019, -0.006))
     pose = {
         "grip": grip, "cup": 0.85,
         "splay": {"index": -0.02, "middle": 0.02, "ring": 0.05, "little": 0.09},
-        "flex_default": (0.6, 0.6, 0.4),
-        "thumb": {"target": th, "init": [0.6, 0.9, -1.35, 0.35, 0.35], "pt": 0.6, "avoid": [big]},
+        "thumb": {"target": th, "init": [0.6, 0.9, -1.35, 0.35, 0.35], "pt": 0.6, "avoid": [big, magbox]},
     }
     return {"Fh": Fh, "shape": shape, "grip": grip, "pose": solve_hand(pose)}
 
@@ -258,7 +264,7 @@ def agrip_hand_matrix():
     angled face. Expressed relative to the grip origin (rail contact point on sock_grip)."""
     d = hand_L_def()
     # same handguard hold, moved so the web of the hand meets the grip's rear face
-    Fw, _ = handguard_frame(y=S.SOCK_GRIP.y - 0.050)
+    Fw, _ = handguard_frame(y=S.SOCK_GRIP.y - 0.079)
     T = socket_matrix(Fw, d["Fh"], True)
     return Matrix.Translation(-S.SOCK_GRIP) @ T
 
@@ -281,6 +287,62 @@ def rifle_hand_sockets():
         "sock_hand_L_vgrip": Matrix.Translation(S.SOCK_GRIP) @ vgrip_hand_matrix(),
         "sock_hand_L_agrip": Matrix.Translation(S.SOCK_GRIP) @ agrip_hand_matrix(),
     }
-    import build_attachments as BA
+    import wpn_attachments as BA
     out["sock_hand_L_mag"] = Matrix.Translation(S.MAG_TOP) @ BA.mag_hand_local("mag_std")
     return out
+
+
+# ---------------------------------------------------------------- pistol
+PISTOL_SUPPORT_CANT = 48.0     # deg the support fingers' start direction is canted below forward
+PISTOL_SUPPORT_S = 0.052       # grip station of the support palm centre
+PISTOL_SUPPORT_X = 0.001
+PISTOL_SUPPORT_F = 0.004
+
+
+def pistol_grip_frame(s=None):
+    s = S.PG_HAND_S if s is None else s
+    return frame_matrix(S.PG_TOP + S.PG_AXIS * s, -V((1, 0, 0)), S.PG_FWD)
+
+
+def pistol_hand_sockets(mag_M):
+    r = hand_R_def()
+    out = {"sock_hand_R": socket_matrix(pistol_grip_frame(), r["Fh"], False)}
+    # support hand wraps the shooting hand: virtual grip = right fist envelope around the grip
+    l = hand_L_def()
+    # support fingers angle down ~55 deg around the shooting hand so the support thumb points forward
+    phi = math.radians(PISTOL_SUPPORT_CANT)
+    v = (S.PG_FWD * math.cos(phi) + S.PG_AXIS * math.sin(phi)).normalized()
+    P = S.PG_TOP + S.PG_AXIS * PISTOL_SUPPORT_S + V((PISTOL_SUPPORT_X, 0, 0)) + S.PG_FWD * PISTOL_SUPPORT_F
+    out["sock_hand_L"] = socket_matrix(frame_matrix(P, -V((1, 0, 0)), v), l["Fh"], True)
+    # reload hand on the magazine body near the floorplate (correct once the mag is ~5 cm out)
+    d = hand_fist_def()
+    import wpn_pistol as BP
+    Pm = V((-BP.MAG_HW + S.VG_R - 0.0004, BP.MAG_HD - S.VG_R + 0.0012, -(BP.MAG_LEN - 0.030)))
+    out["sock_hand_L_mag"] = mag_M @ socket_matrix(frame_matrix(Pm, V((-1, 0, 0)), V((0, 1, 0))), d["Fh"], True)
+    return out
+
+
+def rig_notes():
+    """Machine-readable summary of hand frames and sockets (written next to the .glb files)."""
+    import wpn_pistol as BP
+
+    def mat_out(M):
+        q = M.to_quaternion()
+        R = M.to_3x3()
+        return {"pos": [round(x, 5) for x in M.translation], "quat_wxyz": [round(x, 5) for x in q],
+                "x_axis": [round(x, 4) for x in R.col[0]], "y_axis": [round(x, 4) for x in R.col[1]],
+                "z_axis": [round(x, 4) for x in R.col[2]]}
+    hands = {}
+    for nm, fn, left, what in (("hand_R", hand_R_def, False, "rifle/pistol pistol grip, index on trigger"),
+                               ("hand_L", hand_L_def, True, "handguard cup (palm under, thumb over), pistol support"),
+                               ("hand_L_fist", hand_fist_def, True, "27 mm vertical cylinder (vertical grip, magazines)")):
+        d = fn()
+        F = MIRROR_X @ d["Fh"] @ MIRROR_X if left else d["Fh"]
+        hands[nm] = {"use": what, "origin": "wrist joint", "fingers_along": "+Y", "palm_normal": [0, 0, -1],
+                     "grip_axis_dir": [round(x, 4) for x in F.col[2].to_3d()],
+                     "grip_axis_point": [round(x, 4) for x in F.col[3].to_3d()],
+                     "finger_flex_deg": {k: [round(math.degrees(f), 1) for f in fl] for k, (R, fl) in d["pose"]["fingers"].items()}}
+    return {"units": "metres; Blender axes X right, +Y forward, Z up (Godot: x, y=z, z=-y)",
+            "hands": hands,
+            "rifle_hand_sockets": {k: mat_out(v) for k, v in rifle_hand_sockets().items()},
+            "pistol_hand_sockets": {k: mat_out(v) for k, v in pistol_hand_sockets(BP.mag_matrix()).items()}}

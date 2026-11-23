@@ -33,7 +33,10 @@ func setup() -> void:
 		inst.transform = Transform3D.IDENTITY
 		holder.add_child(inst)
 		MatLib.remap_scene(inst)
-		for mi in inst.find_children("*", "MeshInstance3D", true, false):
+		var meshes: Array = inst.find_children("*", "MeshInstance3D", true, false)
+		if inst is MeshInstance3D:
+			meshes.append(inst)
+		for mi in meshes:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			mi.layers = 1 << 1
 		seg[n] = holder
@@ -74,7 +77,8 @@ func solve(targets: Dictionary, left_kind: String) -> void:
 			pv = Vector3.DOWN
 		pv = pv.normalized()
 		var elbow := s + dir * cos(a) * UPPER + pv * sin(a) * UPPER
-		_place("upper_" + side, s, elbow, pv)
+		# Upper-arm segments carry the elbow point on local -Y: aim it at the pole.
+		_place("upper_" + side, s, elbow, -pv)
 		# Forearm twist follows the hand so the cuff lines up with the glove.
 		_place("fore_" + side, elbow, w, hand_t.basis.y)
 

@@ -509,7 +509,7 @@ func _compare() -> void:
 	await _wait(0.6)
 	player.weapon().ammo = 0
 	player.weapon().start_reload()
-	await _wait(player.weapon()._reload_len * 0.4)
+	await _wait(player.weapon()._reload_len * 0.5)
 	await shot("c12_reload")
 	await _wait(3.0)
 	player._request_switch(1)

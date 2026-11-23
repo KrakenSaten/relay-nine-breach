@@ -1,10 +1,10 @@
 # VK-9 carbine (M2). Origin = bore axis at the rear face of the upper receiver, +Y forward.
 import math
 from mathutils import Vector, Matrix
-from m2lib import (MB, V, X, Y, Z, rrect, circle2, stadium, boolean, union_parts, finish, join, set_origin,
+from wpn_lib import (MB, V, X, Y, Z, rrect, circle2, stadium, boolean, union_parts, finish, join, set_origin,
                    empty, set_parent, rot_about, xform, subsurf, sharp_by_angle, apply_mods, perp_basis)
-from parts import picatinny, socket_screw, qd_cup, pic_profile, PIC_H
-import specs as S
+from wpn_parts import picatinny, socket_screw, qd_cup, pic_profile, PIC_H
+import wpn_specs as S
 
 MUZZLE_Y = 0.655
 
@@ -210,7 +210,7 @@ def _bolt():
         c.box((0.0101, 0.108 + i * 0.0045, 0.0), (0.0030, 0.0018, 0.0140))
     c.box((0.0101, 0.150, 0.0), (0.0030, 0.010, 0.0022))      # extractor relief
     boolean(o, c)
-    finish(o, 0.0004, 1)
+    finish(o, 0.0, 1)
     set_origin(o, (0.0, 0.130, 0.0))
     return o
 
@@ -225,10 +225,10 @@ def _stock():
     u.box((0.0, -0.128, -0.0148), (0.0084, 0.216, 0.0056))
     union_parts(tube, u)
     c = MB()
-    for i in range(7):
-        c.cyl((0.0, -0.050 - i * 0.025, -0.017), 0.0019, 0.012, "Z", n=10)
+    for i in range(4):
+        c.cyl((0.0, -0.050 - i * 0.025, -0.017), 0.0019, 0.012, "Z", n=8)
     boolean(tube, c)
-    finish(tube, 0.0006, 2)
+    finish(tube, 0.0005, 1)
     out.append(tube)
     # end plate + castle nut
     m = MB()
@@ -240,7 +240,7 @@ def _stock():
         a = math.radians(30 + 60 * k)
         c.box((math.cos(a) * 0.0195, -0.0205, math.sin(a) * 0.0195), (0.0045, 0.006, 0.0045), rot=Matrix.Rotation(-a, 3, "Y"))
     boolean(nut, c)
-    finish(nut, 0.0003, 1)
+    finish(nut, 0.0, 1)
     out.append(nut)
     # QD adapter on the tube
     m = MB()
@@ -443,7 +443,7 @@ def build(hand_sockets=None):
     static += _sight_base("rear_sight_base", -0.012, 0.016, 0.0095, (0.0010, 0.0180))
     static += _sight_base("front_sight_base", 0.437, 0.465, 0.443, (0.4415, 0.4590))
     moving = [_charging_handle(), _bolt(), _trigger(), _selector(), _mag_release(), _flash_hider(), _front_sight(), _rear_sight()]
-    from m2lib import tris
+    from wpn_lib import tris
     for o in static + moving:
         print(f"  part {o.name:26s} {tris(o)}")
     # merge static hardware into a few logical meshes (fewer draw calls)

@@ -1,7 +1,7 @@
 # Reusable hardware: Picatinny rail, socket screws, QD sling cups, knurled bands.
 import math
 from mathutils import Vector, Matrix
-from m2lib import MB, V, X, Y, Z, rrect, circle2, boolean, finish, perp_basis
+from wpn_lib import MB, V, X, Y, Z, rrect, circle2, boolean, finish, perp_basis
 
 PIC_H = 0.0094      # MIL-STD-1913 rail height
 PIC_PITCH = 0.01    # slot pitch

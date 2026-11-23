@@ -3,9 +3,9 @@
 # forearms connected to the wrists by a simple two-bone IK.
 import bpy, math, os
 from mathutils import Vector, Matrix
-import m2lib as L
-from m2lib import V
-import render as RD
+import wpn_lib as L
+from wpn_lib import V
+import wpn_render as RD
 
 UPPER_LEN, FORE_LEN = 0.30, 0.26
 
@@ -109,11 +109,12 @@ def _arm(objs, side, hand_obj, shoulder, pole):
     up.matrix_world = _seg_matrix(S, E - S, -V(pole))
 
 
-def _fp_view(rifle_hip=(0.2, -0.21, -0.43), fov=62.0):
-    """In-game hip camera position (weapon root at Godot camera-space hip_pos), viewmodel-style FOV."""
+def _fp_view(rifle_hip=(0.2, -0.21, -0.43), fov=58.0, look=(0.0, 0.16, -0.07)):
+    """Eye at the in-game hip camera position (weapon root at Godot camera-space hip_pos), aimed at the
+    weapon with a viewmodel-style FOV so both hands are in frame."""
     hx, hy, hz = rifle_hip
     cam = V((-hx, hz, -hy))   # Godot (x, y, z) -> Blender (x, -z, y); camera = root - offset
-    return RD.fp_camera(cam, (0.05, 1, -0.12), (0, 0, 1), fov), cam
+    return RD.fp_camera(cam, V(look) - cam, (0, 0, 1), fov), cam
 
 
 def _shoulders(cam):
@@ -182,8 +183,8 @@ def loadout_b(out, prev):
 def attachments_sheet(out, prev):
     objs = _load(out, ["attachments.glb"])
     RD.studio()
-    c = V((0.52, 0.02, -0.03))
-    camloc = V((0.70, -0.85, 0.28))
+    c = V((0.53, 0.02, -0.05))
+    camloc = V((0.60, -1.10, 0.36))
     RD.camera(camloc, c, lens=34)
     RD.three_point(c, camloc, 1.2)
     RD.render(os.path.join(prev, "attachments.png"))
@@ -192,8 +193,8 @@ def attachments_sheet(out, prev):
 def pistol_34(out, prev):
     objs = _load(out, ["pistol.glb"])
     RD.studio()
-    c = V((0, 0.085, -0.035))
-    camloc = V((0.30, -0.16, 0.12))
+    c = V((0, 0.085, -0.045))
+    camloc = V((0.36, 0.30, 0.10))
     RD.camera(camloc, c, lens=50)
     RD.three_point(c, camloc, 0.6)
     RD.render(os.path.join(prev, "pistol_threequarter.png"))
@@ -215,12 +216,19 @@ def _fp_scene(out, mode):
     keep = ["mag_std"]
     if mode == "vgrip":
         keep.append("grip_vertical")
+    if mode == "agrip":
+        keep.append("grip_angled")
     _hide_unused_attachments(objs, keep)
     _mount(objs, rifle, "mag", "mag_std")
     if mode == "vgrip":
         _mount(objs, rifle, "grip", "grip_vertical")
+    if mode == "agrip":
+        _mount(objs, rifle, "grip", "grip_angled")
     hr = _place_hand(objs, "hand_R", _child(rifle, "sock_hand_R"))
-    if mode == "handguard":
+    if mode == "agrip":
+        hl = _place_hand(objs, "hand_L", _child(rifle, "sock_hand_L_agrip"))
+        _hide_arms(objs, ["upper_R", "upper_L", "fore_R", "fore_L", "hand_R", "hand_L"])
+    elif mode == "handguard":
         hl = _place_hand(objs, "hand_L", _child(rifle, "sock_hand_L"))
         _hide_arms(objs, ["upper_R", "upper_L", "fore_R", "fore_L", "hand_R", "hand_L"])
     elif mode == "vgrip":
@@ -260,6 +268,13 @@ def fp_rifle_vgrip(out, prev):
         ("front", V((0.10, 0.72, -0.12)), V((0.0, 0.38, -0.07)), 40)])
 
 
+def fp_rifle_agrip(out, prev):
+    objs, rifle, hr, hl = _fp_scene(out, "agrip")
+    _fp_render(objs, hr, hl, prev, "fp_rifle_agrip", [
+        ("left", V((-0.30, 0.46, -0.16)), V((0.0, 0.33, -0.05)), 40),
+        ("below", V((0.10, 0.48, -0.36)), V((0.0, 0.33, -0.05)), 40)])
+
+
 def fp_rifle_mag(out, prev):
     objs, rifle, hr, hl = _fp_scene(out, "mag")
     _fp_render(objs, hr, hl, prev, "fp_rifle_mag", [
@@ -273,7 +288,7 @@ def fp_pistol(out, prev):
     _hide_arms(objs, ["upper_R", "upper_L", "fore_R", "fore_L", "hand_R", "hand_L"])
     hr = _place_hand(objs, "hand_R", _child(pistol, "sock_hand_R"))
     hl = _place_hand(objs, "hand_L", _child(pistol, "sock_hand_L"))
-    cam, camp = _fp_view((0.16, -0.16, -0.38))
+    cam, camp = _fp_view((0.16, -0.16, -0.38), look=(0.0, 0.07, -0.06))
     sR, sL = _shoulders(camp)
     _arm(objs, "R", hr, sR, V((0.6, 0.0, -0.8)))
     _arm(objs, "L", hl, sL, V((-0.6, 0.0, -0.8)))
@@ -288,7 +303,7 @@ def fp_pistol(out, prev):
 
 
 def hands_sheet(out, prev):
-    import poses, hands as H
+    import wpn_poses as poses, wpn_hands as H
     objs = _load(out, ["arms.glb"])
     _hide_arms(objs, ["hand_R", "hand_L", "hand_L_fist"])
     RD.studio()
@@ -303,18 +318,59 @@ def hands_sheet(out, prev):
     RD.render(os.path.join(prev, "hands_top.png"))
     RD.camera(V((0.05, 0.25, -0.40)), c, lens=45)
     RD.render(os.path.join(prev, "hands_palm.png"))
-    RD.camera(V((-0.45, 0.10, 0.0)), c, lens=45)
-    RD.render(os.path.join(prev, "hands_side.png"))
 
 
 def arms_sheet(out, prev):
     objs = _load(out, ["arms.glb"])
     RD.studio()
-    c = V((0.55, 0.15, 0.0))
-    camloc = V((0.55, -0.55, 0.65))
+    c = V((0.52, 0.13, 0.0))
+    camloc = V((0.52, -0.95, 0.85))
     RD.camera(camloc, c, lens=35)
     RD.three_point(c, camloc, 1.2)
     RD.render(os.path.join(prev, "arms.png"))
+
+
+def _section(prev, name, loc, tgt, clip, ortho):
+    cam = RD.camera(loc, tgt, ortho=ortho)
+    cam.data.clip_start = clip
+    RD.render(os.path.join(prev, "debug", name + ".png"))
+
+
+def sections(out, prev):
+    """Diagnostic slices through each hold (camera near-clip cuts the scene at the hand)."""
+    objs, rifle, hr, hl = _fp_scene(out, "handguard")
+    RD.studio(res=(900, 900))
+    RD.three_point(V((0, 0.3, 0)), V((0.0, 0.9, 0.2)), 1.0)
+    for dy in (0.0, 0.02, 0.04):
+        y = 0.30 + dy
+        _section(prev, "sec_handguard_%02d" % int(dy * 100), V((0, 0.9, 0.0)), V((0, y, 0.0)), 0.9 - y, 0.16)
+    _section(prev, "sec_grip_R", V((0, 0.62, -0.08)), V((0, 0.03, -0.08)), 0.62 - 0.04, 0.14)
+    objs, rifle, hr, hl = _fp_scene(out, "vgrip")
+    RD.studio(res=(900, 900))
+    RD.three_point(V((0, 0.38, -0.08)), V((0.0, 0.38, 0.6)), 1.0)
+    cam = RD.camera(V((0, 0.38, 0.6)), V((0, 0.38, -0.08)), ortho=0.16, up=(0, 1, 0))
+    cam.data.clip_start = 0.6 + 0.085
+    RD.render(os.path.join(prev, "debug", "sec_vgrip.png"))
+    objs, rifle, hr, hl = _fp_scene(out, "mag")
+    RD.studio(res=(900, 900))
+    cam = RD.camera(V((0, 0.17, 0.6)), V((0, 0.175, -0.10)), ortho=0.16)
+    cam.data.clip_start = 0.6 + 0.095
+    RD.three_point(V((0, 0.17, -0.1)), V((0, 0.17, 0.6)), 1.0)
+    RD.render(os.path.join(prev, "debug", "sec_mag.png"))
+    objs = _load(out, ["pistol.glb", "arms.glb"])
+    pistol = _top(objs, "Pistol")
+    _hide_arms(objs, ["upper_R", "upper_L", "fore_R", "fore_L", "hand_R", "hand_L"])
+    _place_hand(objs, "hand_R", _child(pistol, "sock_hand_R"))
+    _place_hand(objs, "hand_L", _child(pistol, "sock_hand_L"))
+    RD.studio(res=(900, 900))
+    RD.three_point(V((0, 0.03, -0.07)), V((0, 0.03, 0.5)), 1.0)
+    import wpn_specs as S
+    for k, ss in enumerate((0.03, 0.06)):
+        p = S.PG_TOP + S.PG_AXIS * ss
+        loc = p - S.PG_AXIS * 0.5
+        cam = RD.camera(loc, p, ortho=0.16)
+        cam.data.clip_start = 0.5
+        RD.render(os.path.join(prev, "debug", "sec_pistol_%d.png" % k))
 
 
 ALL = {
@@ -331,7 +387,9 @@ ALL = {
     "fp_rifle": fp_rifle,
     "fp_rifle_vgrip": fp_rifle_vgrip,
     "fp_rifle_mag": fp_rifle_mag,
+    "fp_rifle_agrip": fp_rifle_agrip,
     "fp_pistol": fp_pistol,
+    "sections": sections,
 }
 
 

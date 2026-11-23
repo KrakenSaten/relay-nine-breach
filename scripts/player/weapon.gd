@@ -133,7 +133,9 @@ func apply_loadout(att: Dictionary) -> void:
 				bs.set_meta("rest", bs.transform)
 			var rest: Transform3D = bs.get_meta("rest")
 			# Modelled upright; fold flat when an optic is fitted.
-			bs.transform = rest * Transform3D(Basis(Vector3.RIGHT, -PI / 2 if has_optic else 0.0), Vector3.ZERO)
+			# Rear folds forward (-90 deg about X), front folds back (+90 deg).
+			var fold := (-PI / 2 if n == "rear_sight" else PI / 2) if has_optic else 0.0
+			bs.transform = rest * Transform3D(Basis(Vector3.RIGHT, fold), Vector3.ZERO)
 	if mag_node == null:
 		var pm := _find_prefixed(model, "mag")
 		if pm and not pm.name.begins_with("mag_"):
@@ -544,8 +546,10 @@ func update_clip(dist_to_wall: float) -> void:
 
 func _reload_pose(t: float) -> Array:
 	var e := sin(clampf(t, 0.0, 1.0) * PI)
-	var p := Vector3(-0.03, -0.06, 0.04) * e
-	var r := Vector3(0.25, 0.25, 0.55) * e
+	# Bring the rifle toward centre and cant it so the magwell faces the
+	# camera; the left hand works the magazine (see _reload_left).
+	var p := Vector3(-0.06, 0.1, 0.08) * e
+	var r := Vector3(0.1, 0.12, -0.5) * e
 	if id == "pistol":
 		r = Vector3(0.35, 0.1, 0.6) * e
 	if _reload_empty and t > 0.7 and t < 0.9:

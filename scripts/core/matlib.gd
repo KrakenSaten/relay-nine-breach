@@ -43,7 +43,7 @@ func pbr(set_name: String, scale := 0.5, tint := Color.WHITE, metallic := 0.0, r
 		m.normal_texture = n
 		m.normal_scale = 1.0
 	m.uv1_triplanar = true
-	m.uv1_world_triplanar = true
+	m.uv1_world_triplanar = not k.begins_with("fp_")   # viewmodel textures must move with the mesh
 	m.uv1_scale = Vector3.ONE * scale
 	m.uv1_triplanar_sharpness = 4.0
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
@@ -144,6 +144,12 @@ func _build_remap() -> void:
 		# Teslabot: worn safety paint over dark alloy.
 		"robot_paint": worn_paint(Color(0.5, 0.36, 0.18)),
 		"robot_bone": worn_paint(Color(0.6, 0.59, 0.55)),
+		# First-person arms
+		"fabric_jacket": pbr("denim_fabric_05", 9.0, Color(0.36, 0.38, 0.33), 0.0, 1.0, "fp_jacket"),
+		"glove": pbr("brown_leather", 7.0, Color(0.2, 0.2, 0.21), 0.0, 1.0, "fp_glove"),
+		"glove_palm": pbr("brown_leather", 9.0, Color(0.11, 0.1, 0.1), 0.0, 0.9, "fp_glove_palm"),
+		"watch": _finish(Color(0.03, 0.03, 0.03), 0.3, 0.35, 8.0, 0.2),
+		"tritium": flat(Color(0.3, 1.0, 0.4), 0.0, 0.4, Color(0.25, 1.0, 0.35), 3.0),
 		"ceramic": _finish(Color(0.78, 0.77, 0.72), 0.0, 0.25, 4.0, 0.15),
 		"rubber_cable": _finish(Color(0.02, 0.02, 0.022), 0.0, 0.75, 6.0, 0.2),
 		"glass_optic": _glass(),
@@ -225,7 +231,10 @@ func _detail(color: Color, metallic: float, rough: float, set_name: String, scal
 func remap_scene(root: Node) -> void:
 	if _remap.is_empty():
 		_build_remap()
-	for mi in root.find_children("*", "MeshInstance3D", true, false):
+	var meshes: Array = root.find_children("*", "MeshInstance3D", true, false)
+	if root is MeshInstance3D:
+		meshes.append(root)   # top-level mesh objects (e.g. arm segments)
+	for mi in meshes:
 		var mesh: Mesh = mi.mesh
 		if mesh == null:
 			continue
