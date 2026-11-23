@@ -45,6 +45,9 @@ var _equip_target := 1.0
 var _trigger_held_last := false
 var _shots_in_burst := 0
 var _clip_pull := 0.0
+## M2: mechanical parts and hand choreography
+var _cycle := 0.0              # bolt/slide travel 0..1 after a shot
+var _parts := {}               # name -> [Node3D, rest Transform3D]
 
 const ATT_SCENE := "res://assets/models/attachments.glb"
 static var _att_root: Node3D
@@ -62,6 +65,10 @@ func setup(weapon_id: String, p: Node, att: Dictionary) -> void:
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.layers = 1 << 1  # viewmodel layer (excluded from reflection probes / decals)
+	for part in ["bolt", "slide", "charging_handle", "trigger"]:
+		var pn := _find_prefixed(model, part)
+		if pn:
+			_parts[part] = [pn, pn.transform]
 	muzzle = model.find_child("sock_muzzle", true, false)
 	eject = model.find_child("sock_eject", true, false)
 	_build_flash()
@@ -119,6 +126,19 @@ func apply_loadout(att: Dictionary) -> void:
 		var s: Node3D = model.find_child(n, true, false)
 		if s:
 			s.scale = Vector3(1, 1, 1) if has_optic else Vector3(1, 3.2, 1)
+	for n in ["front_sight", "rear_sight"]:
+		var bs: Node3D = model.find_child(n, true, false)
+		if bs and id == "rifle":
+			if not bs.has_meta("rest"):
+				bs.set_meta("rest", bs.transform)
+			var rest: Transform3D = bs.get_meta("rest")
+			# Modelled upright; fold flat when an optic is fitted.
+			bs.transform = rest * Transform3D(Basis(Vector3.RIGHT, -PI / 2 if has_optic else 0.0), Vector3.ZERO)
+	if mag_node == null:
+		var pm := _find_prefixed(model, "mag")
+		if pm and not pm.name.begins_with("mag_"):
+			mag_node = pm
+			mag_rest = pm.transform
 	compute_stats()
 	# ADS eye point in weapon-root space
 	var iron: Node3D = model.find_child("sock_iron", true, false)
@@ -398,6 +418,7 @@ func _shoot() -> void:
 	_flash.rotation.z = randf() * TAU
 	_flash.scale = Vector3.ONE * randf_range(0.8, 1.2)
 	_flash_light.light_energy = 3.5 * stats.flash_mult
+	_cycle = 1.0
 	_kick_v += def.kick_back * 38.0 * (1.0 - ads * 0.35)
 	_kick_rot += Vector3(deg_to_rad(randf_range(2.0, 3.5)), deg_to_rad(randf_range(-1.0, 1.0)), deg_to_rad(randf_range(-2.0, 2.0))) * (1.0 - ads * 0.6)
 	player.apply_recoil(stats.recoil_v, randf_range(-stats.recoil_h, stats.recoil_h * 1.2))
@@ -509,6 +530,7 @@ func update_view(delta: float, aiming: bool, sprinting: bool, move_speed: float,
 	rot.x += _clip_pull * 3.0
 	position = pos
 	rotation = rot
+	_animate_parts(delta)
 	_update_shells(delta)
 
 
@@ -575,3 +597,127 @@ func _update_shells(delta: float) -> void:
 		if s.t > 0.8:
 			n.queue_free()
 			_shells.remove_at(i)
+
+
+
+# ---------------------------------------------------------------- M2: mechanism
+func _animate_parts(delta: float) -> void:
+	# Bolt carrier / slide: snap back on the shot, spring forward. The pistol
+	# slide locks back on an empty magazine until the reload chambers a round.
+	var locked := id == "pistol" and ammo == 0 and not (is_reloading() and _reload_loaded)
+	if locked:
+		_cycle = 1.0
+	else:
+		_cycle = move_toward(_cycle, 0.0, delta / (60.0 / stats.rpm * 0.8))
+	var travel := _cycle * _cycle
+	if _parts.has("bolt"):
+		var b: Array = _parts.bolt
+		b[0].transform = (b[1] as Transform3D).translated(Vector3(0, 0, 0.075 * travel))
+	if _parts.has("slide"):
+		var sl: Array = _parts.slide
+		sl[0].transform = (sl[1] as Transform3D).translated(Vector3(0, 0, 0.032 * travel))
+	if _parts.has("trigger"):
+		var tr: Array = _parts.trigger
+		var pull := 1.0 if (_trigger_held_last and ammo > 0) else 0.0
+		tr[0].transform = (tr[1] as Transform3D).rotated_local(Vector3.RIGHT, -0.25 * pull)
+	if _parts.has("charging_handle"):
+		var ch: Array = _parts.charging_handle
+		var pull_ch := 0.0
+		if is_reloading() and _reload_empty and id == "rifle":
+			pull_ch = clampf(1.0 - absf(_reload_t - 0.78) / 0.05, 0.0, 1.0)
+		ch[0].transform = (ch[1] as Transform3D).translated(Vector3(0, 0, 0.07 * pull_ch))
+
+
+## Transform of `n` in this weapon's parent space (the weapon holder).
+func _xf(n: Node3D) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var cur: Node = n
+	while cur != null and cur != self:
+		if cur is Node3D:
+			t = (cur as Node3D).transform * t
+		cur = cur.get_parent()
+	return transform * t
+
+
+func _sock_xf(names: Array) -> Variant:
+	for nm in names:
+		var n := _find_prefixed(model, nm)
+		if n:
+			return _xf(n)
+	return null
+
+
+## Hand IK targets for FPArms, in the weapon-holder (camera) space.
+func hand_targets() -> Dictionary:
+	var r = _sock_xf(["sock_hand_R"])
+	if r == null:
+		return {}
+	var out := {"R": r, "kind": "open"}
+	var l = null
+	var grip_id: String = loadout.get("grip", "none") if id == "rifle" else "none"
+	if grip_id != "none":
+		var g := model.find_child("att_" + grip_id, true, false)
+		if g:
+			var gh := _find_prefixed(g, "hand_L")
+			if gh:
+				l = _xf(gh)
+		if l == null:
+			l = _sock_xf(["sock_hand_L_vgrip" if grip_id == "grip_vertical" else "sock_hand_L_agrip"])
+		out.kind = "fist" if grip_id == "grip_vertical" else "open"
+	if l == null:
+		l = _sock_xf(["sock_hand_L"])
+	if l == null:
+		out.L = r
+		return out
+	if is_reloading():
+		var res := _reload_left(l)
+		l = res[0]
+		if res[1] != "":
+			out.kind = res[1]
+	out.L = l
+	return out
+
+
+func _mag_hand_xf() -> Variant:
+	if mag_node:
+		var mh := _find_prefixed(mag_node, "hand_L")
+		if mh:
+			return _xf(mh)
+	return _sock_xf(["sock_hand_L_mag"])
+
+
+static func _ease(x: float) -> float:
+	x = clampf(x, 0.0, 1.0)
+	return x * x * (3.0 - 2.0 * x)
+
+
+## Left-hand reload choreography: support -> magazine -> pouch -> new
+## magazine into the well -> (charging handle if empty) -> support.
+func _reload_left(support: Transform3D) -> Array:
+	var t := _reload_t
+	var mag_v = _mag_hand_xf()
+	if mag_v == null:
+		return [support, ""]
+	var mag: Transform3D = mag_v
+	var pouch := Transform3D(mag.basis, Vector3(-0.2, -0.55, -0.1))
+	var in_t := 0.55 if _reload_empty else 0.62
+	if t < 0.14:
+		return [support.interpolate_with(mag, _ease(t / 0.14)), "fist"]
+	if t < 0.30:
+		return [mag, "fist"]
+	if t < 0.40:
+		return [mag.interpolate_with(pouch, _ease((t - 0.30) / 0.10)), "fist"]
+	if t < in_t - 0.15:
+		return [pouch.interpolate_with(mag, _ease((t - 0.40) / maxf(in_t - 0.55, 0.01))), "fist"]
+	if t < in_t + 0.04:
+		return [mag, "fist"]
+	if _reload_empty and id == "rifle" and _parts.has("charging_handle"):
+		var ch: Transform3D = _xf(_parts.charging_handle[0])
+		var hand_ch := Transform3D(support.basis, ch.origin + Vector3(-0.02, 0.05, 0.06))
+		if t < 0.72:
+			return [mag.interpolate_with(hand_ch, _ease((t - in_t - 0.04) / maxf(0.72 - in_t - 0.04, 0.01))), "fist"]
+		if t < 0.84:
+			return [hand_ch, "fist"]
+		return [hand_ch.interpolate_with(support, _ease((t - 0.84) / 0.16)), ""]
+	var back_start := in_t + 0.04
+	return [mag.interpolate_with(support, _ease((t - back_start) / maxf(0.95 - back_start, 0.01))), ""]

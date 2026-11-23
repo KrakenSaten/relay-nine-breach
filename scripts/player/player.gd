@@ -40,6 +40,7 @@ const NV_DRAIN := 1.0 / 75.0
 const NV_RECHARGE := 1.0 / 40.0
 var _nv_light: OmniLight3D
 var deployed_shield: Node3D = null
+var arms: FPArms
 
 var input_enabled := true
 var _pitch := 0.0
@@ -127,6 +128,10 @@ func _ready() -> void:
 		w.visible = false
 		weapons.append(w)
 	weapons[0].visible = true
+	arms = FPArms.new()
+	arms.name = "Arms"
+	weapon_holder.add_child(arms)
+	arms.setup()
 	Game.player = self
 
 
@@ -378,6 +383,10 @@ func _physics_process(delta: float) -> void:
 	_look_delta = _look_accum
 	_look_accum = Vector2.ZERO
 	w.update_view(delta, _aiming, _sprinting, hs, _look_delta / maxf(delta * 60.0, 0.001), _crouched, is_on_floor())
+	var ht := w.hand_targets()
+	arms.visible = not ht.is_empty() and w.visible
+	if arms.visible:
+		arms.solve(ht, ht.get("kind", "open"))
 	# Interaction
 	_update_interact(delta)
 	# Night vision battery
