@@ -106,6 +106,72 @@ bpy.ops.export_scene.gltf(filepath=GLB, export_format="GLB", export_yup=True, ex
 print("exported", GLB)
 
 
+# ---------------------------------------------------------------- deterministic animation block
+def canonical_animations(js, binc):
+    """The exporter emits channels in hash-dependent order. Rebuild all animation accessors/bufferViews at the end
+    of the buffer, animations sorted by name and channels by (bone, path), so reruns are byte-identical."""
+    import numpy as np
+    anims = js.get("animations", [])
+    if not anims:
+        return binc
+    acc_ids = sorted({s[k] for a in anims for s in a["samplers"] for k in ("input", "output")})
+    first_acc = acc_ids[0]
+    assert acc_ids == list(range(first_acc, len(js["accessors"]))), "animation accessors are not trailing"
+    bv_ids = sorted({js["accessors"][i]["bufferView"] for i in acc_ids})
+    first_bv = bv_ids[0]
+    assert bv_ids == list(range(first_bv, len(js["bufferViews"]))), "animation bufferViews are not trailing"
+    cut = min(js["bufferViews"][i].get("byteOffset", 0) for i in bv_ids)
+    ncomp = {"SCALAR": 1, "VEC3": 3, "VEC4": 4}
+
+    def read(ai):
+        a = js["accessors"][ai]
+        bv = js["bufferViews"][a["bufferView"]]
+        st = bv.get("byteOffset", 0) + a.get("byteOffset", 0)
+        n = a["count"] * ncomp[a["type"]]
+        return a["type"], np.frombuffer(bytes(binc[st:st + n * 4]), dtype="<f4").copy()
+    nodes = js["nodes"]
+    items = []
+    for a in anims:
+        chans = []
+        for ch in a["channels"]:
+            s = a["samplers"][ch["sampler"]]
+            chans.append((nodes[ch["target"]["node"]]["name"], ch["target"]["path"], ch["target"]["node"],
+                          read(s["input"]), read(s["output"]), s.get("interpolation", "LINEAR")))
+        chans.sort(key=lambda c: (c[0], c[1]))
+        items.append((a["name"], chans))
+    items.sort(key=lambda it: it[0])
+    js["accessors"] = js["accessors"][:first_acc]
+    js["bufferViews"] = js["bufferViews"][:first_bv]
+    out = bytearray(binc[:cut])
+
+    def put(typ, arr, with_minmax):
+        while len(out) % 4:
+            out.append(0)
+        off = len(out)
+        out.extend(arr.astype("<f4").tobytes())
+        js["bufferViews"].append({"buffer": 0, "byteOffset": off, "byteLength": arr.size * 4})
+        acc = {"bufferView": len(js["bufferViews"]) - 1, "componentType": 5126, "count": arr.size // ncomp[typ], "type": typ}
+        if with_minmax:
+            acc["min"] = [float(arr.min())]
+            acc["max"] = [float(arr.max())]
+        js["accessors"].append(acc)
+        return len(js["accessors"]) - 1
+    new = []
+    for name, chans in items:
+        samplers, channels = [], []
+        for bone, path, node, (ti, tv), (vt, vv), interp in chans:
+            ia = put(ti, tv, True)
+            oa = put(vt, vv, False)
+            samplers.append({"input": ia, "output": oa, "interpolation": interp})
+            channels.append({"sampler": len(samplers) - 1, "target": {"node": node, "path": path}})
+        new.append({"name": name, "channels": channels, "samplers": samplers})
+    js["animations"] = new
+    while len(out) % 4:
+        out.append(0)
+    js["buffers"][0]["byteLength"] = len(out)
+    return out
+
+
 # ---------------------------------------------------------------- joint convention fix
 def fix_joint_convention(path):
     """The exporter keeps bone axis labels (joint global = C*R), but every M2 object/socket node is C*R*C^-1.
@@ -178,6 +244,7 @@ def fix_joint_convention(path):
                 elif par.get(node) in joints:
                     vals[k] = list(Cm @ Vector(vals[k]))
             binc[start:start + cnt * nc * 4] = vals.astype("<f4").tobytes()
+    binc = canonical_animations(js, binc)
     raw = json.dumps(js, separators=(",", ":")).encode("utf-8")
     raw += b" " * ((4 - len(raw) % 4) % 4)
     body = struct.pack("<II", len(raw), 0x4E4F534A) + raw + struct.pack("<II", len(binc), btype) + bytes(binc)
@@ -268,6 +335,23 @@ suffixed = [n for n in joint_names if "." in n]
 print("glTF hand frame deviation (max abs matrix element):", frame_dev_gltf)
 print("animations:", {k: len(v) for k, v in anims.items()})
 
+# ---------------------------------------------------------------- optional socket recommendation
+# The approved M2 vertical-grip hand frame (delta 38 deg) points the left hand forward-LEFT, which costs 75-100 deg of
+# wrist deviation for an arm coming from the left shoulder. A delta of 0 (palm flat on the grip's left side) keeps the
+# same fist and contact but cuts that to ~40 deg. Not applied (M2 files untouched); offered as data.
+import wpn_poses as WP
+import wpn_specs as WS
+_vg = WP.socket_matrix(WP.vgrip_frame(0.0), WP.hand_fist_def()["Fh"], True)
+
+
+def _mout(M):
+    q = M.to_quaternion()
+    return {"pos": [round(x, 5) for x in M.translation], "quat_wxyz": [round(x, 5) for x in q]}
+
+
+REC = {"grip_vertical.hand_L (grip space, delta=0)": _mout(_vg),
+       "sock_hand_L_vgrip (rifle space, delta=0)": _mout(Matrix.Translation(WS.SOCK_GRIP) @ _vg)}
+
 # ---------------------------------------------------------------- bone documentation
 doc, blender_dev = B.bone_doc(arm, frames)
 pose_info = {}
@@ -291,15 +375,23 @@ notes = {
                  "(both sides). Rest elbow bend %.1f deg." % math.degrees(B.D_UPPER.angle(B.D_FORE)),
         "fingers": "finger/thumb bones: +Y along the phalanx, +Z dorsal (nail side); FLEXION (curl) = -rotation about local +X "
                    "on both sides; abduction = rotation about local +Z.",
-        "twist": "forearm_twist_X sits at 60%% of the forearm (child of forearm_X, same axes). Drive it with ~0.5x the hand's "
-                 "roll about the forearm's +Y relative to rest (forearm_twist local rotation about +Y); hand_X is a child "
-                 "of forearm_X (not of the twist bone).",
+        "twist": "forearm_twist_X sits at 60% of the forearm (child of forearm_X, same axes). Drive it with ~0.75x the hand's "
+                 "roll about the forearm's +Y relative to the rest roll (forearm_twist local rotation about +Y); hand_X is a "
+                 "child of forearm_X (not of the twist bone). Skin weights hand over forearm->twist between 5 and 20 cm from "
+                 "the elbow and twist->hand across the wrist (22.4-27.2 cm), so up to ~+-120 deg of roll stays clean.",
+        "ik": "two-bone solve: shoulder = clavicle tail, upperarm 0.30, forearm 0.26; choose the elbow on the IK circle to "
+              "hang below the shoulder and to minimise wrist deviation/twist (see tools/m2/arms_rig_preview.solve_arm).",
         "clavicle": "root-level per side; tail = shoulder joint. Translate it (e.g. forward) when a socket is beyond reach "
                     "(upperarm 0.30 + forearm 0.26).",
         "left_side": "exact mirror of the right: positions x -> -x; each bone keeps a right-handed frame with the same "
                      "+Y/+Z meaning, so +X is lateral on the right arm and medial on the left arm.",
         "actions": "one keyframe (frame 0) per action, rotation channels on that side's finger and thumb bones only; "
                    "apply on top of any arm pose."},
+    "recommended_socket_overrides": REC,
+    "reach_note": "With the game's rifle hip_pos (0.2, -0.21, -0.43) the support-hand socket is ~0.73 m from the eye and "
+                  "out of reach of a 0.56 m arm from a shoulder at (+-0.19, -0.05, -0.21); the previews therefore use a "
+                  "shouldered low-ready eye at rifle-space (-0.19, -0.23, 0.18). At hip_pos the left clavicle would need "
+                  "~0.3 m of forward protraction (or bring the weapon ~0.2 m closer).",
     "triangles": tris, "max_influences": maxinf, "skin_joints": len(joint_names), "suffixed_joint_names": suffixed,
     "bones": doc, "poses": pose_info,
 }

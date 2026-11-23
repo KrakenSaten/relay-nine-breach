@@ -117,7 +117,7 @@ def pose_defs():
     poses["pose_indexoff_R"] = ("R", {"fingers": f, "thumb": thumb_R})
     # ---- left support cup on the handguard
     dL = P.hand_L_def()
-    poses["pose_cup_L"] = ("L", {"fingers": close_fingers(dL["grip"], {"index": 0.06, "middle": 0.01, "ring": -0.03, "little": -0.07}),
+    poses["pose_cup_L"] = ("L", {"fingers": close_fingers(dL["grip"], {"index": 0.06, "middle": 0.01, "ring": -0.03, "little": -0.07}, pad=-0.0009),
                                  "thumb": tuple(dL["pose"]["thumb_params"])})
     # ---- fist on the 27 mm vertical grip
     dF = P.hand_fist_def()
@@ -176,7 +176,6 @@ def pose_defs():
     f["index"] = (0.03, [0.03, 0.06, 0.03])
     _, mj, ms = fk_points("middle", *f["middle"])
     tgt = mj[1] + (mj[2] - mj[1]) * 0.45 + ms[1].col[2] * (radius("middle", 1) + 0.0090) - ms[1].col[0] * 0.006
-    big = H.Grip(Frod, [(x * 3.2, y * 3.2) for x, y in rod])
     poses["pose_point_L"] = ("L", {"fingers": f, "thumb": solve_thumb(tgt, (0.55, 0.85, -1.35, 0.30, 0.30), [], None, 0.0, pt=0.6)})
     # ---- relaxed and open (both sides)
     relaxed = {"index": (0.22, 0.30, 0.16), "middle": (0.28, 0.36, 0.20), "ring": (0.33, 0.40, 0.22), "little": (0.38, 0.44, 0.24)}

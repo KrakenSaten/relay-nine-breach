@@ -21,3 +21,10 @@ captures/*
 !captures/m2_core/
 !captures/m2_ai/
 *.log
+!captures/m2_vs_m3/
+!captures/m3_video/
+!captures/m3_botvideo/
+!captures/m3_final/
+!captures/m3_bench/
+!captures/m3_ai/
+!captures/m3_compare/

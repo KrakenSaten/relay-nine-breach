@@ -1,0 +1,10 @@
+[   7.96] BOTANIM: walk, run, turn, hits, stagger, death (scripted drive)
+[   7.96] TELEPORT player -> (6.3, 0.05, 12.6)
+[  11.35]   walk t=0 pos=(4.2, 0.0, 8.3) vel=1.70 nav_done=false next=(5.2, 0.4, 8.3)
+[  13.53]   walk t=1 pos=(6.0, 0.0, 8.3) vel=1.70 nav_done=false next=(7.7, 0.4, 8.3)
+[  15.44]   walk t=2 pos=(7.7, 0.0, 8.3) vel=1.70 nav_done=false next=(9.6, 0.4, 8.3)
+[  17.47]   walk t=3 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  19.43]   walk t=4 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  21.43]   walk t=5 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  23.66]   walk t=6 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  51.41] BOTANIM done: state=DEAD

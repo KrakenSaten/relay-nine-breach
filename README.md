@@ -17,7 +17,7 @@ in Settings.
 
 ### Standalone build
 
-`dist/BREACH/Breach.exe` is a self-contained Windows x64 release (no Godot needed). See
+`dist/BREACH/Breach.exe` is the approved v0.2.0 release; `dist/BREACH_0.3.0/Breach.exe` is the M3 development candidate (not manually playtested). Both are self-contained Windows x64 builds. See
 [docs/RELEASE.md](docs/RELEASE.md) for the size, dependencies, validation and rebuild command.
 
 ## Controls
@@ -37,6 +37,7 @@ in Settings.
 ## Docs
 
 * [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): systems and design
+* [docs/REPORT_M3.md](docs/REPORT_M3.md): M3 animation, environment, effects, performance, v0.3.0
 * [docs/REPORT_M2.md](docs/REPORT_M2.md): M2 visual overhaul, AI refinement, performance, regression results
 * [docs/REPORT.md](docs/REPORT.md): M1 report
 * [ASSETS.md](ASSETS.md): every asset source and license

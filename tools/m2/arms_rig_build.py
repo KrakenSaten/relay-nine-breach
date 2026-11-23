@@ -22,7 +22,8 @@ SHOULDER_R = V((0.190, -0.050, -0.210))
 CLAV_DIR_R = V((0.80, 0.10, -0.40)).normalized()      # clavicle points from the neck base out to the shoulder
 D_UPPER = V((-0.05, 0.75, -0.55)).normalized()        # upper arm forward-down-in
 D_FORE = V((-0.15, 0.95, 0.05)).normalized()          # ~39 deg elbow bend at rest
-HAND_DORSAL_HINT = V((0.50, 0.0, 0.85))               # palm faces down-inward (semi-pronated)
+HAND_DORSAL_HINT = V((0.94, 0.0, 0.34))               # near-neutral forearm roll (thumb up, ~20 deg pronated):
+                                                      # centres the twist range between grip/cup/fist holds
 
 # hand rest (bind) pose: slight natural curl, relaxed thumb (design = right hand space)
 REST_SPLAY = {"index": 0.070, "middle": 0.010, "ring": -0.040, "little": -0.090}
@@ -146,7 +147,8 @@ def arm_weights(t, zside=0.0):
     """t = rest path length from the shoulder (forearm starts at UPPER_LEN). zside in [-1,1]: -1 olecranon
     (back of elbow) keeps the upper-arm longer, +1 inner crease hands over earlier -> less elbow collapse."""
     ce = UPPER_LEN + 0.012 * (-zside)
-    wf = sstep(ce - 0.038, ce + 0.038, t)
+    hw = 0.038 + 0.014 * max(0.0, zside)          # softer hand-over on the crease side
+    wf = sstep(ce - hw, ce + hw, t)
     wc = 1.0 - sstep(-0.035, 0.050, t)
     w = {"clavicle": (1 - wf) * wc * 0.6, "upperarm": (1 - wf) * (1 - wc * 0.6)}
     for k, v in fore_weights(max(0.0, t - UPPER_LEN)).items():
@@ -336,6 +338,15 @@ def build_hand_right(groups):
         p.data.materials.clear()
         p.data.materials.append(mat("glove_palm"))
         transfer_weights(p, o)
+    # the moulded knuckle guard is one stiff piece: keep 35% of it on the hand so it flexes, not ripples
+    kg = parts[1]
+    hand_g = kg.vertex_groups.get("hand_" + groups.suffix) or kg.vertex_groups.new(name="hand_" + groups.suffix)
+    names = {g.index: g.name for g in kg.vertex_groups}
+    for v in kg.data.vertices:
+        ws = {names[e.group]: e.weight for e in v.groups}
+        for n, w in ws.items():
+            kg.vertex_groups[n].add([v.index], w * 0.65, "REPLACE")
+        hand_g.add([v.index], ws.get(hand_g.name, 0.0) * 0.65 + 0.35, "REPLACE")
     return parts, info
 
 
@@ -438,7 +449,8 @@ def transfer_weights(target, source, k=4):
                 tg[name].add([v.index], x / tot, "REPLACE")
 
 
-def pillow_at(name, obj, origin, direction, s, d, ws, ls, h, material, n=10, pw=3.2, taper=0.82, lv=1, sink=0.0015):
+def pillow_at(name, obj, origin, direction, s, d, ws, ls, h, material, n=10, pw=3.2, taper=0.82, lv=1, sink=0.0015,
+              conform=True):
     bmo = bmesh.new()
     bmo.from_mesh(obj.data)
     bvh = BVHTree.FromBMesh(bmo)
@@ -454,8 +466,13 @@ def pillow_at(name, obj, origin, direction, s, d, ws, ls, h, material, n=10, pw=
         for i in range(n):
             t = 2 * math.pi * (i + 0.5) / n
             c, sn = math.cos(t), math.sin(t)
-            ring.append(bm.verts.new(base + s * (ws * sc * math.copysign(abs(c) ** (2 / pw), c)) +
-                                     d * (ls * sc * math.copysign(abs(sn) ** (2 / pw), sn)) + u * hz))
+            q = base + s * (ws * sc * math.copysign(abs(c) ** (2 / pw), c)) + d * (ls * sc * math.copysign(abs(sn) ** (2 / pw), sn))
+            if conform:
+                # follow the curved surface under every footprint point (no flat plates on round sleeves)
+                hq = bvh.ray_cast(q + u * 0.05, -u, 0.12)
+                if hq[0] is not None:
+                    q = hq[0] - u * sink
+            ring.append(bm.verts.new(q + u * hz))
         rings.append(ring)
     for k in range(2):
         for i in range(n):
@@ -504,7 +521,7 @@ def build_arm_right(groups):
     c3, _ = path_point(0.088, lay)
     parts.append(pillow_at("patch", sl, c3 + X * 0.2, -X, Z, Y, 0.019, 0.024, 0.0080, "glove_palm", n=12, pw=4.0, sink=-0.0002))
     ce, Re = path_point(U - 0.010, lay)
-    parts.append(pillow_at("elbow_patch", sl, ce - Re.col[2] * 0.2, Re.col[2], Re.col[0], Re.col[1], 0.034, 0.030, 0.0032,
+    parts.append(pillow_at("elbow_patch", sl, ce - Re.col[2] * 0.2, Re.col[2], Re.col[0], Re.col[1], 0.026, 0.030, 0.0030,
                            "fabric_jacket", n=12))
     cc, Rc = path_point(U + 0.196, lay)
     parts.append(pillow_at("cuff_tab", sl, cc + Rc.col[0] * 0.2, -Rc.col[0], Rc.col[2], Rc.col[1], 0.0105, 0.0095, 0.0028,
@@ -548,7 +565,7 @@ def build_watch_right(sleeve, lay, groups):
     subd(band, 1)
     parts.append(band)
     case = pillow_at("watch_case", sleeve, c - Z * 0.2, Z, X, Y, 0.0185, 0.0195, 0.0095, "watch", n=12, pw=3.4, taper=0.92,
-                     sink=-0.0012)
+                     sink=-0.0012, conform=False)
     parts.append(case)
     bmo = bmesh.new()
     bmo.from_mesh(sleeve.data)

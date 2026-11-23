@@ -1,0 +1,84 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+[   8.79] RELEASE build=false debug=true version=0.2.0 exe=C:/AAA/tools/godot/Godot_v4.7.2-stable_win64.exe
+[   8.79] RELEASE project dir present next to exe: false
+[   8.80] RELEASE renderer=vulkan adapter=Intel(R) Arc(TM) B580 Graphics
+[   8.80] AUDIO driver=WASAPI device=Default mix_rate=44100 buses=5
+[   8.94] AUDIO streams checked=30 missing=[]
+[   9.22] SETTINGS preset switch Low->High: scale 0.77->1.00 sdfgi false->true taa=true
+[   9.22] AUTOTEST start, quality=High
+[   9.22] bots spawned: 10, cover points: 176
+[   9.22] nav path dock->control points: 46
+[  15.86] capture C:/AAA/Breach/captures/m3_final/01_dock_start.png
+[  16.67] capture C:/AAA/Breach/captures/m3_final/02_ads_reflex.png
+[  16.67] ADS debug: eye_local=(0.0, 0.079, 0.197) weapon.pos=(-0.000338, -0.079288, -0.197) ads=1.00
+[  16.67] TELEPORT player -> (7.5, 0.05, -1.5)
+[  18.17] capture C:/AAA/Breach/captures/m3_final/03_corridor.png
+[  18.99] capture C:/AAA/Breach/captures/m3_final/03b_corridor_dark_nightvision.png
+[  18.99] night vision: on=true battery=0.99
+[  19.58] capture C:/AAA/Breach/captures/m3_final/03c_corridor_dark_no_nv.png
+[  19.58] TELEPORT player -> (13.2, 0.05, -2.6)
+[  21.61] capture C:/AAA/Breach/captures/m3_final/04_hall_overview.png
+[  21.61] COMBAT phase: player exposed in hall for 14 s (god mode)
+[  22.95] capture C:/AAA/Breach/captures/m3_final/05_bot_charging.png
+[  24.14]   perc @CharacterBody3D@1227 d=9.1 ang=111 los=false hit=@StaticBody3D@145 at (8.85, 1.833891, -9.870737) bot=(8.52216, 0.000833, -10.40108) aw=0.95 state=SEARCH lit=true
+[  24.14]   perc @CharacterBody3D@1261 d=10.5 ang=55 los=false hit=@StaticBody3D@110 at (5.85, 1.861711, -9.382614) bot=(5.489101, 0.000093, -9.702115) aw=0.95 state=SEARCH lit=true
+[  24.14]   perc @CharacterBody3D@1295 d=9.6 ang=74 los=true hit=<null> at <null> bot=(8.870291, 0.000841, -11.08002) aw=1.50 state=COMBAT lit=true
+[  24.14]   perc @CharacterBody3D@1329 d=6.6 ang=0 los=true hit=<null> at <null> bot=(14.2004, 0.000831, -8.912695) aw=1.50 state=COMBAT lit=true
+[  24.14]   perc @CharacterBody3D@1363 d=10.3 ang=95 los=false hit=@AnimatableBody3D@299 at (9.652363, 1.81225, -11.86057) bot=(9.510769, 0.000114, -12.20133) aw=1.50 state=COMBAT lit=true
+[  24.14]   perc @CharacterBody3D@1397 d=9.6 ang=0 los=true hit=<null> at <null> bot=(22.46005, 0.000839, -4.940263) aw=1.50 state=COMBAT lit=true
+[  24.14]   perc @CharacterBody3D@1431 d=12.1 ang=1 los=true hit=<null> at <null> bot=(13.79898, 0.000675, -14.65479) aw=1.50 state=COMBAT lit=true
+[  26.20]   perc @CharacterBody3D@1227 d=7.8 ang=1 los=true hit=<null> at <null> bot=(11.07898, -0.000482, -10.05588) aw=1.50 state=COMBAT lit=true
+[  26.20]   perc @CharacterBody3D@1261 d=10.5 ang=40 los=false hit=@StaticBody3D@110 at (5.85, 1.859511, -9.360062) bot=(5.439487, 0.000093, -9.708419) aw=0.95 state=SEARCH lit=true
+[  26.20]   perc @CharacterBody3D@1295 d=9.2 ang=0 los=true hit=<null> at <null> bot=(10.89042, 0.000817, -11.32446) aw=1.50 state=COMBAT lit=true
+[  26.20]   perc @CharacterBody3D@1329 d=6.6 ang=0 los=true hit=<null> at <null> bot=(14.20155, 0.00084, -8.986654) aw=1.50 state=COMBAT lit=true
+[  26.20]   perc @CharacterBody3D@1363 d=10.3 ang=96 los=false hit=@AnimatableBody3D@299 at (9.613473, 1.865213, -11.85371) bot=(9.510129, 0.000114, -12.20199) aw=1.50 state=COMBAT lit=true
+[  26.20]   perc @CharacterBody3D@1397 d=12.1 ang=0 los=true hit=<null> at <null> bot=(24.71302, 0.00084, -5.748583) aw=1.50 state=COMBAT lit=true
+[  26.20]   perc @CharacterBody3D@1431 d=9.0 ang=1 los=true hit=<null> at <null> bot=(14.14258, 0.000823, -11.46009) aw=1.50 state=COMBAT lit=true
+[  36.94] AI after exposure: state entries { "SEARCH": 10, "COMBAT": 9, "PATROL": 1 } | attack windups 64 | role-frames { "cover": 6414, "flanker": 1267, "assault": 3250 } | peek-frames 1176 | player damage absorbed (god) 0
+[  36.94] ENGAGE: scripted aim at visible units (zones head/torso/core)
+[  38.00] capture C:/AAA/Breach/captures/m3_final/06_firing_ads.png
+[  38.41] target @CharacterBody3D@1227 -> state DEAD hp -1
+[  39.55] target @CharacterBody3D@1329 -> state DEAD hp -1
+[  43.28] target @CharacterBody3D@1397 -> state COMBAT hp 45
+[  44.45] target @CharacterBody3D@1431 -> state DEAD hp -1
+[  45.71] target @CharacterBody3D@1465 -> state DEAD hp -16
+[  49.41] target @CharacterBody3D@1499 -> state COMBAT hp 138
+[  49.71] kills during engage: 4 (stats { "shots": 64, "hits": 64, "kills": 4, "head_hits": 1, "core_hits": 0, "core_kills": 0, "damage_taken": 0, "time": 0.0, "god_absorbed": 1091.0853656395 })
+[  50.92] capture C:/AAA/Breach/captures/m3_final/07_after_fight.png
+[  50.93] TELEPORT player -> (4.526235, 0.050838, 5.690969)
+[  51.23] core shot test: victim state=DEAD, core_kills=1
+[  51.97] capture C:/AAA/Breach/captures/m3_final/08_core_overload.png
+[  53.20] capture C:/AAA/Breach/captures/m3_final/09_wreck.png
+[  53.20] TELEPORT player -> (13.9, 0.05, -27.0)
+[  54.60] capture C:/AAA/Breach/captures/m3_final/10_servers.png
+[  54.60] TELEPORT player -> (27.0, 0.05, -30.0)
+[  56.16] capture C:/AAA/Breach/captures/m3_final/11_control.png
+[  56.16] TELEPORT player -> (27.0, 0.05, -35.6)
+[  56.18] hold: focus=RelayConsole connecting=0.07
+[  56.37] hold: focus=RelayConsole connecting=0.28
+[  56.57] hold: focus=RelayConsole connecting=0.48
+[  56.78] hold: focus=RelayConsole connecting=0.68
+[  57.00] hold: focus=RelayConsole connecting=0.90
+[  57.20] hold: focus=RelayConsole connecting=1.11
+[  57.41] hold: focus=RelayConsole connecting=1.32
+[  57.60] hold: focus=RelayConsole connecting=1.52
+[  57.81] hold: focus=RelayConsole connecting=1.72
+[  58.02] hold: focus=RelayConsole connecting=1.92
+[  58.22] hold: focus=RelayConsole connecting=2.01
+[  58.42] hold: focus=RelayConsole connecting=2.01
+[  58.42] console uploading=true state=HACK
+[  62.02] capture C:/AAA/Breach/captures/m3_final/12_upload_defend.png
+[  67.44] bots alive during defense: 7, console jammed=false
+[  67.44] TIME SKIP: console progress forced to 0.98 to verify completion flow
+[  70.44] after upload: state=EXTRACT D6 locked=false
+[  70.44] TELEPORT player -> (3.0, 0.1, 11.8)
+[  75.44] extraction: state=COMPLETE
+[  76.04] capture C:/AAA/Breach/captures/m3_final/13_extraction.png
+[  76.45] capture C:/AAA/Breach/captures/m3_final/14_loadout.png
+[  76.87] capture C:/AAA/Breach/captures/m3_final/15_settings.png
+[  77.32] capture C:/AAA/Breach/captures/m3_final/16_complete.png
+[  77.32] AUTOTEST done. Final stats { "shots": 68, "hits": 68, "kills": 5, "head_hits": 1, "core_hits": 4, "core_kills": 1, "damage_taken": 0, "time": 0.0, "god_absorbed": 1547.19631761222 }
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)

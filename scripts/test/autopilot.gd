@@ -220,8 +220,12 @@ func _autotest() -> void:
 		teleport(back + Vector3(0, 0.05, 0), victim.bones.core.global_position)
 		var tt2 := 0.0
 		player.bot_input.fire = true
-		while tt2 < 2.0 and victim.state != Teslabot.S.DEAD:
+		# M3 hit reactions shove the unit; keep re-aiming at the capacitor
+		# for up to 4 s (same weapon, same damage model).
+		while tt2 < 4.0 and victim.state != Teslabot.S.DEAD:
 			_look(victim.bones.core.global_position)
+			if player.weapon().ammo == 0:
+				player.weapon().start_reload()
 			await _wait(0.03)
 			tt2 += 0.03
 		player.bot_input.fire = false

@@ -11,6 +11,9 @@ import arms_rig_poses as RP
 
 STATIC = "C:/AAA/Breach/staging/weapons"
 REACH = (B.UPPER_LEN + B.FORE_LEN) * 0.975
+COMFORT = 0.53      # max shoulder-to-wrist distance before the clavicle protracts (arm ~35 deg short of straight)
+RIFLE_EYE = V((-0.19, -0.23, 0.18))   # shouldered low-ready: buttpad in the right shoulder pocket
+TWIST_SHARE = 0.75                    # fraction of the hand's roll (about the forearm axis) given to forearm_twist
 
 
 def reset_pose(ob):
@@ -48,8 +51,14 @@ def solve_arm(ob, side, hand_world, pole_hint):
     S0 = clav.tail_local.copy()
     S = S0.copy()
     d = W - S
-    if d.length > REACH:
-        S = W - d.normalized() * REACH
+    if d.length > COMFORT:
+        # protract the clavicle straight forward (keeps shoulder height so the elbow still hangs)
+        fwd = V((0, 1, 0))
+        lat2 = d.length_squared - d.dot(fwd) ** 2
+        if lat2 < COMFORT ** 2:
+            S = S + fwd * (d.dot(fwd) - math.sqrt(COMFORT ** 2 - lat2))
+        else:
+            S = W - d.normalized() * COMFORT
     d = W - S
     dist, dn = d.length, d.normalized()
     a, b = B.UPPER_LEN, B.FORE_LEN
@@ -59,15 +68,25 @@ def solve_arm(ob, side, hand_world, pole_hint):
     e1 = dn.cross(ref).normalized()
     e2 = dn.cross(e1).normalized()
     sgn = 1.0 if side == "R" else -1.0
+    rest_f = rest["forearm_" + side].matrix_local.to_3x3()
+    rest_h = rest["hand_" + side].matrix_local.to_3x3()
+    roll0 = roll_about(rest_f, rest_h)
     best = None
     for k in range(144):
         th = 2 * math.pi * k / 144
         E = S + dn * x + (e1 * math.cos(th) + e2 * math.sin(th)) * h
         fdir = (W - E).normalized()
         c = math.acos(max(-1.0, min(1.0, fdir.dot(Yh)))) ** 2
-        c += 4.0 * max(0.0, E.z - (S.z - 0.02)) / 0.05          # elbows hang below the shoulder
+        c += 3.0 * max(0.0, E.z - (S.z - 0.07)) / 0.05          # elbows hang below the shoulder
         c += 2.0 * max(0.0, -(E.x - S.x) * sgn - 0.06) / 0.05   # and do not swing across the body
         c += 0.3 * (E - (S + V(pole_hint) * 0.3)).length
+        yu_ = (E - S).normalized()
+        zu_ = fdir - yu_ * fdir.dot(yu_)
+        if zu_.length > 1e-5:
+            xu_ = yu_.cross(zu_.normalized()).normalized()
+            tw_ = roll_about(B.frame3(xu_, fdir, xu_.cross(fdir).normalized()), Mh.to_3x3()) - roll0
+            tw_ = (tw_ + math.pi) % (2 * math.pi) - math.pi
+            c += 1.6 * (tw_ / math.pi) ** 2                        # prefer elbows that need little forearm twist
         if best is None or c < best[0]:
             best = (c, E)
     E = best[1]
@@ -87,11 +106,14 @@ def solve_arm(ob, side, hand_world, pole_hint):
     bpy.context.view_layer.update()
     pbs["forearm_" + side].matrix = B.mat4(Rf, E)
     bpy.context.view_layer.update()
-    rest_f = rest["forearm_" + side].matrix_local.to_3x3()
-    rest_h = rest["hand_" + side].matrix_local.to_3x3()
-    tw = roll_about(Rf, Mh.to_3x3()) - roll_about(rest_f, rest_h)
+    tw = roll_about(Rf, Mh.to_3x3()) - roll0
+    if os.environ.get("RIGDBG"):
+        f3 = lambda v: [round(c, 2) for c in v]
+        print("DBG", side, "E", f3(E), "S", f3(S), "W", f3(W), "Xf", f3(Rf.col[0]), "Yf", f3(Rf.col[1]), "Xh", f3(Mh.to_3x3().col[0]),
+              "Yh", f3(Yh), "Zh", f3(Mh.to_3x3().col[2]), "roll", round(math.degrees(roll_about(Rf, Mh.to_3x3())), 1), "roll0", round(math.degrees(roll0), 1),
+              "restXf", f3(rest_f.col[0]), "restXh", f3(rest_h.col[0]))
     tw = (tw + math.pi) % (2 * math.pi) - math.pi
-    pbs["forearm_twist_" + side].matrix = B.mat4(Rf @ Matrix.Rotation(0.5 * tw, 3, "Y"), E + yf * B.FORE_LEN * B.TWIST_AT)
+    pbs["forearm_twist_" + side].matrix = B.mat4(Rf @ Matrix.Rotation(TWIST_SHARE * tw, 3, "Y"), E + yf * B.FORE_LEN * B.TWIST_AT)
     bpy.context.view_layer.update()
     pbs["hand_" + side].matrix = Mh
     bpy.context.view_layer.update()
@@ -218,7 +240,7 @@ def fp_composite(ob, mesh, prev, mode):
     if mode == "vgrip":
         RD.attach(_top("grip_vertical"), _child(rifle, "sock_grip"))
     bpy.context.view_layer.update()
-    eye = V((-0.2, -0.43, 0.21))       # weapon at hip_pos (0.2, -0.21, -0.43) in Godot camera space
+    eye = RIFLE_EYE.copy()
     ob.matrix_world = Matrix.Translation(eye)
     bpy.context.view_layer.update()
     apply_action(ob, "pose_grip_R")
@@ -228,18 +250,23 @@ def fp_composite(ob, mesh, prev, mode):
     stats = {"R": solve_arm(ob, "R", _child(rifle, "sock_hand_R").matrix_world, (0.5, -0.1, -0.85)),
              "L": solve_arm(ob, "L", _child(rifle, left[0]).matrix_world, (-0.5, -0.1, -0.85))}
     RD.studio()
-    look = V((0.0, 0.16, -0.07))
-    RD.fp_camera(eye, look - eye, (0, 0, 1), 58.0)
+    look = V((0.0, 0.20, -0.06))
+    RD.fp_camera(eye, look - eye, (0, 0, 1), 66.0)
     RD.three_point(V((0, 0.2, -0.05)), eye, 1.0)
     name = {"handguard": "fp_rifle", "vgrip": "fp_rifle_vgrip", "mag": "fp_rifle_mag"}[mode]
     RD.render(os.path.join(prev, name + ".png"))
     views = {"handguard": [("left", (-0.30, 0.40, -0.14), (0.0, 0.27, -0.04)), ("right", (0.30, 0.10, -0.12), (0.0, 0.08, -0.07)),
-                           ("below", (0.10, 0.42, -0.36), (0.0, 0.25, -0.06)), ("elbows", (0.55, -0.35, -0.10), (0.0, -0.05, -0.18))],
+                           ("below", (0.10, 0.42, -0.36), (0.0, 0.25, -0.06)), ("elbows", (0.55, -0.45, -0.20), (-0.05, -0.05, -0.22)), ("elbow_L", (-0.62, 0.05, -0.55), (-0.22, 0.12, -0.20))],
              "vgrip": [("left", (-0.30, 0.48, -0.16), (0.0, 0.36, -0.08)), ("front", (0.10, 0.72, -0.12), (0.0, 0.38, -0.08))],
              "mag": [("left", (-0.32, 0.26, -0.16), (0.0, 0.16, -0.10)), ("front", (0.18, 0.48, -0.16), (0.0, 0.17, -0.11))]}[mode]
     for suffix, loc, tgt in views:
         RD.camera(V(loc), V(tgt), lens=40)
         RD.render(os.path.join(prev, name + "_" + suffix + ".png"))
+    if mode == "handguard":
+        for pn in ("pose_trigger_R", "pose_indexoff_R"):
+            apply_action(ob, pn)
+            RD.camera(V((0.24, 0.13, -0.07)), V((0.0, 0.085, -0.055)), lens=40)
+            RD.render(os.path.join(prev, "fp_rifle_" + pn[5:] + ".png"))
     _clear_imports(keep)
     for o in [x for x in bpy.data.objects if x.type in ("LIGHT", "CAMERA")]:
         bpy.data.objects.remove(o, do_unlink=True)

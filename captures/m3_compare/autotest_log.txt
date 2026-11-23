@@ -1,0 +1,32 @@
+[  12.10] TELEPORT player -> (8.0, 0.05, 11.0)
+[  13.93] capture C:/AAA/Breach/captures/m3_compare/c01_dock.png
+[  13.94] PERF c01_dock: process_ms=7.88 physics_ms=0.73 draw_calls=1065 objects=2469 nodes=3674 fps=149
+[  13.94] TELEPORT player -> (7.5, 0.05, -1.5)
+[  15.78] capture C:/AAA/Breach/captures/m3_compare/c02_corridor.png
+[  15.78] PERF c02_corridor: process_ms=14.33 physics_ms=0.66 draw_calls=640 objects=1756 nodes=3674 fps=131
+[  15.78] TELEPORT player -> (13.2, 0.05, -2.6)
+[  17.60] capture C:/AAA/Breach/captures/m3_compare/c03_hall.png
+[  17.60] PERF c03_hall: process_ms=645.93 physics_ms=0.58 draw_calls=776 objects=1762 nodes=3674 fps=41
+[  17.60] TELEPORT player -> (28.0, 0.05, -4.0)
+[  19.42] capture C:/AAA/Breach/captures/m3_compare/c04_hall_deep.png
+[  19.42] PERF c04_hall_deep: process_ms=52.22 physics_ms=0.60 draw_calls=546 objects=1787 nodes=3674 fps=48
+[  19.42] TELEPORT player -> (13.9, 0.05, -27.0)
+[  21.20] capture C:/AAA/Breach/captures/m3_compare/c05_servers.png
+[  21.20] PERF c05_servers: process_ms=37.19 physics_ms=0.60 draw_calls=142 objects=831 nodes=3674 fps=78
+[  21.20] TELEPORT player -> (27.0, 0.05, -29.0)
+[  23.04] capture C:/AAA/Breach/captures/m3_compare/c06_control.png
+[  23.04] PERF c06_control: process_ms=61.05 physics_ms=0.74 draw_calls=196 objects=622 nodes=3674 fps=112
+[  23.04] TELEPORT player -> (5.0, 0.05, -4.0)
+[  24.84] capture C:/AAA/Breach/captures/m3_compare/c07_office.png
+[  24.84] PERF c07_office: process_ms=61.86 physics_ms=0.65 draw_calls=122 objects=517 nodes=3674 fps=118
+[  24.84] TELEPORT player -> (8.0, 0.05, 3.2)
+[  26.66] capture C:/AAA/Breach/captures/m3_compare/c08_robot_front.png
+[  26.67] PERF c08_robot_front: process_ms=8.97 physics_ms=0.57 draw_calls=387 objects=771 nodes=3674 fps=142
+[  26.67] TELEPORT player -> (8.6, 0.05, 8.8)
+[  28.56] capture C:/AAA/Breach/captures/m3_compare/c09_robot_back.png
+[  28.56] PERF c09_robot_back: process_ms=626.46 physics_ms=0.65 draw_calls=1003 objects=2269 nodes=3674 fps=45
+[  28.56] TELEPORT player -> (12.0, 0.05, 8.0)
+[  30.19] capture C:/AAA/Breach/captures/m3_compare/c10_weapon_hip.png
+[  31.19] capture C:/AAA/Breach/captures/m3_compare/c11_weapon_ads.png
+[  33.17] capture C:/AAA/Breach/captures/m3_compare/c12_reload.png
+[  37.38] capture C:/AAA/Breach/captures/m3_compare/c13_pistol.png

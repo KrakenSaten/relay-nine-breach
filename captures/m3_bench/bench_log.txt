@@ -1,0 +1,16 @@
+[  32.51] SPIKES >20ms (7): ["35.0ms { \"plan_us\": 10, \"think_us\": 3 } bots_combat=0", "29.0ms {  } bots_combat=2", "32.2ms {  } bots_combat=8", "29.1ms { \"arc\": 2 } bots_combat=9", "33.4ms {  } bots_combat=9", "21.2ms {  } bots_combat=9", "38.9ms { \"think_us\": 101 } bots_combat=4"]
+[  32.51] PERF Low: draw_calls=4513 objects=10927 prims=3161778 process_ms=7.27 physics_ms=4.12 nav_ms=0.01
+[  32.51] BENCH { "preset": "Low", "frames": 5167, "avg_fps": 215.766512678899, "avg_ms": 4.6346394886967, "p95_ms": 7.922, "p99_ms": 12.908, "1pct_low_fps": 58.5782082202595 }
+[  33.04] capture C:/AAA/Breach/captures/m3_bench/bench_0_Low.png
+[  58.96] SPIKES >20ms (4): ["38.1ms { \"think_us\": 37 } bots_combat=3", "32.3ms {  } bots_combat=3", "22.8ms {  } bots_combat=0", "26.7ms {  } bots_combat=0"]
+[  58.96] PERF Medium: draw_calls=418 objects=832 prims=319949 process_ms=6.35 physics_ms=2.93 nav_ms=0.00
+[  58.96] BENCH { "preset": "Medium", "frames": 4779, "avg_fps": 199.550105778423, "avg_ms": 5.01127271318202, "p95_ms": 6.94444444444444, "p99_ms": 8.505, "1pct_low_fps": 75.1424626320474 }
+[  59.57] capture C:/AAA/Breach/captures/m3_bench/bench_1_Medium.png
+[  85.35] SPIKES >20ms (7): ["29.3ms { \"arc\": 1 } bots_combat=8", "33.2ms { \"arc\": 2 } bots_combat=8", "20.3ms {  } bots_combat=8", "27.0ms {  } bots_combat=8", "20.6ms {  } bots_combat=8", "50.6ms { \"think_us\": 54 } bots_combat=5", "25.9ms {  } bots_combat=1"]
+[  85.35] PERF High: draw_calls=253 objects=651 prims=278829 process_ms=9.37 physics_ms=3.22 nav_ms=0.00
+[  85.35] BENCH { "preset": "High", "frames": 3624, "avg_fps": 151.71211277677, "avg_ms": 6.59143150600907, "p95_ms": 7.85, "p99_ms": 9.53774603174604, "1pct_low_fps": 65.7673263924281 }
+[  85.98] capture C:/AAA/Breach/captures/m3_bench/bench_2_High.png
+[ 111.77] SPIKES >20ms (9): ["57.0ms { \"think_us\": 797 } bots_combat=8", "58.3ms {  } bots_combat=8", "25.0ms {  } bots_combat=8", "30.6ms { \"think_us\": 11 } bots_combat=7", "20.9ms {  } bots_combat=2", "24.6ms {  } bots_combat=0", "37.0ms {  } bots_combat=1", "32.3ms { \"think_us\": 26 } bots_combat=2", "22.4ms { \"think_us\": 8 } bots_combat=4"]
+[ 111.78] PERF Ultra: draw_calls=1999 objects=4963 prims=3494684 process_ms=11.20 physics_ms=2.96 nav_ms=0.01
+[ 111.78] BENCH { "preset": "Ultra", "frames": 2828, "avg_fps": 118.289669530598, "avg_ms": 8.45382360072727, "p95_ms": 9.784, "p99_ms": 12.9872222222215, "1pct_low_fps": 46.7838602365594 }
+[ 112.37] capture C:/AAA/Breach/captures/m3_bench/bench_3_Ultra.png

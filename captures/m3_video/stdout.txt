@@ -1,0 +1,18 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+Movie Maker mode enabled, recording movie in 1920×1080 @ 60 FPS...
+[   8.22] VIDEO: scripted combat in the turbine hall (god mode, scripted aim)
+[   8.22] TELEPORT player -> (9.9, 0.05, -11.0)
+[  73.42] VIDEO done: kills=4 shots=54 hits=35 god_absorbed=61.7018055790779
+--------------------------------------------------------------------------------
+Done recording movie at path: C:/AAA/Breach/captures/m3_video/combat.avi
+994 frames at 60 FPS (movie length: 00:00:16:34), recorded in 00:01:13 (21% of real-time speed).
+CPU render time: 3.55 seconds (average: 3.58 ms/frame)
+GPU render time: 15.43 seconds (average: 15.52 ms/frame)
+Encoding time: 14.69 seconds (average: 14.78 ms/frame)
+--------------------------------------------------------------------------------
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)
+WARNING: 26 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

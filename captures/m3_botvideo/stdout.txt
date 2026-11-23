@@ -1,0 +1,25 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+Movie Maker mode enabled, recording movie in 1920×1080 @ 30 FPS...
+[   7.96] BOTANIM: walk, run, turn, hits, stagger, death (scripted drive)
+[   7.96] TELEPORT player -> (6.3, 0.05, 12.6)
+[  11.35]   walk t=0 pos=(4.2, 0.0, 8.3) vel=1.70 nav_done=false next=(5.2, 0.4, 8.3)
+[  13.53]   walk t=1 pos=(6.0, 0.0, 8.3) vel=1.70 nav_done=false next=(7.7, 0.4, 8.3)
+[  15.44]   walk t=2 pos=(7.7, 0.0, 8.3) vel=1.70 nav_done=false next=(9.6, 0.4, 8.3)
+[  17.47]   walk t=3 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  19.43]   walk t=4 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  21.43]   walk t=5 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  23.66]   walk t=6 pos=(8.900001, 0.0, 8.3) vel=0.00 nav_done=true next=(9.6, 0.4, 8.3)
+[  51.41] BOTANIM done: state=DEAD
+--------------------------------------------------------------------------------
+Done recording movie at path: C:/AAA/Breach/captures/m3_botvideo/bot.avi
+682 frames at 30 FPS (movie length: 00:00:22:22), recorded in 00:00:51 (43% of real-time speed).
+CPU render time: 1.67 seconds (average: 2.45 ms/frame)
+GPU render time: 10.45 seconds (average: 15.32 ms/frame)
+Encoding time: 10.22 seconds (average: 14.98 ms/frame)
+--------------------------------------------------------------------------------
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)
+WARNING: 32 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
