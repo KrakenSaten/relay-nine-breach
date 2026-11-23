@@ -30,6 +30,8 @@ func run(m: Node) -> void:
 		await _bench()
 	elif "--showcase" in OS.get_cmdline_user_args():
 		await _showcase()
+	elif "--compare" in OS.get_cmdline_user_args():
+		await _compare()
 	elif "--video" in OS.get_cmdline_user_args():
 		await _video()
 	else:
@@ -461,3 +463,51 @@ func _video() -> void:
 		await get_tree().process_frame
 	player.bot_input = {"god": true}
 	L("VIDEO done: kills=%d shots=%d hits=%d god_absorbed=%s" % [Game.stats.kills, Game.stats.shots, Game.stats.hits, Game.stats.get("god_absorbed", 0)])
+
+
+# ------------------------------------------------------------------ compare
+## Fixed camera poses for M1/M2 before-after comparison. AI frozen.
+func _compare() -> void:
+	for b in main.director.bots:
+		b.set_physics_process(false)
+		b.global_position += Vector3(0, -50, 0)  # park out of view
+	var bot: Teslabot = main.director.bots[0]
+	bot.global_position = Vector3(8.0, 0.0, 6.0)
+	bot.rotation = Vector3.ZERO
+	bot.state = Teslabot.S.COMBAT
+	bot._aim_blend = 1.0
+	bot.awareness = 1.0
+	bot.set_physics_process(true)
+	bot.director = null  # keeps _physics_process from thinking; animation pose stays
+	await _wait(6.0)
+	var poses := [
+		["c01_dock", Vector3(8, 0.05, 11), Vector3(8, 1.6, -2)],
+		["c02_corridor", Vector3(7.5, 0.05, -1.5), Vector3(7.5, 1.4, -20)],
+		["c03_hall", Vector3(13.2, 0.05, -2.6), Vector3(22, 2.5, -14)],
+		["c04_hall_deep", Vector3(28.0, 0.05, -4.0), Vector3(14, 2.0, -20)],
+		["c05_servers", Vector3(13.9, 0.05, -27.0), Vector3(14.5, 1.4, -36)],
+		["c06_control", Vector3(27.0, 0.05, -29.0), Vector3(27.0, 1.2, -37.0)],
+		["c07_office", Vector3(5.0, 0.05, -4.0), Vector3(-4, 1.2, -11)],
+		["c08_robot_front", Vector3(8.0, 0.05, 3.2), Vector3(8, 1.4, 6)],
+		["c09_robot_back", Vector3(8.6, 0.05, 8.8), Vector3(8, 1.4, 6)],
+	]
+	for p in poses:
+		teleport(p[1], p[2])
+		await _wait(1.2)
+		await shot(p[0])
+	teleport(Vector3(12.0, 0.05, 8.0), Vector3(12.0, 1.0, 4.0))
+	await _wait(1.0)
+	await shot("c10_weapon_hip")
+	player.bot_input.aim = true
+	await _wait(1.0)
+	await shot("c11_weapon_ads")
+	player.bot_input.aim = false
+	await _wait(0.6)
+	player.weapon().ammo = 0
+	player.weapon().start_reload()
+	await _wait(player.weapon()._reload_len * 0.4)
+	await shot("c12_reload")
+	await _wait(3.0)
+	player._request_switch(1)
+	await _wait(1.2)
+	await shot("c13_pistol")
