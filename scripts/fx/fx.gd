@@ -176,6 +176,7 @@ func flash(pos: Vector3, color: Color, energy := 2.0, rng := 4.0, dur := 0.06, s
 
 
 func decal(pos: Vector3, normal: Vector3, size := 0.09, scorch := false) -> void:
+	_ev("decal")
 	var d: Decal
 	if _decals.size() < DECAL_MAX:
 		d = Decal.new()
@@ -198,9 +199,17 @@ func decal(pos: Vector3, normal: Vector3, size := 0.09, scorch := false) -> void
 
 
 ## kind: "metal", "concrete", "robot", "weak", "shield"
+var events := {}   # perf attribution: effect name -> count (reset by the bench)
+
+
+func _ev(n: String) -> void:
+	events[n] = events.get(n, 0) + 1
+
+
 func impact(pos: Vector3, normal: Vector3, kind: String) -> void:
 	if _world == null:
 		return
+	_ev("impact_" + kind)
 	match kind:
 		"concrete":
 			_fire(_dust[_di], pos + normal * 0.02, normal); _di = (_di + 1) % DUST_POOL
@@ -268,6 +277,7 @@ func _basis_y(dir: Vector3) -> Basis:
 func arc(from: Vector3, to: Vector3, width := 0.035, dur := 0.14, branches := 2, light := true) -> void:
 	if _world == null:
 		return
+	_ev("arc")
 	var mi := MeshInstance3D.new()
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var im := ImmediateMesh.new()
@@ -336,6 +346,7 @@ func _build_bolt(im: ImmediateMesh, from: Vector3, to: Vector3, width: float, br
 
 
 func overload(pos: Vector3) -> void:
+	_ev("overload")
 	flash(pos, Color(0.55, 0.78, 1.0), 14.0, 12.0, 0.55, true)
 	shockwave(pos, 4.0, 0.28)
 	smoke_column(pos)

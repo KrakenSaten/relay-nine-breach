@@ -458,13 +458,17 @@ func _update_interact(delta: float) -> void:
 		_hold_progress = 0.0
 		_focus = target
 	if _focus == null:
+		weapon().reach_point = null
 		interact_prompt.emit("", 0.0)
 		return
 	var prompt: String = _focus.get_prompt(self)
 	if prompt == "":
 		interact_prompt.emit("", 0.0)
+		weapon().reach_point = null
 		return
 	var holding := _act("interact")
+	# Reach toward what we're using (console, door, breaker) while F is held.
+	weapon().reach_point = hit.position if holding and hit else null
 	if _focus.has_method("hold"):
 		if holding:
 			_hold_progress = _focus.hold(self, delta)

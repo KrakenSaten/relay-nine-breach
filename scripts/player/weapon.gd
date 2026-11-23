@@ -45,6 +45,11 @@ var _equip_target := 1.0
 var _trigger_held_last := false
 var _shots_in_burst := 0
 var _clip_pull := 0.0
+var _strafe := 0.0
+var _vert := 0.0
+## World-space point the support hand reaches for (interaction), or null.
+var reach_point = null
+var _reach := 0.0
 ## M2: mechanical parts and hand choreography
 var _cycle := 0.0              # bolt/slide travel 0..1 after a shot
 var _parts := {}               # name -> [Node3D, rest Transform3D]
@@ -426,7 +431,8 @@ func _shoot() -> void:
 	_flash_light.light_energy = 3.5 * stats.flash_mult
 	_cycle = 1.0
 	_kick_v += def.kick_back * 38.0 * (1.0 - ads * 0.35)
-	_kick_rot += Vector3(deg_to_rad(randf_range(2.0, 3.5)), deg_to_rad(randf_range(-1.0, 1.0)), deg_to_rad(randf_range(-2.0, 2.0))) * (1.0 - ads * 0.6)
+	_kick_rot += Vector3(deg_to_rad(randf_range(2.0, 3.5)), deg_to_rad(randf_range(-1.0, 1.0)), deg_to_rad(randf_range(-2.5, 1.5))) * (1.0 - ads * 0.6)
+	_kick_v += randf_range(-0.05, 0.05)
 	player.apply_recoil(stats.recoil_v, randf_range(-stats.recoil_h, stats.recoil_h * 1.2))
 	_eject_shell()
 	if randf() < 0.5:
@@ -527,10 +533,22 @@ func update_view(delta: float, aiming: bool, sprinting: bool, move_speed: float,
 		var r := _reload_pose(_reload_t)
 		pos += r[0]
 		rot += r[1]
-	# Equip pose
-	var lowered := 1.0 - _equip
-	pos += Vector3(0.0, -0.25, 0.05) * lowered
-	rot += Vector3(-0.9, 0.2, 0.0) * lowered
+	# Equip pose: draw rises with a little overshoot, holster drops away.
+	var e_in := _equip
+	var c1 := 1.70158
+	var back := 1.0 + (c1 + 1.0) * pow(e_in - 1.0, 3.0) + c1 * pow(e_in - 1.0, 2.0) if _equip_target > 0.5 else e_in * e_in
+	var lowered := 1.0 - back
+	pos += Vector3(0.05, -0.28, 0.06) * lowered
+	rot += Vector3(-1.0, 0.35, -0.25) * lowered
+	# Movement-dependent motion: lean into strafes, dip on landing, float on jumps.
+	var lv: Vector3 = player.camera.global_transform.basis.inverse() * player.velocity
+	_strafe = lerpf(_strafe, clampf(lv.x / 4.3, -1.0, 1.0), 1.0 - exp(-8.0 * delta))
+	_vert = lerpf(_vert, clampf(lv.y / 5.0, -1.0, 1.0), 1.0 - exp(-10.0 * delta))
+	var ads_k := 1.0 - ads_e * 0.75
+	rot.z += -_strafe * 0.07 * ads_k
+	pos.x += -_strafe * 0.008 * ads_k
+	pos.y += -_vert * 0.012 * ads_k - player._land_dip * 0.35
+	rot.x += _vert * 0.03 * ads_k
 	# Wall proximity: pull weapon back instead of clipping
 	pos.z += _clip_pull
 	rot.x += _clip_pull * 3.0
@@ -697,6 +715,14 @@ func hand_targets() -> Dictionary:
 		l = res[0]
 		if res[1] != "":
 			out.kind = res[1]
+	# Contextual interaction: the support hand leaves the weapon to press.
+	_reach = move_toward(_reach, 1.0 if reach_point != null and not is_reloading() else 0.0, get_physics_process_delta_time() * 4.0)
+	if _reach > 0.0 and reach_point != null:
+		var cam_t: Transform3D = player.camera.global_transform
+		var holder_space: Vector3 = (cam_t.affine_inverse() * (reach_point as Vector3))
+		var press := Transform3D(Basis.looking_at(holder_space.normalized(), Vector3.UP) * Basis(Vector3.RIGHT, -PI / 2), holder_space - holder_space.normalized() * 0.17)
+		l = (l as Transform3D).interpolate_with(press, _reach * _reach * (3.0 - 2.0 * _reach))
+		out.kind = "point"
 	out.L = l
 	return out
 

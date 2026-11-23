@@ -47,6 +47,7 @@ func run(m: Node) -> void:
 
 
 var _track_bot: Node3D = null
+var _spikes: Array = []
 
 
 func _process(delta: float) -> void:
@@ -360,11 +361,16 @@ func _bench() -> void:
 				seg += 1
 				continue
 			player.global_position = a.lerp(b, segpos / len)
+			if dt > 0.02 and _recording:
+				_spikes.append("%.1fms %s bots_combat=%d" % [dt * 1000.0, Fx.events, main.director.engaged().size()])
+			Fx.events = {}
 			player.velocity = Vector3.ZERO
 			var look := b + Vector3(0, 1.4, 0) + Vector3(sin(Time.get_ticks_msec() / 900.0) * 3.0, 0, 0)
 			_look(look)
 			await get_tree().process_frame
 		_recording = false
+		L("SPIKES >20ms (%d): %s" % [_spikes.size(), _spikes.slice(0, 14)])
+		_spikes.clear()
 		L("PERF %s: draw_calls=%d objects=%d prims=%d process_ms=%.2f physics_ms=%.2f nav_ms=%.2f" % [Settings.PRESETS[q],
 			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
 			Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,

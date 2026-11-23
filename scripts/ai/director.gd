@@ -138,7 +138,9 @@ func _process(delta: float) -> void:
 	if _plan_t > 0.0:
 		return
 	_plan_t = 0.5
+	var _t0 := Time.get_ticks_usec()
 	_squad_plan()
+	Fx.events["plan_us"] = Fx.events.get("plan_us", 0) + Time.get_ticks_usec() - _t0
 
 
 ## Fire-and-maneuver when the player breaks line of sight.

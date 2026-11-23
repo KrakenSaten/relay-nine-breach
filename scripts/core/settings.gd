@@ -120,7 +120,7 @@ func apply() -> void:
 	e.ssil_enabled = q >= 3
 	e.ssr_enabled = q >= 2
 	e.ssr_max_steps = 48 if q >= 3 else 32
-	e.sdfgi_enabled = q >= 2
+	e.sdfgi_enabled = q >= 2 and not ("--nosdfgi" in OS.get_cmdline_user_args())
 	e.glow_enabled = true
 	e.volumetric_fog_enabled = q >= 1
 	e.fog_enabled = q == 0

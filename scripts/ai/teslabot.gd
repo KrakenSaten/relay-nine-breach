@@ -646,7 +646,10 @@ func _physics_process(dt: float) -> void:
 	else:
 		_think_t -= dt
 		if _think_t <= 0.0 and not debug_drive:
+			var _t0 := Time.get_ticks_usec()
 			_think()
+			var _us := Time.get_ticks_usec() - _t0
+			Fx.events["think_us"] = Fx.events.get("think_us", 0) + _us
 			_think_t = 0.35
 		if _attack_t >= 0.0:
 			_update_attack(dt)
@@ -1118,6 +1121,7 @@ func _pop_plate(zone: String, dir: Vector3, preferred := "") -> void:
 	if plate == null:
 		plate = _armor[zone][randi() % _armor[zone].size()]
 	_armor[zone].erase(plate)
+	Fx._ev("armor_pop")
 	if not is_instance_valid(plate) or not plate.is_visible_in_tree():
 		return
 	var xf := plate.global_transform
