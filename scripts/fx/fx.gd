@@ -340,3 +340,15 @@ func overload(pos: Vector3) -> void:
 		arc(pos, pos + d * randf_range(0.8, 1.8), 0.012, 0.2, 1, false)
 	smoke(pos)
 	decal(Vector3(pos.x, 0.0, pos.z), Vector3.UP, 2.2, true)
+
+
+
+## Fire every effect once (briefing screen) so pipelines compile before play.
+func warmup(pos: Vector3, normal: Vector3) -> void:
+	for k in ["concrete", "metal", "robot", "weak", "shield"]:
+		impact(pos, normal, k)
+	arc(pos, pos + Vector3(0.5, 0.3, 0), 0.02, 0.1, 1, true)
+	tracer(pos + Vector3(0, 0, 3), pos)
+	smoke(pos, normal)
+	overload(pos)
+	flash(pos, Color(1, 0.7, 0.4), 1.0, 2.0, 0.05, true)

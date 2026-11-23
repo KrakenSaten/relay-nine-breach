@@ -53,6 +53,17 @@ func _ready() -> void:
 	director.setup_doors(level.doors)
 	for s in level.spawns:
 		_spawn_bot(s.pos, s.patrol)
+	# Shader warm-up in front of the camera while the briefing covers the screen.
+	var cam_t := player.camera.global_transform
+	Fx.warmup(cam_t.origin - cam_t.basis.z * 4.0 + Vector3(0, -0.8, 0), cam_t.basis.z)
+	for w in player.weapons:
+		w._flash.visible = true
+		w.visible = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	for w in player.weapons:
+		w._flash.visible = false
+	player.weapons[1].visible = false
 	Game.state = Game.State.BRIEFING
 	if Game.autotest:
 		var ap := preload("res://scripts/test/autopilot.gd").new()
