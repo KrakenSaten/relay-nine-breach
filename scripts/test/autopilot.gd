@@ -44,6 +44,10 @@ func run(m: Node) -> void:
 		await m4.spots()
 	elif "--m4video" in args:
 		await m4.video()
+	elif "--m4perf" in args:
+		await m4.perf()
+	elif "--m4load" in args:
+		await m4.combat_perf()
 	elif "--bench" in OS.get_cmdline_user_args():
 		await _bench()
 	elif "--showcase" in OS.get_cmdline_user_args():
@@ -72,7 +76,15 @@ var _track_bot: Node3D = null
 var _spikes: Array = []
 
 
+var hitch_log := false
+var _last_us := 0
+
+
 func _process(delta: float) -> void:
+	var now_us := Time.get_ticks_usec()
+	if hitch_log and _last_us > 0 and now_us - _last_us > 50000:
+		L("  HITCH %.0f ms" % ((now_us - _last_us) / 1000.0))
+	_last_us = now_us
 	if _recording:
 		_frame_times.append(delta)
 	if _track_bot and is_instance_valid(_track_bot):
@@ -360,6 +372,18 @@ func _ai_summary() -> String:
 # ------------------------------------------------------------------ benchmark
 func _bench() -> void:
 	var path := [Vector3(8, 0.05, 11), Vector3(7.5, 0.05, 1.0), Vector3(7.5, 0.05, -10.5), Vector3(10.5, 0.05, -11.0), Vector3(20, 0.05, -11.5), Vector3(26, 0.05, -18), Vector3(14, 0.05, -24.5), Vector3(14, 0.05, -28), Vector3(15.3, 0.05, -33.5), Vector3(20, 0.05, -32), Vector3(27, 0.05, -33)]
+	var duration := 24.0
+	if "--bench-path=m4" in OS.get_cmdline_user_args():
+		# M4 route: corridor -> tunnel -> pump -> office -> hall -> switchgear -> control -> servers -> core
+		main.mission.ex.lockdown_panel.done.emit()
+		main.level.nav_unblock("blast")
+		main.mission.ex.blast_door.open_now(true)
+		path = [Vector3(8, 0.05, 11), Vector3(7.5, 0.05, 1.0), Vector3(7.5, 0.05, -28.5), Vector3(-7.0, 0.05, -28.5), Vector3(-15, 0.05, -22), Vector3(-15, 0.05, -10),
+			Vector3(-7.0, 0.05, -7.0), Vector3(0, 0.05, -8), Vector3(7.5, 0.05, -10.5), Vector3(20, 0.05, -14), Vector3(30.5, 0.05, -18), Vector3(36, 0.05, -18),
+			Vector3(44, 0.05, -12), Vector3(36, 0.05, -26.5), Vector3(27, 0.05, -29), Vector3(20, 0.05, -32), Vector3(15.5, 0.05, -34.5), Vector3(15.5, 0.05, -39.5),
+			Vector3(17, 0.05, -42.5), Vector3(22, 0.05, -46), Vector3(28.5, 0.05, -56)]
+		duration = 45.0
+		L("BENCH path: M4 route (lockdown released, blast door open), %.0f s per preset" % duration)
 	for d in main.level.doors.values():
 		if not d.locked:
 			d.target = deg_to_rad(95)
@@ -377,7 +401,7 @@ func _bench() -> void:
 		var total := 0.0
 		for i in path.size() - 1:
 			total += path[i].distance_to(path[i + 1])
-		var speed := total / 24.0
+		var speed := total / duration
 		var pos := 0.0
 		var seg := 0
 		var segpos := 0.0

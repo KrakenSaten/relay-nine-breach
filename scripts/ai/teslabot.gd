@@ -107,6 +107,13 @@ var _wake_delay := 0.0
 var _wake_target := Vector3.ZERO
 var _hum_db := -14.0
 var _door_scan_t := 0.0
+var _anim_acc := 0.0
+var _anim_interval := 0.0
+var _lod_t := 0.0
+var _sep := Vector3.ZERO
+var _sep_n := 0
+var _idle_ticks := 0
+var _door_ray_n := 0
 
 
 func _ready() -> void:
@@ -719,9 +726,11 @@ func _physics_process(dt: float) -> void:
 	_attack_cd -= dt
 	_door_cd -= dt
 	_sense_t -= dt
+	var _p0 := Time.get_ticks_usec()
 	if _sense_t <= 0.0 and not debug_drive:
 		_sense(0.15)
 		_sense_t = 0.15
+	var _p1 := Time.get_ticks_usec()
 	if _stagger_t > 0.0:
 		_stagger_t -= dt
 		velocity.x = move_toward(velocity.x, 0, dt * 12)
@@ -737,13 +746,61 @@ func _physics_process(dt: float) -> void:
 		if _attack_t >= 0.0:
 			_update_attack(dt)
 		_steer(dt)
+	var _p2 := Time.get_ticks_usec()
 	if not is_on_floor():
 		velocity.y -= 12.0 * dt
 	else:
 		velocity.y = -0.5
-	move_and_slide()
-	_animate(dt)
+	# Units holding still on the floor (aiming, scanning, posted) skip the
+	# collision sweep; it is the largest per-unit cost.
+	if is_on_floor() and Vector2(velocity.x, velocity.z).length() < 0.03:
+		_idle_ticks += 1
+	else:
+		_idle_ticks = 0
+	if _idle_ticks < 3 or _idle_ticks % 8 == 0:
+		move_and_slide()
+	var _p3 := Time.get_ticks_usec()
+	var _p4 := Time.get_ticks_usec()
 	_damage_fx(dt)
+	if Game.autotest:
+		var ev: Dictionary = Fx.events
+		ev["prof_sense"] = ev.get("prof_sense", 0) + (_p1 - _p0)
+		ev["prof_think_steer"] = ev.get("prof_think_steer", 0) + (_p2 - _p1)
+		ev["prof_move"] = ev.get("prof_move", 0) + (_p3 - _p2)
+		ev["prof_fx"] = ev.get("prof_fx", 0) + (Time.get_ticks_usec() - _p4)
+
+
+## Animation runs once per rendered frame (not per 120 Hz physics tick),
+## thinned out with distance and when off-screen; dt is accumulated so the
+## gait and springs stay correct.
+func _process(delta: float) -> void:
+	if state == S.DEAD or director == null or is_dormant():
+		return
+	_anim_acc += delta
+	_lod_t -= delta
+	if _lod_t <= 0.0:
+		_lod_t = 0.25 + randf() * 0.05
+		_anim_interval = _anim_lod()
+	if _anim_acc >= _anim_interval or _attack_t >= 0.0 or _stagger_t > 0.0:
+		var t0 := Time.get_ticks_usec()
+		_animate(_anim_acc)
+		_anim_acc = 0.0
+		if Game.autotest:
+			Fx.events["prof_anim"] = Fx.events.get("prof_anim", 0) + (Time.get_ticks_usec() - t0)
+
+
+func _anim_lod() -> float:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return 0.0
+	var d := cam.global_position.distance_to(global_position)
+	if not cam.is_position_in_frustum(global_position + Vector3.UP * 1.2):
+		return 1.0 / 30.0 if d < 10.0 else 1.0 / 15.0
+	if d > 24.0:
+		return 1.0 / 30.0
+	if d > 10.0:
+		return 1.0 / 60.0
+	return 0.0
 
 
 func _think() -> void:
@@ -956,15 +1013,20 @@ func _steer(dt: float) -> void:
 		if to.length() > 0.05:
 			desired = to.normalized() * spd
 		_try_open_doors(desired)
-	# Separation from squadmates
-	for b in director.bots:
-		if b == self or b.state == S.DEAD:
-			continue
-		var off: Vector3 = global_position - b.global_position
-		off.y = 0
-		var l := off.length()
-		if l < 1.4 and l > 0.01:
-			desired += off / l * (1.4 - l) * 2.0
+	# Separation from squadmates (recomputed every 3rd tick)
+	_sep_n -= 1
+	if _sep_n <= 0:
+		_sep_n = 3
+		_sep = Vector3.ZERO
+		for b in director.bots:
+			if b == self or b.state == S.DEAD:
+				continue
+			var off: Vector3 = global_position - b.global_position
+			off.y = 0
+			var l := off.length()
+			if l < 1.4 and l > 0.01:
+				_sep += off / l * (1.4 - l) * 2.0
+	desired += _sep
 	var hv := Vector3(velocity.x, 0, velocity.z)
 	hv = hv.move_toward(desired, 9.0 * dt)
 	velocity.x = hv.x
@@ -1018,9 +1080,12 @@ func _steer(dt: float) -> void:
 func _try_open_doors(desired: Vector3) -> void:
 	if _door_cd > 0.0 or desired.length() < 0.1:
 		return
+	_door_ray_n += 1
+	if _door_ray_n % 4 != 0:
+		return
 	# Path-based: open a closed door the planned path runs through (an angled
 	# approach along a wall never points the probe ray at the leaf).
-	_door_scan_t -= get_physics_process_delta_time()
+	_door_scan_t -= get_physics_process_delta_time() * 4.0   # runs every 4th tick
 	if _door_scan_t <= 0.0:
 		_door_scan_t = 0.2
 		var path := agent.get_current_navigation_path()

@@ -110,6 +110,8 @@ func _remove_bots(except: Array = []) -> void:
 # ------------------------------------------------------------------ mission chain
 func mission() -> void:
 	L("M4 MISSION TEST: scripted run with real interactions, god mode. Teleports between objectives are logged.")
+	await W(4.0)
+	ap.hitch_log = true
 	L("start: stage=%s D5=%s D6=%s D11=%s bots=%d (dormant %d)" % [m.stage, lv.doors.D5.locked, lv.doors.D6.locked, lv.doors.D11.locked, main.director.bots.size(), main.director.bots.filter(func(b): return b.dormant).size()])
 	L("console prompt before power: '%s'" % lv.console.get_prompt(player))
 	var r := path_info(Vector3(8, 0, 11), Vector3(27, 0, -35.5))
@@ -209,9 +211,16 @@ func checkpoint_test() -> void:
 	await W(1.0)
 	L("SHORTCUT: console progress forced to 0.98")
 	lv.console.progress = 0.98
-	await W(5.5)
+	var t := 0.0
+	while m.stage != "core" and t < 20.0:
+		await W(0.25)
+		t += 0.25
+	await W(4.0)
 	m.ex.capacitors[0].destroy()
-	await W(3.0)
+	t = 0.0
+	while Game.checkpoint.get("name", "") != "relay core" and t < 15.0:
+		await W(0.25)
+		t += 0.25
 	L("  checkpoint now: %s stage=%s caps=%s" % [Game.checkpoint.get("name", "none"), Game.checkpoint.get("stage", ""), Game.checkpoint.get("flags", {}).get("caps", [])])
 	var expect := {"stage": Game.checkpoint.stage, "alive": Game.checkpoint.bots.map(func(e): return e.id), "kills": Game.checkpoint.stats.kills, "respawn": Game.checkpoint.respawn.origin}
 	expect.alive.sort()
@@ -346,7 +355,7 @@ func ai() -> void:
 	# --- steam: same unit, same distance, with and without steam
 	p2.patrol_points = []
 	p2.global_position = main.director.snap(Vector3(-15, 0, -11.5))
-	ap.teleport(Vector3(-15, 0.05, -4.8), p2.global_position + Vector3(0, 1.5, 0))
+	ap.teleport(Vector3(-15, 0.05, -6.5), p2.global_position + Vector3(0, 1.5, 0))
 	p2.debug_face = Vector3(0, 0, 1)
 	p2.awareness = 0.0
 	p2._set_state(Teslabot.S.PATROL)
@@ -363,7 +372,7 @@ func ai() -> void:
 	L("  steam valve used: pump obscured=%s" % Game.room_obscured("pump"))
 	p2.awareness = 0.0
 	p2._set_state(Teslabot.S.PATROL)
-	ap.teleport(Vector3(-15, 0.05, -4.8), p2.global_position + Vector3(0, 1.5, 0))
+	ap.teleport(Vector3(-15, 0.05, -6.5), p2.global_position + Vector3(0, 1.5, 0))
 	await W(2.0)
 	L("  steam ON:  p2 awareness=%.2f state=%s visible=%s" % [p2.awareness, Teslabot.S.keys()[p2.state], p2.target_visible])
 	await shot("m4_ai_steam")
@@ -519,3 +528,101 @@ func video() -> void:
 	ap.teleport(Vector3(3.0, 0.1, 11.4), Vector3(8.0, 1.5, 4.0))
 	await W(3.0)
 	L("VIDEO done: state=%s" % Game.State.keys()[Game.state])
+
+
+# ------------------------------------------------------------------ lighting-state cost
+func _avg_fps(secs: float) -> float:
+	var t0 := Time.get_ticks_usec()
+	var f0 := Engine.get_frames_drawn()
+	await W(secs)
+	return float(Engine.get_frames_drawn() - f0) / ((Time.get_ticks_usec() - t0) / 1e6)
+
+
+func perf() -> void:
+	L("M4 PERF PROBE: fixed views, average FPS over 3 s per lighting state (preset %s)" % Settings.PRESETS[Settings.quality])
+	var views := [["control", Vector3(25.0, 1.6, -29.0), Vector3(21.0, 1.2, -32.0)], ["hall", Vector3(13.0, 1.6, -4.0), Vector3(28.0, 2.0, -12.0)],
+		["pump", Vector3(-7.5, 1.6, -25.5), Vector3(-18.0, 1.5, -12.0)], ["core", Vector3(17.0, 1.6, -40.8), Vector3(22.0, 3.2, -52.0)]]
+	_freeze_bots()
+	m.ex.blast_door.open_now(true)
+	await W(4.0)
+	var states := ["normal", "emergency", "emergency_noalarm_nofoglights", "blackout"]
+	for st in states:
+		if st == "emergency":
+			m._emergency_lighting(true)
+			m._alarm(true)
+		elif st == "emergency_noalarm_nofoglights":
+			m._alarm(false)
+			for e in m.ex.emergency_lights:
+				(e[0] as OmniLight3D).light_volumetric_fog_energy = 0.0
+		elif st == "blackout":
+			for e in m.ex.emergency_lights:
+				(e[0] as OmniLight3D).light_volumetric_fog_energy = 1.5
+			m._blackout(true)
+		await W(2.0)
+		var row := []
+		for v in views:
+			ap.teleport(v[1] - Vector3(0, 1.55, 0), v[2])
+			await W(1.0)
+			row.append("%s %.0f" % [v[0], await _avg_fps(3.0)])
+		L("  %-30s %s" % [st, ", ".join(row)])
+
+
+func _sample(secs: float) -> Dictionary:
+	for k in Fx.events.keys():
+		if String(k).begins_with("prof_"):
+			Fx.events[k] = 0
+	var t0 := Time.get_ticks_usec()
+	var f0 := Engine.get_frames_drawn()
+	var proc := 0.0
+	var phys := 0.0
+	var objs := 0.0
+	var calls := 0.0
+	var n := 0
+	var t := 0.0
+	while t < secs:
+		await W(0.1)
+		t += 0.1
+		proc += Performance.get_monitor(Performance.TIME_PROCESS)
+		phys += Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)
+		objs += Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)
+		calls += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+		n += 1
+	var fps := float(Engine.get_frames_drawn() - f0) / ((Time.get_ticks_usec() - t0) / 1e6)
+	var near := 0
+	for b in ap._bots():
+		if b.global_position.distance_to(player.global_position) < 25.0:
+			near += 1
+	var wall := (Time.get_ticks_usec() - t0) / 1e6
+	var prof := {}
+	for k in Fx.events.keys():
+		if String(k).begins_with("prof_"):
+			prof[String(k).substr(5)] = snappedf(Fx.events[k] / 1000.0 / wall, 0.1)   # ms of CPU per second
+	L("    bot tick cost (ms per second): %s" % [prof])
+	return {"fps": snappedf(fps, 0.1), "process_ms": snappedf(proc / n * 1000.0, 0.01), "physics_ms": snappedf(phys / n * 1000.0, 0.01), "objects": int(objs / n), "draw_calls": int(calls / n), "alive": ap._bots().size(), "within25m": near}
+
+
+func combat_perf() -> void:
+	L("M4 COMBAT LOAD PROBE (preset %s): all units alerted to relay control, player there (god mode)" % Settings.PRESETS[Settings.quality])
+	m.ex.lockdown_panel.done.emit()
+	m.ex.breakers[0].done.emit()
+	m.ex.breakers[1].done.emit()
+	await W(1.5)
+	ap.teleport(Vector3(27.0, 0.05, -30.5), Vector3(21.0, 1.2, -32.0))
+	for b in main.director.bots:
+		if not b.is_dormant():
+			b.alert_to(Vector3(27.0, 0, -31.0))
+	await W(14.0)
+	L("  converged:            %s" % [await _sample(5.0)])
+	for b in ap._bots():
+		b.set_physics_process(false)
+	await W(1.0)
+	L("  units paused (render only): %s" % [await _sample(4.0)])
+	for b in ap._bots():
+		b.model.visible = false
+	await W(1.0)
+	L("  units paused + hidden: %s" % [await _sample(4.0)])
+	for b in ap._bots():
+		b.model.visible = true
+		b.set_physics_process(true)
+	await W(1.0)
+	L("  resumed:              %s" % [await _sample(4.0)])

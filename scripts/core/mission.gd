@@ -32,7 +32,8 @@ var _motor: AudioStreamPlayer3D
 var _lift_t := -1.0
 var _board_t := 0.0
 var _obj_t := 0.0
-var _events: Array = []  # [time_left, Callable]
+var _events: Array = []  # [time_left, Callable, label]
+var _arc_t := 5.0
 
 
 func setup(m: Node, lvl: LevelBuilder) -> void:
@@ -236,7 +237,9 @@ func _check_infiltrate() -> void:
 		_set_stage("upload")
 		Game.set_objective("CONNECT THE OVERRIDE AT RELAY CONTROL", level.console.global_position)
 		var p: Player = Game.player
-		_queue(1.0, func(): save_checkpoint("objectives", _safe_xform(p.global_transform)))
+		_queue(1.0, func():
+			if stage == "upload":
+				save_checkpoint("objectives", _safe_xform(p.global_transform)), "cp_objectives")
 	else:
 		_update_infiltrate_objective(true)
 
@@ -285,7 +288,9 @@ func _on_console_completed() -> void:
 	_queue(5.5, func():
 		Game.say("The core blast door is open. Relay Nine is exposed - destroy its three capacitor stacks.", 5.0)
 		_update_core_objective(true))
-	_queue(7.0, func(): save_checkpoint("relay core", Transform3D(Basis(Vector3.UP, deg_to_rad(90.0)), Vector3(25.0, 0.05, -29.0))))
+	_queue(7.0, func():
+		if stage == "core":
+			save_checkpoint("relay core", Transform3D(Basis.looking_at(Vector3(-4.0, 0, -3.0).normalized()), Vector3(25.0, 0.05, -29.0))), "cp_core")
 	flags.complication = true
 
 
@@ -314,20 +319,19 @@ func _emergency_lighting(on: bool) -> void:
 			if n is Light3D and is_instance_valid(n):
 				if not n.has_meta("e0"):
 					n.set_meta("e0", n.light_energy)
-				n.light_energy = n.get_meta("e0") * (0.35 if on else 1.0)
+				n.light_energy = n.get_meta("e0") * (0.3 if on else 1.0)
 	_refresh_probes()
 
 
 ## Interior reflection probes were captured under the normal lighting; capture
 ## them again after a lighting change so metal stops reflecting dead lamps.
 func _refresh_probes() -> void:
-	var probes := level.find_children("*", "ReflectionProbe", true, false)
-	for rp in probes:
-		rp.update_mode = ReflectionProbe.UPDATE_ALWAYS
-	await get_tree().create_timer(0.6).timeout
-	for rp in probes:
+	# A changed property marks an update-once probe dirty; stagger them so the
+	# re-captures spread over ~1.5 s instead of stalling a frame.
+	for rp in level.find_children("*", "ReflectionProbe", true, false):
+		await get_tree().create_timer(0.12).timeout
 		if is_instance_valid(rp):
-			rp.update_mode = ReflectionProbe.UPDATE_ONCE
+			rp.position.y += 0.002 if int(rp.position.y * 1000.0) % 2 == 0 else -0.002   # moving it re-captures
 
 
 func _alarm(on: bool) -> void:
@@ -416,6 +420,11 @@ func _blackout(silent := false) -> void:
 	for r in Game.rooms:
 		if r != "dock":
 			Game.set_room_lit(r, false)
+	# Without the grid, only emergency beacons and the lift's own supply
+	# remain: drop the ambient fill so the extraction is genuinely dark.
+	if main.env:
+		main.env.ambient_light_energy = 0.14
+		main.env.fog_light_color = Color(0.05, 0.05, 0.055)
 	_refresh_probes()
 	if silent:
 		return
@@ -430,7 +439,9 @@ func _blackout(silent := false) -> void:
 		if specs[id].hunt:
 			_hunt(b, pp)
 	_dispatch(pp, 3)
-	_queue(9.0, func(): save_checkpoint("extraction", Transform3D(Basis(), Vector3(17.0, 0.05, -40.6))))
+	_queue(9.0, func():
+		if stage == "extract":
+			save_checkpoint("extraction", Transform3D(Basis(), Vector3(17.0, 0.05, -40.6))), "cp_extract")
 
 
 # ------------------------------------------------------------------ lift
@@ -455,11 +466,27 @@ func _on_lift_called() -> void:
 
 func _process(delta: float) -> void:
 	# Scripted events
-	for e in _events.duplicate():
+	var i := 0
+	while i < _events.size():
+		var e: Array = _events[i]
 		e[0] -= delta
 		if e[0] <= 0.0:
-			_events.erase(e)
+			_events.remove_at(i)
+			if Game.autotest:
+				print("[mission] event %s fired at %.2f" % [e[2], Time.get_ticks_msec() / 1000.0])
 			e[1].call()
+		else:
+			i += 1
+	_arc_t -= delta
+	if _arc_t <= 0.0:
+		_arc_t = randf_range(3.5, 8.0)
+		_ambient_arc()
+	if Game.emergency:
+		# Beacons pulse (rotating-beacon rhythm, offset per light).
+		var tt := Time.get_ticks_msec() / 1000.0
+		for k in ex.emergency_lights.size():
+			var l: OmniLight3D = ex.emergency_lights[k][0]
+			l.light_energy = 2.4 + 1.8 * sin(tt * 3.4 + k * 0.9)
 	if not Game.is_active() or Game.player == null:
 		return
 	_obj_t -= delta
@@ -502,8 +529,32 @@ func _lift_arrived() -> void:
 	Game.say("Lift is down - get on!", 3.0)
 
 
-func _queue(t: float, cb: Callable) -> void:
-	_events.append([t, cb])
+## Live equipment arcs now and then: the energised transformers (once main
+## power is back) and the relay array (until it is destroyed). Only when the
+## player is near enough to see or hear it.
+func _ambient_arc() -> void:
+	var p: Player = Game.player
+	if p == null:
+		return
+	var spots := []
+	if flags.power >= 2:
+		for x in [39.6, 44.2]:
+			spots.append([Vector3(x - 0.6 + randf() * 1.2, 4.3, -27.6), Vector3(x + randf_range(-1.5, 1.5), 6.0, -28.4)])
+	if not flags.core:
+		var c := ex.core_center
+		var a := randf() * TAU
+		spots.append([c + Vector3(0, 6.6, 0), c + Vector3(cos(a) * 3.2, 9.6, sin(a) * 3.2)])
+	for sp in spots:
+		if sp[0].distance_to(p.global_position) < 26.0:
+			Fx.arc(sp[0], sp[1], 0.03, 0.12, 2, true)
+			Sfx.play_3d("arc_crackle" if ResourceLoader.exists("res://assets/audio/arc_crackle_0.wav") else "tesla_shot", sp[0], -4.0, 0.1, 6.0)
+			return
+
+
+func _queue(t: float, cb: Callable, label := "") -> void:
+	_events.append([t, cb, label if label != "" else "%.1fs" % t])
+	if Game.autotest:
+		print("[mission] queued %s at %.2f (+%.1f s)" % [label, Time.get_ticks_msec() / 1000.0, t])
 
 
 # ------------------------------------------------------------------ checkpoints
