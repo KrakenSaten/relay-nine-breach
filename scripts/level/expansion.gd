@@ -29,6 +29,7 @@ var capacitors: Array = []
 var blast_door: M4Objects.BlastDoor
 var steam_valve: M4Objects.SteamValve
 var lift_panel: M4Objects.HoldStation
+var caches: Array = []   # M4Objects.AmmoCache, in mission order
 var core_center := Vector3(22.0, 0.0, -52.0)
 var core_glow: OmniLight3D
 var core_array: Node3D
@@ -53,6 +54,7 @@ func build() -> void:
 	_core()
 	_office_panel()
 	_lift_panel()
+	_ammo_caches()
 	_structure()
 	if kit:
 		kit.free()   # out-of-tree templates must not outlive the level
@@ -752,6 +754,79 @@ func _office_panel() -> void:
 	lockdown_label.position = Vector3(0, 1.45, 0.125)
 	lockdown_panel.add_child(lockdown_label)
 	b.place_sign("SECURITY LOCKDOWN", Vector3(3.6, 1.92, -12.83), 0, 24, Color(0.85, 0.84, 0.8), 0.003)
+
+
+## Three limited ammunition caches along the mission (tunable stock):
+##   security office (lockdown objective), switchgear hall (power objective),
+##   relay control (upload defence; last stop before the relay core).
+const CACHE_STOCK := {"office": [60, 30], "switchgear": [60, 15], "control": [90, 30]}
+
+
+func _ammo_caches() -> void:
+	caches.append(_ammo_cache("SECURITY AMMO CACHE", Vector3(1.7, 0, -12.4), 0.0, CACHE_STOCK.office))
+	caches.append(_ammo_cache("SWITCHGEAR AMMO CACHE", Vector3(36.2, 0, -2.6), 180.0, CACHE_STOCK.switchgear))
+	caches.append(_ammo_cache("CONTROL AMMO CACHE", Vector3(23.2, 0, -26.6), 180.0, CACHE_STOCK.control))
+
+
+func _ammo_cache(cache_name: String, pos: Vector3, yaw: float, stock: Array) -> M4Objects.AmmoCache:
+	var c := M4Objects.AmmoCache.new()
+	c.cache_name = cache_name
+	c.rifle = stock[0]
+	c.pistol = stock[1]
+	c.rifle_max = stock[0]
+	c.pistol_max = stock[1]
+	c.prompt = "[HOLD F] TAKE AMMUNITION"
+	c.hold_time = 1.0
+	b.nav.add_child(c)   # floor obstacle: part of the navmesh source
+	c.global_position = pos
+	c.rotation.y = deg_to_rad(yaw)
+	# Same green case as the dock armory, read back in local space.
+	var crate := b.prop("crate", Vector3.ZERO, 0.0, false, "metal", false, c)
+	var world := b._world_aabb(crate) if crate else AABB(pos + Vector3(-0.5, 0, -0.4), Vector3(1.0, 0.8, 0.8))
+	var la: AABB = c.global_transform.affine_inverse() * world
+	b.cover_props.append(world)
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = la.size
+	cs.shape = bs
+	cs.position = la.get_center()
+	c.add_child(cs)
+	var top := la.end.y
+	var front := la.end.z
+	var half_w := la.size.x * 0.5
+	# Ammo cans on top: they disappear as the stock runs down.
+	var olive := MatLib.flat(Color(0.2, 0.24, 0.14), 0.3, 0.6)
+	for i in 3:
+		var x := (i - 1) * minf(0.3, half_w * 0.62)
+		var can := _station_box(c, Vector3(0.26, 0.17, 0.15), Vector3(x, top + 0.085, la.get_center().z + (0.05 if i == 1 else -0.06)), olive)
+		_station_box(can, Vector3(0.262, 0.03, 0.152), Vector3(0, 0.03, 0), MatLib.hazard())
+		c.cans.append(can)
+	# Stencil, status lamp, stock readout, a faint green glow (findable in the blackout).
+	var sten := Label3D.new()
+	sten.text = "AMMUNITION"
+	sten.font_size = 44
+	sten.pixel_size = 0.0022
+	sten.modulate = Color(0.95, 0.8, 0.2)
+	sten.shaded = true
+	sten.double_sided = false
+	sten.position = Vector3(0, top * 0.55, front + 0.012)
+	c.add_child(sten)
+	c.lamp = _station_box(c, Vector3(0.07, 0.05, 0.02), Vector3(half_w * 0.72, top * 0.78, front + 0.01), MatLib.flat(Color(0.2, 1.0, 0.35)))
+	c.readout = Label3D.new()
+	c.readout.font_size = 30
+	c.readout.pixel_size = 0.0015
+	c.readout.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	c.readout.position = Vector3(0, top + 0.32, la.get_center().z)
+	c.add_child(c.readout)
+	c.glow = OmniLight3D.new()
+	c.glow.light_color = Color(0.45, 1.0, 0.55)
+	c.glow.light_energy = 0.3
+	c.glow.omni_range = 2.0
+	c.glow.shadow_enabled = false
+	c.add_child(c.glow)
+	c.glow.position = Vector3(0, top + 0.35, front + 0.25)
+	c.refresh()
+	return c
 
 
 func set_lockdown_released() -> void:

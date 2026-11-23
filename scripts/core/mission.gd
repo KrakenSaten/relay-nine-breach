@@ -17,6 +17,11 @@ signal stage_changed(stage: String)
 
 const LIFT_TIME := 25.0
 const BOARD_TIME := 2.0
+## Restarting from a checkpoint restores the ammunition carried at the save,
+## but never less than this per weapon (magazine + reserve), so a retry can't
+## start dry. Ammo caches are restored to their stock at the save.
+const RESTORE_MIN_RIFLE := 90
+const RESTORE_MIN_PISTOL := 30
 
 var main: Node
 var level: LevelBuilder
@@ -62,6 +67,11 @@ func setup(m: Node, lvl: LevelBuilder) -> void:
 	restoring = Game.checkpoint.get("pending", false)
 	if restoring:
 		_apply_world(Game.checkpoint.flags)
+		var cs: Array = Game.checkpoint.get("caches", [])
+		for i in mini(cs.size(), ex.caches.size()):
+			ex.caches[i].rifle = cs[i][0]
+			ex.caches[i].pistol = cs[i][1]
+			ex.caches[i].refresh()
 
 
 # ------------------------------------------------------------------ encounters
@@ -584,7 +594,9 @@ func save_checkpoint(cp_name: String, respawn: Transform3D) -> void:
 			bl.append({"id": id, "pos": b.global_position, "dormant": b.dormant})
 	Game.checkpoint = {"name": cp_name, "stage": stage, "flags": flags.duplicate(true), "respawn": respawn,
 		"loadout": p.loadout.duplicate(), "bots": bl, "stats": Game.stats.duplicate(), "elapsed": Game.elapsed(),
-		"state": Game.state, "pending": false}
+		"state": Game.state, "pending": false,
+		"ammo": p.weapons.map(func(w): return [w.ammo, w.reserve]),
+		"caches": ex.caches.map(func(c): return [c.rifle, c.pistol])}
 	Game.say("CHECKPOINT - " + cp_name.to_upper(), 2.0)
 
 
@@ -621,6 +633,19 @@ func _apply_world(f: Dictionary) -> void:
 		_blackout(true)
 
 
+func _restore_ammo(p: Player, saved: Array) -> void:
+	if saved.size() < 2:
+		return
+	var floors := [RESTORE_MIN_RIFLE, RESTORE_MIN_PISTOL]
+	for i in 2:
+		var w = p.weapons[i]
+		w.ammo = clampi(saved[i][0], 0, w.stats.mag)
+		w.reserve = clampi(saved[i][1], 0, int(w.def.reserve))
+		if w.ammo + w.reserve < floors[i]:
+			w.reserve = mini(int(w.def.reserve), floors[i] - w.ammo)
+		w.ammo_changed.emit()
+
+
 func _spawn_from_checkpoint() -> void:
 	var cp: Dictionary = Game.checkpoint
 	var respawn: Transform3D = cp.respawn
@@ -648,6 +673,7 @@ func resume() -> void:
 	var p: Player = Game.player
 	p.global_transform = cp.respawn
 	p.set_loadout(cp.loadout)
+	_restore_ammo(p, cp.get("ammo", []))
 	stage = cp.stage
 	match stage:
 		"upload":

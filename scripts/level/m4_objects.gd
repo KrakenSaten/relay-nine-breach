@@ -199,3 +199,89 @@ class SteamValve extends HoldStation:
 			volume.visible = m.density > 0.01
 		if obscured and randf() < dt * 6.0:
 			Fx.smoke(center + Vector3(randf_range(-7, 7), randf_range(0.3, 3.0), randf_range(-9, 9)))
+
+
+## Ammunition cache: hold F to top up rifle and pistol reserves from a
+## limited stock. Never refills; takes only what the player can carry (the
+## reserve limit is each weapon's starting reserve). Stock is recorded in
+## checkpoints, so restarting cannot farm it.
+class AmmoCache extends HoldStation:
+	var cache_name := "AMMO CACHE"
+	var rifle := 60
+	var pistol := 30
+	var rifle_max := 60
+	var pistol_max := 30
+	var readout: Label3D
+	var lamp: MeshInstance3D
+	var cans: Array = []
+	var glow: OmniLight3D
+
+	func _ready() -> void:
+		super._ready()
+		once = false
+		done.connect(func(): take(Game.player))
+
+	## Rounds the player could take right now (limited by stock and carry limit).
+	func wants(p: Node) -> Vector2i:
+		if p == null or not is_instance_valid(p) or p.weapons.size() < 2:
+			return Vector2i.ZERO
+		var rw = p.weapons[0]
+		var pw = p.weapons[1]
+		return Vector2i(mini(rifle, maxi(0, int(rw.def.reserve) - rw.reserve)), mini(pistol, maxi(0, int(pw.def.reserve) - pw.reserve)))
+
+	func stock_text() -> String:
+		return "RIFLE %d  |  PISTOL %d" % [rifle, pistol]
+
+	func get_prompt(p: Node) -> String:
+		if rifle <= 0 and pistol <= 0:
+			return cache_name + " - EMPTY"
+		var w := wants(p)
+		if w.x <= 0 and w.y <= 0:
+			return cache_name + " - AMMUNITION FULL  (" + stock_text() + " LEFT)"
+		return "[HOLD F] TAKE AMMUNITION  (" + stock_text() + ")"
+
+	func hold(p: Node, delta: float) -> float:
+		var w := wants(p)
+		if delta >= 0.0 and w.x <= 0 and w.y <= 0:
+			_progress = 0.0
+			return 0.0
+		return super.hold(p, delta)
+
+	func take(p: Node) -> Vector2i:
+		var w := wants(p)
+		if w.x <= 0 and w.y <= 0:
+			return w
+		p.weapons[0].reserve += w.x
+		p.weapons[1].reserve += w.y
+		rifle -= w.x
+		pistol -= w.y
+		p.weapons[0].ammo_changed.emit()
+		p.weapons[1].ammo_changed.emit()
+		refresh()
+		var parts := []
+		if w.x > 0:
+			parts.append("+%d RIFLE" % w.x)
+		if w.y > 0:
+			parts.append("+%d PISTOL" % w.y)
+		Game.say("AMMUNITION   " + "   ".join(parts) + ("   (cache empty)" if rifle <= 0 and pistol <= 0 else ""), 2.5)
+		Sfx.play("mag_in", -4.0)
+		Sfx.play_3d("foley_cloth", global_position + Vector3.UP * 0.8, -6.0, 0.1, 3.0)
+		Fx.flash(global_position + Vector3.UP * 1.0, Color(0.55, 1.0, 0.6), 1.0, 2.5, 0.15)
+		Game.emit_noise(global_position, 5.0, p)   # rummaging through a crate is quiet, not silent
+		return w
+
+	## Visual state: readout, lamp colour, how many ammo cans remain on top.
+	func refresh() -> void:
+		var total := rifle + pistol
+		var full := maxi(1, rifle_max + pistol_max)
+		if readout:
+			readout.text = stock_text() if total > 0 else "EMPTY"
+			readout.modulate = Color(0.85, 0.9, 0.85) if total > 0 else Color(0.75, 0.4, 0.35)
+		if lamp:
+			var c := Color(0.2, 1.0, 0.35) if total * 2 > full else (Color(1.0, 0.65, 0.1) if total > 0 else Color(1.0, 0.1, 0.05))
+			lamp.material_override = MatLib.flat(c, 0.0, 0.4, c, 4.0 if total > 0 else 2.0)
+		var show := ceili(float(cans.size()) * total / full)
+		for i in cans.size():
+			(cans[i] as Node3D).visible = i < show
+		if glow:
+			glow.visible = total > 0
