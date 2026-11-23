@@ -32,6 +32,8 @@ func run(m: Node) -> void:
 		await _showcase()
 	elif "--aitest" in OS.get_cmdline_user_args():
 		await _aitest()
+	elif "--botanim" in OS.get_cmdline_user_args():
+		await _botanim()
 	elif "--compare" in OS.get_cmdline_user_args():
 		await _compare()
 	elif "--video" in OS.get_cmdline_user_args():
@@ -42,9 +44,16 @@ func run(m: Node) -> void:
 	get_tree().quit()
 
 
+var _track_bot: Node3D = null
+
+
 func _process(delta: float) -> void:
 	if _recording:
 		_frame_times.append(delta)
+	if _track_bot and is_instance_valid(_track_bot):
+		var tgt: Vector3 = _track_bot.bones.pelvis.global_position + Vector3(0, 0.2, 0)
+		var cur := player.camera.global_position - player.camera.global_transform.basis.z * 4.0
+		_look(cur.lerp(tgt, 1.0 - exp(-6.0 * delta)))
 
 
 func L(s: String) -> void:
@@ -625,3 +634,47 @@ func _aitest() -> void:
 	L("AITEST reload push: push unit-frames +%d" % [_ai2.push - push_before])
 	_ai2_on = false
 	L("AITEST final: %s" % [_ai2])
+
+
+
+# ------------------------------------------------------------------ robot animation capture
+func _botanim() -> void:
+	L("BOTANIM: walk, run, turn, hits, stagger, death (scripted drive)")
+	main.hud.visible = false
+	for b in main.director.bots:
+		b.set_physics_process(false)
+		b.global_position += Vector3(0, -50, 0)
+	var bot: Teslabot = main.director.bots[0]
+	bot.set_physics_process(true)
+	bot.debug_drive = true
+	bot.global_position = Vector3(2.6, 0.05, 8.3)
+	bot.state = Teslabot.S.PATROL
+	teleport(Vector3(6.3, 0.05, 12.6), Vector3(6.3, 1.1, 8.3))
+	player.weapons[0].visible = false
+	player.arms.visible = false
+	_track_bot = bot
+	await _wait(1.0)
+	bot._go(Vector3(9.6, 0, 8.3), Teslabot.WALK)
+	for i in 7:
+		await _wait(1.0)
+		L("  walk t=%d pos=%s vel=%.2f nav_done=%s next=%s" % [i, bot.global_position.snapped(Vector3.ONE * 0.1), Vector3(bot.velocity.x, 0, bot.velocity.z).length(), bot.agent.is_navigation_finished(), bot.agent.get_next_path_position().snapped(Vector3.ONE * 0.1)])
+	bot._go(Vector3(2.8, 0, 8.6), Teslabot.RUN)
+	await _wait(3.4)
+	bot._stop()
+	await _wait(0.6)
+	for d in [Vector3(1, 0, 0), Vector3(0, 0, 1), Vector3(-1, 0, 0.3)]:
+		bot.debug_face = d
+		await _wait(0.9)
+	bot.debug_face = (player.global_position - bot.global_position).normalized()
+	bot.state = Teslabot.S.COMBAT
+	bot.target_visible = true
+	await _wait(0.8)
+	var dir := (bot.global_position - player.global_position).normalized()
+	for z in ["torso", "head", "arm_R", "leg_L"]:
+		bot.take_damage(12.0, z, bot.bones.torso.global_position, dir, -dir, null)
+		await _wait(0.55)
+	bot.take_damage(60.0, "torso", bot.bones.torso.global_position, dir, -dir, null)
+	await _wait(1.4)
+	bot.take_damage(900.0, "torso", bot.bones.torso.global_position, dir, -dir, null)
+	await _wait(3.0)
+	L("BOTANIM done: state=%s" % Teslabot.S.keys()[bot.state])

@@ -279,5 +279,6 @@ func _storytelling() -> void:
 		d.global_position = p[0]
 		if p[0].y > 0.5:
 			d.rotation = Vector3(0, 0, -PI / 2)
-	ph("metal_tool_chest", Vector3(18.2, 0, -11.2), 35, true)
-	ph("hand_truck", Vector3(19.4, 0, -12.2), 110)
+	# Kept clear of the patrol lane between the turbines.
+	ph("metal_tool_chest", Vector3(29.6, 0, -13.9), 80, true)
+	ph("hand_truck", Vector3(30.3, 0, -12.9), 110)

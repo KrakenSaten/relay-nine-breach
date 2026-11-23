@@ -352,3 +352,14 @@ func warmup(pos: Vector3, normal: Vector3) -> void:
 	smoke(pos, normal)
 	overload(pos)
 	flash(pos, Color(1, 0.7, 0.4), 1.0, 2.0, 0.05, true)
+
+
+
+## Ground dust kicked up by heavy footfalls and collapsing bodies.
+func dust_puff(pos: Vector3, scale := 1.0) -> void:
+	if _dust.is_empty():
+		return
+	var p := _dust[_di]
+	_di = (_di + 1) % DUST_POOL
+	_fire(p, pos, Vector3.UP)
+	p.scale = Vector3.ONE * scale

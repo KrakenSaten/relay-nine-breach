@@ -234,7 +234,7 @@ func _request_switch(i: int) -> void:
 		return
 	_switch_to = i
 	weapon().set_equipped(false)
-	Sfx.play("weapon_switch", -6.0)
+	Sfx.play_local("weapon_holster" if ResourceLoader.exists("res://assets/audio/weapon_holster.wav") else "weapon_switch", -4.0)
 
 
 func _toggle_crouch() -> void:
@@ -274,10 +274,15 @@ func _physics_process(delta: float) -> void:
 		w.visible = true
 		w._equip = 0.0
 		w.set_equipped(true)
+		if ResourceLoader.exists("res://assets/audio/weapon_draw.wav"):
+			Sfx.play_local("weapon_draw", -3.0)
 		weapon_changed.emit()
 	# Stance
 	var mv := _move_vec()
+	var was_aiming := _aiming
 	_aiming = _act("aim") and alive
+	if _aiming and not was_aiming and ResourceLoader.exists("res://assets/audio/cloth_raise.wav"):
+		Sfx.play_local("cloth_raise", -8.0, 0.08)
 	var want_sprint := _act("sprint") and mv.y < -0.3 and not _aiming and is_on_floor()
 	if want_sprint and _crouched and _can_stand():
 		_crouched = false

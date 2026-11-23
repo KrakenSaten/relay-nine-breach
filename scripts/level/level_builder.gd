@@ -823,13 +823,13 @@ func build_cover_points() -> Array:
 
 # ------------------------------------------------------------------ audio zones
 const ROOM_AUDIO := {
-	"dock": ["Rev_Dock", "ambience_facility", Vector3(8, 3, 7), -14.0],
+	"dock": ["Rev_Dock", "ambience_dock", Vector3(8, 3, 7), -12.0],
 	"corridor": ["Rev_Small", "ambience_facility", Vector3(7.5, 2.5, -15), -18.0],
 	"office": ["Rev_Small", "electric_buzz_loop", Vector3(0.5, 3.2, -8), -22.0],
 	"passage": ["Rev_Small", "", Vector3.ZERO, 0.0],
 	"hall": ["Rev_Hall", "ambience_hall", Vector3(20, 4, -14), -10.0],
 	"servers": ["Rev_Servers", "ambience_servers", Vector3(15, 1.5, -32), -12.0],
-	"control": ["Rev_Small", "electric_buzz_loop", Vector3(27, 4.0, -33), -20.0],
+	"control": ["Rev_Small", "ambience_control", Vector3(27, 3.0, -33), -13.0],
 }
 
 

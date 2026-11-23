@@ -74,12 +74,19 @@ var _spark_t := 0.0
 var _step_side := 0
 var _last_step_phase := 0.0
 var _stuck_t := 0.0
+var _stuck_n := 0
 var _last_pos := Vector3.ZERO
 var _door_cd := 0.0
 var _alerted_once := false
 var _servo_cd := 0.0
 var _rest := {}
 var _crouch_b := 0.0
+var anim: BotAnim
+## Debug/capture controls (autopilot only)
+var debug_drive := false
+var debug_face := Vector3.ZERO
+var _last_hit_local := Vector3(0, 0, 1)
+var _cap_warned := false
 ## M2 combat refinement
 var suppression := 0.0          # 0..1, from near misses/hits; decays
 var _push_t := 0.0              # aggressive push window (e.g. player reloading)
@@ -95,7 +102,7 @@ func _ready() -> void:
 	collision_mask = 1 | (1 << 1) | (1 << 2)
 	var cs := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
-	cap.radius = 0.42
+	cap.radius = 0.36   # must stay inside the navmesh agent radius (0.4)
 	cap.height = 2.0
 	cs.shape = cap
 	cs.position.y = 1.0
@@ -117,6 +124,7 @@ func _ready() -> void:
 	_setup_materials()
 	_setup_hitboxes()
 	_collect_armor()
+	anim = BotAnim.new(self)
 	agent = NavigationAgent3D.new()
 	agent.path_desired_distance = 0.7
 	agent.target_desired_distance = 0.9
@@ -393,6 +401,10 @@ func take_damage(amount: float, zone: String, pos: Vector3, dir: Vector3, normal
 		Game.stats.head_hits += 1
 	if zone == "core":
 		Game.stats.core_hits += 1
+		# Audible warning when the capacitor is close to overloading.
+		if not _cap_warned and hp < MAX_HP * 0.4 and hp > 0.0:
+			_cap_warned = true
+			Sfx.play_3d("robot_capacitor_whine", bones.core.global_position, 0.0, 0.0, 6.0)
 	Fx.impact(pos, normal, "weak" if zone == "core" or (zone == "head" and not blinded) else "robot")
 	# Visible component damage: plates come off as their zone takes punishment.
 	_armor_damage(zone, dmg, dir)
@@ -403,7 +415,8 @@ func take_damage(amount: float, zone: String, pos: Vector3, dir: Vector3, normal
 			_break_zone(zone, pos)
 	# Flinch
 	var local_dir := global_transform.basis.inverse() * dir
-	_flinch += Vector3(-local_dir.z * 0.25, 0, local_dir.x * 0.2) * clampf(dmg / 30.0, 0.3, 1.5)
+	_last_hit_local = local_dir
+	anim.hit(zone, local_dir, dmg / 30.0)
 	if zone == "core" or _recent_dmg > 45.0:
 		_stagger(0.45 if zone == "core" else 0.3)
 	# Being shot reveals the shooter's direction.
@@ -449,6 +462,10 @@ func _break_zone(zone: String, pos: Vector3) -> void:
 func _stagger(dur: float) -> void:
 	if state == S.DEAD:
 		return
+	if _stagger_t <= 0.0 and anim:
+		anim.stagger(_last_hit_local)
+		Sfx.play_3d("robot_stagger", bones.torso.global_position, -2.0, 0.08, 5.0)
+		velocity += global_transform.basis * (_last_hit_local * Vector3(1, 0, 1)).normalized() * 1.4
 	_cancel_attack()
 	_stagger_t = maxf(_stagger_t, dur)
 
@@ -472,6 +489,7 @@ func _die(dir: Vector3, overload: bool) -> void:
 	_death_t = 0.0
 	var local := global_transform.basis.inverse() * dir
 	_death_dir = 1.0 if local.z < 0.0 else -1.0  # fall away from the shot
+	anim.start_death(local, overload)
 	collision_layer = 0
 	collision_mask = 1
 	for a in hitboxes:
@@ -589,7 +607,8 @@ func _fire_arc() -> void:
 	Fx.arc(from, end, 0.03, 0.16, 3, true)
 	Sfx.play_3d("tesla_shot", from, 1.0, 0.06, 9.0)
 	Game.emit_noise(from, 18.0, self)
-	_flinch += Vector3(0.12, 0, 0)
+	anim.impulse("shoulder_R", Vector3(6.0, 0, 0))
+	anim.impulse("torso", Vector3(-1.5, 0, 0))
 
 
 # ------------------------------------------------------------------ movement
@@ -617,7 +636,7 @@ func _physics_process(dt: float) -> void:
 	_attack_cd -= dt
 	_door_cd -= dt
 	_sense_t -= dt
-	if _sense_t <= 0.0:
+	if _sense_t <= 0.0 and not debug_drive:
 		_sense(0.15)
 		_sense_t = 0.15
 	if _stagger_t > 0.0:
@@ -626,7 +645,7 @@ func _physics_process(dt: float) -> void:
 		velocity.z = move_toward(velocity.z, 0, dt * 12)
 	else:
 		_think_t -= dt
-		if _think_t <= 0.0:
+		if _think_t <= 0.0 and not debug_drive:
 			_think()
 			_think_t = 0.35
 		if _attack_t >= 0.0:
@@ -872,20 +891,35 @@ func _steer(dt: float) -> void:
 		face = stimulus - global_position
 	elif hv.length() > 0.3:
 		face = hv
+	if debug_face != Vector3.ZERO:
+		face = debug_face
 	face.y = 0
 	if face.length() > 0.01:
 		_face_dir = _face_dir.slerp(face.normalized(), 1.0 - exp(-4.0 * dt)).normalized() if _face_dir.dot(face.normalized()) > -0.99 else face.normalized()
 		look_at(global_position + _face_dir, Vector3.UP)
-	# Stuck detection: re-path
-	if _has_move and hv.length() > 0.5:
-		if global_position.distance_to(_last_pos) < 0.02:
-			_stuck_t += dt
-			if _stuck_t > 1.2:
-				_stuck_t = 0.0
-				_go(director.snap(global_position + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))), _move_speed)
-		else:
+	# Stuck detection over 0.6 s windows (per-frame movement at 120 Hz is
+	# ~1.4 cm when walking, so a per-frame threshold flagged every walker).
+	if _has_move and desired.length() > 0.5 and _attack_t < 0.0:
+		_stuck_t += dt
+		if _stuck_t >= 0.6:
+			var moved := global_position.distance_to(_last_pos)
+			if moved < desired.length() * 0.6 * 0.25:
+				_stuck_n += 1
+				if _stuck_n >= 2:
+					# Side-step, then resume the same destination.
+					_stuck_n = 0
+					var dest := _move_target
+					var side := desired.normalized().cross(Vector3.UP) * (1.0 if randf() < 0.5 else -1.0)
+					global_position += side * 0.05
+					agent.target_position = dest
+			else:
+				_stuck_n = 0
 			_stuck_t = 0.0
-	_last_pos = global_position
+			_last_pos = global_position
+	else:
+		_stuck_t = 0.0
+		_stuck_n = 0
+		_last_pos = global_position
 
 
 func _try_open_doors(desired: Vector3) -> void:
@@ -908,74 +942,28 @@ func _try_open_doors(desired: Vector3) -> void:
 
 # ------------------------------------------------------------------ animation
 func _animate(dt: float) -> void:
-	var hv := Vector3(velocity.x, 0, velocity.z)
-	var spd := hv.length()
-	var fwd_speed := hv.dot(-global_transform.basis.z)
-	_gait_amp = lerpf(_gait_amp, clampf(spd / 2.2, 0.0, 1.0), 1.0 - exp(-6.0 * dt))
-	_phase += dt * (2.0 + spd * 2.1) * (1.0 if _gait_amp > 0.05 else 0.0)
-	var a := _gait_amp
-	var dirsign := 1.0 if fwd_speed >= -0.2 else -1.0
-	var limp_l := 1.0 - 0.5 * limp
-	var sL := sin(_phase) * dirsign
-	var sR := sin(_phase + PI) * dirsign
+	var spd := Vector3(velocity.x, 0, velocity.z).length()
 	# Crouch behind cover while hiding (hitboxes follow the bones).
 	var want_crouch := 1.0 if (state == S.COMBAT and role == "cover" and _cover_phase == "hide" and spd < 0.6) else 0.0
-	_crouch_b = move_toward(_crouch_b, want_crouch, dt * 3.0)
+	_crouch_b = move_toward(_crouch_b, want_crouch, dt * 2.6)
 	var c := _crouch_b * _crouch_b * (3.0 - 2.0 * _crouch_b)
-	_bone_rot("hip_L", Vector3(sL * 0.5 * a * limp_l + 1.0 * c, 0, 0))
-	_bone_rot("hip_R", Vector3(sR * 0.5 * a + 0.9 * c, 0, 0))
-	_bone_rot("knee_L", Vector3(-maxf(0.0, cos(_phase)) * 0.8 * a - 0.08 - 1.7 * c, 0, 0))
-	_bone_rot("knee_R", Vector3(-maxf(0.0, cos(_phase + PI)) * 0.8 * a - 0.08 - 1.5 * c, 0, 0))
-	_bone_rot("ankle_L", Vector3(-sL * 0.2 * a + 0.7 * c, 0, 0))
-	_bone_rot("ankle_R", Vector3(-sR * 0.2 * a + 0.6 * c, 0, 0))
-	# Footstep sounds on gait extremes
-	var step_phase := fposmod(_phase, PI)
-	if a > 0.25 and step_phase < _last_step_phase:
-		Sfx.play_3d("robot_step", global_position, -6.0 + a * 4.0, 0.08, 4.0)
-		_step_side = 1 - _step_side
-	_last_step_phase = step_phase
-	# Pelvis bob, sway and limp hitch
-	var pel: Node3D = bones.pelvis
-	var bob := absf(sin(_phase)) * 0.05 * a
-	pel.position = _rest.pelvis.origin + Vector3(sin(_phase) * 0.025 * a, -bob - 0.03 * limp * absf(sin(_phase * 0.5)) - 0.32 * c, 0.07 * c)
-	# Upper body: twist towards the aim target independently of the legs.
 	var aim_target := Vector3.ZERO
 	var aiming := false
 	var p: Player = Game.player
 	if p and state == S.COMBAT and (target_visible or _attack_t >= 0.0):
 		aiming = true
 		aim_target = _aim_point if _attack_t >= 0.0 else p.get_chest_point()
+	elif state == S.COMBAT and role == "overwatch":
+		aiming = true
+		aim_target = last_known + Vector3.UP * 1.3
 	_aim_blend = move_toward(_aim_blend, 1.0 if aiming or state == S.COMBAT else 0.0, dt * 3.0)
 	var torso_yaw := 0.0
 	var aim_pitch := 0.0
 	if aiming:
 		var local = global_transform.basis.inverse() * (aim_target - bones.torso.global_position)
-		torso_yaw = clampf(atan2(-local.x, -local.z), -1.0, 1.0)
+		torso_yaw = atan2(-local.x, -local.z)
 		aim_pitch = atan2(local.y + 0.3, Vector2(local.x, local.z).length())
-	_flinch = _flinch.lerp(Vector3.ZERO, 1.0 - exp(-7.0 * dt))
-	var idle := sin(_t * 1.3) * 0.02
-	var t_rot := Vector3(0.08 * a + _flinch.x + idle, torso_yaw * _aim_blend, sin(_phase) * 0.04 * a + _flinch.z)
-	if _stagger_t > 0.0:
-		t_rot += Vector3(-0.25, 0, sin(_t * 30.0) * 0.06)
-	_bone_rot("torso", t_rot)
-	# Head scanning when idle / searching; tracking when engaged.
-	var head_yaw := 0.0
-	var head_pitch := 0.0
-	if state in [S.PATROL, S.SEARCH, S.SUSPICIOUS, S.INVESTIGATE]:
-		head_yaw = sin(_t * (0.6 if state == S.PATROL else 1.4)) * (0.5 if state == S.PATROL else 0.8)
-		if state == S.SUSPICIOUS:
-			var ls := global_transform.basis.inverse() * (stimulus - global_position)
-			head_yaw = clampf(atan2(-ls.x, -ls.z), -0.9, 0.9)
-	elif aiming:
-		head_pitch = clampf(aim_pitch * 0.6, -0.5, 0.4)
-	_bone_rot("head", Vector3(head_pitch, head_yaw, 0))
-	# Arms: emitter raised to aim in combat, lowered otherwise.
-	var arm_pitch := lerpf(-0.75, clampf(aim_pitch, -0.9, 0.9), _aim_blend)
-	if _attack_t >= 0.0:
-		arm_pitch += sin(_t * 60.0) * 0.01
-	_bone_rot("shoulder_R", Vector3(arm_pitch + _flinch.x * 0.5, 0, 0))
-	_bone_rot("shoulder_L", Vector3(lerpf(-0.6, -0.3, _aim_blend) + sin(_phase) * 0.15 * a, 0, 0))
-	_bone_rot("elbow_L", Vector3(sin(_t * 0.9) * 0.05, 0, 0))
+	anim.update(dt, c, torso_yaw, aim_pitch, aiming, _attack_t >= 0.0, _stagger_t, limp)
 	# Eye brightness follows awareness (readable alert state).
 	if not blinded:
 		var e := 5.0 + 10.0 * clampf(awareness, 0.0, 1.0)
@@ -984,11 +972,43 @@ func _animate(dt: float) -> void:
 		for m in eye_mats:
 			m.emission_energy_multiplier = e
 		eye_light.light_energy = 0.4 + clampf(awareness, 0.0, 1.0) * 0.9
-	# Servo whine when turning quickly or starting to move
+	# Quick servo whirs on snappy aim changes
 	_servo_cd -= dt
-	if _servo_cd <= 0.0 and absf(torso_yaw) > 0.5 and _aim_blend > 0.5:
-		Sfx.play_3d("robot_servo", bones.torso.global_position, -10.0, 0.15, 3.0)
-		_servo_cd = 1.5
+	if _servo_cd <= 0.0 and absf(anim._sp.torso_yaw[1]) > 2.2:
+		Sfx.play_3d("robot_servo_short" if ResourceLoader.exists("res://assets/audio/robot_servo_short_0.wav") else "robot_servo", bones.torso.global_position, -9.0, 0.12, 3.0)
+		_servo_cd = 0.6
+
+
+func _head_scan() -> float:
+	if state == S.SUSPICIOUS:
+		var ls := global_transform.basis.inverse() * (stimulus - global_position)
+		return clampf(atan2(-ls.x, -ls.z), -0.9, 0.9)
+	if state in [S.PATROL, S.SEARCH, S.INVESTIGATE]:
+		return sin(_t * (0.6 if state == S.PATROL else 1.4)) * (0.5 if state == S.PATROL else 0.8)
+	return 0.0
+
+
+## Called by BotAnim at each foot contact.
+func _footfall(side: String, run: float) -> void:
+	var foot: Node3D = bones.get("ankle_" + side)
+	var pos: Vector3 = foot.global_position if foot else global_position
+	var heavy := run > 0.4 and ResourceLoader.exists("res://assets/audio/robot_step_heavy_0.wav")
+	Sfx.play_3d("robot_step_heavy" if heavy else "robot_step", pos, -5.0 + run * 3.0, 0.08, 4.0)
+	if run > 0.5 and randf() < 0.6:
+		Fx.dust_puff(Vector3(pos.x, 0.03, pos.z))
+	if randf() < 0.15:
+		Sfx.play_3d("robot_hydraulic_hiss" if ResourceLoader.exists("res://assets/audio/robot_hydraulic_hiss_0.wav") else "robot_hydraulic", pos + Vector3.UP * 0.5, -14.0, 0.1, 3.0)
+
+
+## Called by BotAnim when the falling body hits the floor.
+func _ground_impact(n: int) -> void:
+	var pos: Vector3 = bones.torso.global_position
+	pos.y = 0.1
+	Sfx.play_3d("robot_collapse" if ResourceLoader.exists("res://assets/audio/robot_collapse_0.wav") else "robot_step", pos, 3.0 - n * 4.0, 0.05, 8.0)
+	Fx.dust_puff(pos, 1.6)
+	Fx.smoke(pos)
+	if n == 1:
+		Fx.mini_arcs(bones.core.global_position, 3, 0.4)
 
 
 func _bone_rot(n: String, r: Vector3) -> void:
@@ -1002,22 +1022,7 @@ func _bone_rot(n: String, r: Vector3) -> void:
 func _animate_death(dt: float) -> void:
 	_death_t += dt
 	var t := _death_t
-	var k1 := clampf(t / 0.45, 0.0, 1.0)
-	var k2 := clampf((t - 0.35) / 0.65, 0.0, 1.0)
-	k2 = k2 * k2
-	_bone_rot("knee_L", Vector3(-1.3 * k1, 0, 0))
-	_bone_rot("knee_R", Vector3(-1.1 * k1, 0, 0))
-	_bone_rot("hip_L", Vector3(0.9 * k1, 0, 0))
-	_bone_rot("hip_R", Vector3(0.7 * k1, 0, 0.1))
-	_bone_rot("torso", Vector3(0.4 * k1 * _death_dir, 0, 0.1))
-	_bone_rot("head", Vector3(0.5 * k1, 0.3, 0))
-	_bone_rot("shoulder_R", Vector3(-1.2 * k1, 0, 0.2))
-	_bone_rot("shoulder_L", Vector3(-1.0 * k1, 0, -0.2))
-	var pel: Node3D = bones.pelvis
-	var base: Transform3D = _rest.pelvis
-	var drop := lerpf(0.0, -0.55, k1)
-	var fall := Basis.from_euler(Vector3(-1.35 * k2 * _death_dir, 0, 0.15 * k2))
-	pel.transform = Transform3D(base.basis * fall, base.origin + Vector3(0, drop - 0.25 * k2, 0.5 * k2 * _death_dir))
+	anim.update_death(dt)
 	if not is_on_floor():
 		velocity.y -= 12.0 * dt
 	velocity.x = move_toward(velocity.x, 0, dt * 6)
@@ -1143,7 +1148,7 @@ func _pop_plate(zone: String, dir: Vector3, preferred := "") -> void:
 	rb.linear_velocity = velocity + d * randf_range(2.0, 4.0) + Vector3.UP * randf_range(1.0, 2.5)
 	rb.angular_velocity = Vector3(randf_range(-8, 8), randf_range(-8, 8), randf_range(-8, 8))
 	Fx.mini_arcs(xf.origin, 2, 0.25)
-	Sfx.play_3d("impact_metal", xf.origin, -2.0, 0.1, 4.0)
+	Sfx.play_3d("robot_armor_break" if ResourceLoader.exists("res://assets/audio/robot_armor_break_0.wav") else "impact_metal", xf.origin, 2.0, 0.1, 5.0)
 	# Debris settles, then is cleaned up.
 	var t := rb.create_tween()
 	t.tween_interval(6.0)

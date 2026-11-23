@@ -7,7 +7,10 @@
 # Blender axes: X right, robot faces +Y, Z up, metres. glTF is exported Y-up with modifiers applied.
 # Joint/empty contract is identical to tools/build_models.py:build_teslabot (M1).
 # Damage contract: detachable plates are separate objects "armor_<zone>_<n>" (origin at their own centre),
-# machinery under them is "internal_<zone>_*", parented to the same joint empty.
+# machinery under them is "internal_<zone>*", parented to the same joint empty.
+# M3: hydraulic rams are cylinder/rod pairs with origins at their mount eyes and local +Y aimed at the other
+# mount (the game re-aims them every frame); everything else is merged per joint into "<joint>_body"
+# (plus "<joint>_leds" and per-zone internals) to cut draw calls; toe_/heel_ contact and spark_ FX empties.
 import bpy, bmesh, math, os, sys, json, random, time
 from mathutils import Vector, Matrix
 
@@ -474,6 +477,8 @@ class Part:
         return self.loft(secs, mat, bevel=False)
 
     def bolts(self, F, pts, w, r=0.0065, mat="robot_joint"):
+        if self.name.startswith("armor_"):
+            mat = self.default  # painted-over bolt heads: no extra material surface on detachable plates
         for x, y in pts:
             self.bolt(F.pt(x, y, w), F.normal(x, y), r, mat=mat)
         return self
@@ -668,6 +673,94 @@ def cable_bundle(name, parent, ctrl, radii, spread, phase=0.0, mat="rubber_cable
     return obs
 
 
+# ------------------------------------------------------------------ hydraulic rams
+RAMS = []     # ram pair records (report + preview aiming)
+PIVOTS = {}   # object name -> (origin, x axis, y axis): custom object frames (ram mounts, claw knuckles)
+SPARKS = []   # (parent empty, world position) for spark_<n> FX empties
+RAM_RANGES = {"knee": (-110, 5), "ankle": (-30, 40), "elbow": (-80, 60)}
+
+
+def frame_matrix(o, xa, ya):
+    ya = V(ya).normalized()
+    xa = V(xa)
+    xa = (xa - ya * xa.dot(ya)).normalized()
+    za = xa.cross(ya)
+    m = Matrix((xa, ya, za)).transposed().to_4x4()
+    m.translation = V(o)
+    return m
+
+
+def horn_point(K, A, b, rng):
+    """Rest position of a rod eye on a lever of length b about joint K (rotation about X).
+    The lever sweep over rng is centred perpendicular to the ram line, which gives the smallest stroke
+    ratio; of the two solutions the one behind the joint (-Y) is used."""
+    K, A = V(K), V(A)
+    phi = math.atan2(A.z - K.z, A.y - K.y)
+    tc = math.radians((rng[0] + rng[1]) / 2)
+    beta, alt = phi + math.pi / 2 - tc, phi - math.pi / 2 - tc
+    if math.cos(alt) < math.cos(beta):
+        beta = alt
+    return V((A.x, K.y + b * math.cos(beta), K.z + b * math.sin(beta)))
+
+
+def build_ram(base, cyl_parent, rod_parent, joint, kind, A, B, offs, rc, rr):
+    """Cylinder (origin = pivot eye A on cyl_parent) and rod (origin = rod-end eye B on rod_parent), both
+    modelled along their local +Y towards the other mount. Barrel and rod lengths are solved from the mount
+    distance over the joint range so that, with both aimed at each other, the rod never leaves the barrel
+    (overlap >= 3 cm at full extension), never bottoms out (>= 3.5 cm ahead of the pivot at full
+    retraction) and the gland never reaches the rod eye (>= 3 cm)."""
+    A, B = V(A), V(B)
+    K = EW[joint]
+    rng = RAM_RANGES[kind]
+    ds = [(A - (K + Matrix.Rotation(math.radians(t), 3, "X") @ (B - K))).length for t in range(rng[0], rng[1] + 1)]
+    dmin, dmax = min(ds), max(ds)
+    gap, back, ovl = 0.03, 0.035, 0.03
+    Lc = dmin - gap
+    lo, hi = dmax - Lc + ovl, dmin - back
+    assert lo <= hi, ("ram stroke infeasible", base, dmin, dmax)
+    Lr = (lo + hi) / 2
+    u = (B - A).normalized()
+    cyl = Part(base + "_cyl", cyl_parent, "robot_joint")
+    rod = Part(base + "_rod", rod_parent, "steel")
+    for ox in offs:
+        a, b = A + X * ox, B + X * ox
+        cyl.cyl(a - X * 0.014, a + X * 0.014, 0.016, n=10, mat="robot_dark")            # pivot eye (hinge along X)
+        cyl.cyl(a + u * 0.008, a + u * 0.034, rc * 0.7, rc, n=10)                        # rear cap
+        cyl.cyl(a + u * 0.034, a + u * (Lc - 0.016), rc, n=10)                           # barrel
+        cyl.tube(a + u * (Lc - 0.016), a + u * Lc, rc + 0.003, rr + 0.0015, n=10, mat="robot_dark")  # gland
+        rod.cyl(b - X * 0.013, b + X * 0.013, 0.0145, n=10, mat="robot_dark")            # rod-end eye
+        rod.cyl(b - u * 0.006, b - u * 0.03, rr * 1.7, rr * 1.4, n=8, mat="robot_dark")  # rod-end block
+        rod.cyl(b - u * 0.03, b - u * Lr, rr, n=8)                                        # chromed rod
+    co, ro = cyl.done(0), rod.done(0)
+    PIVOTS[co.name] = (A, X, u)
+    PIVOTS[ro.name] = (B, X, -u)
+    RAMS.append(dict(cylinder=co.name, rod=ro.name, cylinder_parent=cyl_parent, rod_parent=rod_parent, joint=joint,
+                     range_deg=list(rng), cylinder_origin=[round(c, 4) for c in A], rod_origin=[round(c, 4) for c in B],
+                     rest_length=round((B - A).length, 4), min_length=round(dmin, 4), max_length=round(dmax, 4),
+                     barrel_length=round(Lc, 4), rod_length=round(Lr, 4), twin_x_offsets=list(offs),
+                     overlap_at_full_extension=round(Lc - (dmax - Lr), 4),
+                     rod_tip_clearance_at_full_retraction=round(dmin - Lr, 4),
+                     gland_to_eye_at_full_retraction=round(dmin - Lc, 4)))
+    return A, B
+
+
+def pin(part, P, x0, x1, r=0.0075, mat="steel"):
+    part.cyl(V((x0, P.y, P.z)), V((x1, P.y, P.z)), r, n=8, mat=mat, bevel=False)
+
+
+def lever(part, K, B, x, th=0.012, w=0.042, mat="robot_dark"):
+    k, b = V((x, K[1], K[2])), V((x, B.y, B.z))
+    d = b - k
+    L = d.length
+    ey = d / L
+    part.obox((k + b) / 2, X, ey, X.cross(ey), (th, L + w * 0.6, w), mat)
+
+
+def arm_ram_points(s):
+    A = V((s * 0.378, -0.095, 1.585))
+    return A, horn_point(EW[f"elbow_{'R' if s > 0 else 'L'}"], A, 0.062, RAM_RANGES["elbow"])
+
+
 # ------------------------------------------------------------------ joints
 def build_empties():
     for name, parent, loc in JOINTS:
@@ -689,7 +782,7 @@ def build_empties():
 # =================================================================== BODY
 def build_pelvis():
     p = Part("pelvis_frame", "pelvis", "robot_dark")
-    p.loft([sec((0, -0.01, 0.86), X, Y, crect(0.11, 0.12, 0.03)),
+    p.loft([sec((0, -0.01, 0.905), X, Y, crect(0.07, 0.10, 0.02)),
             sec((0, 0.0, 0.95), X, Y, crect(0.19, 0.22, 0.05)),
             sec((0, 0.0, 1.05), X, Y, crect(0.22, 0.25, 0.06)),
             sec((0, -0.01, 1.10), X, Y, crect(0.20, 0.21, 0.05))])
@@ -1147,16 +1240,14 @@ def build_arm(s):
     for xf in (0.309, 0.451):
         u.prism(fork, (s * xf, 0, 0), Y, Z, X, -0.009, 0.009)
     u.bead([(s * 0.318, -0.05, 1.44), (s * 0.318, 0.05, 1.44)], (-s, 0, 0))
+    # elbow ram: cylinder pivots on a clevis behind the upper arm, rod drives a short lever horn on the forearm
+    A, B = arm_ram_points(s)
+    u.box((A.x, -0.081, A.z + 0.006), (0.05, 0.022, 0.045))
+    for dx in (-0.0185, 0.0185):
+        u.box((A.x + dx, A.y + 0.004, A.z), (0.007, 0.036, 0.036))
+    pin(u, A, A.x - 0.024, A.x + 0.024, 0.006)
     u.done(0.004, 1)
-    rc = Part(f"arm_{lab}_ram_cyl", sh, "robot_joint")
-    rc.cyl((s * 0.378, -0.088, 1.585), (s * 0.378, -0.091, 1.425), 0.021, n=12)
-    rc.cyl((s * 0.378, -0.091, 1.44), (s * 0.378, -0.0912, 1.425), 0.025, n=12, mat="robot_dark")
-    rc.box((s * 0.378, -0.08, 1.595), (0.03, 0.03, 0.03), "robot_dark")
-    rc.done(0.002, 1)
-    rr = Part(f"arm_{lab}_ram_rod", el, "steel")
-    rr.cyl((s * 0.378, -0.091, 1.45), (s * 0.378, -0.095, 1.292), 0.0105, n=10)
-    rr.cyl((s * 0.358, -0.095, 1.286), (s * 0.398, -0.095, 1.286), 0.013, n=10, mat="robot_dark")
-    rr.done(0.0015, 1)
+    build_ram(f"arm_{lab}_ram", sh, el, el, "elbow", A, B, (0.0,), 0.021, 0.0095)
 
     # pauldron (armor_arm_X_1): pressed and folded steel shell, layered ridge plate
     F = PF((s * 0.34, -0.03, 1.868), (s, 0, 0), (0, 1, -0.10), Z, rt=1.1, fx=[(-0.05, -32), (0.075, 36), (0.165, 52)])
@@ -1223,10 +1314,13 @@ def forearm_housing(s, name, front):
                   sec((cx, 0.08, 1.325), X, Z, crect(0.124, 0.17, 0.04)),
                   sec((cx, 0.20, 1.322), X, Z, crect(0.124, 0.16, 0.04)),
                   sec((cx, front, 1.32), X, Z, crect(0.105, 0.125, 0.035))])
-    hsg.loft([sec((cx, -0.13, 1.272), X, Z, crect(0.075, 0.055, 0.015)),
-              sec((cx, -0.04, 1.268), X, Z, crect(0.09, 0.07, 0.02)),
-              sec((cx, 0.05, 1.28), X, Z, crect(0.10, 0.09, 0.025))])
-    hsg.cyl((cx - 0.025, -0.095, 1.286), (cx + 0.025, -0.095, 1.286), 0.012, n=10, mat="robot_joint")
+    hsg.loft([sec((cx, -0.13, 1.256), X, Z, crect(0.075, 0.045, 0.012)),
+              sec((cx, -0.04, 1.252), X, Z, crect(0.09, 0.05, 0.015)),
+              sec((cx, 0.05, 1.272), X, Z, crect(0.10, 0.08, 0.025))])
+    A, B = arm_ram_points(s)
+    for dx in (-0.019, 0.019):
+        lever(hsg, EW[el], B, A.x + dx, th=0.007, w=0.034)
+    pin(hsg, B, A.x - 0.024, A.x + 0.024, 0.006)
     hsg.bead([(cx - s * 0.062, 0.06, 1.39), (cx - s * 0.062, front - 0.02, 1.39)], (-s, 0, 1))
     return hsg
 
@@ -1384,7 +1478,8 @@ def build_claw_arm():
                           sec(a1, hinge, upv, crect(0.004, 0.003, 0.0008))])
                 seg.loft([sec(a0.lerp(a1, 0.2) - upv * 0.004, hinge, upv, crect(0.006, 0.01, 0.001)),
                           sec(a1 - upv * 0.001, hinge, upv, crect(0.002, 0.003, 0.0004))], "steel", bevel=False)
-            seg.done(0.0015, 1)
+            so = seg.done(0.0015, 1)
+            PIVOTS[so.name] = (p.copy(), hinge, dv)  # origin on the knuckle pin, +Y along the segment
             p = q
 
 
@@ -1403,19 +1498,15 @@ def build_leg(s):
             sec((s * 0.168, 0.012, 0.86), X, Y, crect(0.19, 0.22, 0.05)),
             sec((s * 0.165, 0.008, 0.72), X, Y, crect(0.18, 0.21, 0.05)),
             sec((s * 0.16, 0.0, 0.615), X, Y, crect(0.13, 0.14, 0.03))])
-    t.box((cx, -0.118, 0.915), (0.12, 0.03, 0.03), "robot_joint")
-    t.bead([(s * 0.262, -0.06, 0.86), (s * 0.262, 0.07, 0.86)], (s, 0, 0))
+    t.bead([(s * 0.262, 0.02, 0.86), (s * 0.262, 0.07, 0.86)], (s, 0, 0))
+    # knee rams: twins flanking the knee, cylinders on thigh brackets, rods on lever horns of the knee hub
+    KA = V((cx, -0.03, 0.88))
+    KB = horn_point(EW[knee], KA, 0.09, RAM_RANGES["knee"])
+    for sg_ in (-1, 1):
+        t.box((cx + sg_ * 0.088, KA.y, KA.z), (0.016, 0.05, 0.055))
+        pin(t, KA, cx + sg_ * 0.082, cx + sg_ * 0.13)
     t.done(0.006, 1)
-    rc = Part(f"leg_{lab}_knee_ram_cyl", hip, "robot_joint")
-    rd = Part(f"leg_{lab}_knee_ram_rod", knee, "steel")
-    for ox in (-0.038, 0.038):
-        x = cx + ox
-        rc.cyl((x, -0.122, 0.91), (x, -0.122, 0.60), 0.022, n=12)
-        rc.cyl((x, -0.122, 0.62), (x, -0.122, 0.60), 0.026, n=12, mat="robot_dark")
-        rd.cyl((x, -0.122, 0.64), (x, -0.128, 0.37), 0.0105, n=10)
-    rd.cyl((cx - 0.052, -0.128, 0.37), (cx + 0.052, -0.128, 0.37), 0.013, n=10, mat="robot_dark")
-    rc.done(0.002, 1)
-    rd.done(0.0015, 1)
+    build_ram(f"leg_{lab}_knee_ram", hip, knee, knee, "knee", KA, KB, (-0.11, 0.11), 0.022, 0.0105)
 
     # thigh front plate (armor_leg_X_1)
     F = PF((s * 0.168, 0.15, 0.79), (s, 0, 0), (0, -0.2, 1), Y, rt=0.8, fx=[(0.05, 36), (-0.05, 36)])
@@ -1435,7 +1526,7 @@ def build_leg(s):
     it.done(0.0015, 1)
 
     # outer thigh plate (armor_leg_X_2)
-    F = PF((s * 0.288, 0.01, 0.765), Y, Z, (s, 0, 0), fx=[(0.06, 30), (-0.05, 30)])
+    F = PF((s * 0.325, 0.01, 0.765), Y, Z, (s, 0, 0), fx=[(0.06, 30)])
     to = Part(f"armor_leg_{lab}_2", hip, "robot_dark")
     to.plate(F, chips(cpoly(-0.095, -0.12, 0.105, 0.095, (0.03, 0.04, 0.03, 0.02)), [(3, 0.5, 0.02, 0.006)]), 0.022, cuts=(0, 1))
     to.panel(F, cpoly(-0.04, 0.02, 0.05, 0.06, (0.005,) * 4), 0.0, "robot_bone", 0.0015)
@@ -1443,9 +1534,9 @@ def build_leg(s):
     to.bolts(F, [(-0.03, 0.075), (0.04, 0.075), (-0.03, -0.10), (0.04, -0.10)], 0.0, r=0.0055)
     to.done(0.004, 1)
     ih = Part(f"internal_leg_{lab}_hipservo", hip, "robot_joint")
-    ih.cyl((s * 0.255, 0.0, 0.79), (s * 0.268, 0.0, 0.79), 0.05, n=14)
-    ih.cyl((s * 0.262, -0.07, 0.70), (s * 0.262, 0.06, 0.85), 0.007, n=8, mat="rubber_cable")
-    ih.box((s * 0.26, 0.05, 0.70), (0.015, 0.05, 0.06), "copper")
+    ih.cyl((s * 0.294, 0.045, 0.78), (s * 0.301, 0.045, 0.78), 0.04, n=14)
+    ih.cyl((s * 0.298, 0.02, 0.68), (s * 0.298, 0.08, 0.86), 0.006, n=8, mat="rubber_cable")
+    ih.box((s * 0.297, 0.07, 0.70), (0.008, 0.03, 0.05), "copper")
     ih.done(0.0015, 1)
 
     # knee
@@ -1453,6 +1544,9 @@ def build_leg(s):
     k.cyl((s * 0.08, 0, 0.55), (s * 0.24, 0, 0.55), 0.064, n=18)
     for x0, x1 in ((0.07, 0.08), (0.24, 0.25)):
         k.cyl((s * x0, 0, 0.55), (s * x1, 0, 0.55), 0.046, n=14, mat="robot_dark")
+    for sg_ in (-1, 1):  # lever horns that the knee-ram rods drive
+        lever(k, EW[knee], KB, cx + sg_ * 0.092)
+        pin(k, KB, cx + sg_ * 0.086, cx + sg_ * 0.13)
     k.done(0.003, 1)
     kc = Part(f"armor_leg_{lab}_3", knee, "robot_dark")
     prof = [(0.04, 0.652), (0.14, 0.622), (0.198, 0.545), (0.168, 0.452), (0.092, 0.426), (0.06, 0.50)]
@@ -1478,17 +1572,15 @@ def build_leg(s):
              sec((cx, -0.195, 0.34), X, Y, crect(0.125, 0.11, 0.03)),
              sec((cx, -0.185, 0.25), X, Y, crect(0.10, 0.09, 0.025)),
              sec((cx, -0.115, 0.185), X, Y, crect(0.075, 0.03, 0.01))], "robot_joint")
-    sh.box((cx, -0.128, 0.372), (0.12, 0.03, 0.03))
     sh.bead([(cx - s * 0.07, -0.10, 0.45), (cx - s * 0.07, -0.12, 0.25)], (-s, 0, 0))
+    # ankle rams: twins on the calf flanks driving heel horns on the foot
+    AA = V((cx, -0.10, 0.40))
+    AB = horn_point(EW[ank], AA, 0.10, RAM_RANGES["ankle"])
+    for sg_ in (-1, 1):
+        sh.box((cx + sg_ * 0.079, AA.y, AA.z), (0.022, 0.045, 0.05))
+        pin(sh, AA, cx + sg_ * 0.068, cx + sg_ * 0.122)
     sh.done(0.006, 1)
-    ac = Part(f"leg_{lab}_ankle_ram_cyl", knee, "robot_joint")
-    ac.cyl((cx, -0.225, 0.33), (cx, -0.185, 0.18), 0.019, n=12)
-    ac.cyl((cx, -0.228, 0.345), (cx, -0.225, 0.33), 0.015, n=10, mat="robot_dark")
-    ac.done(0.002, 1)
-    ar = Part(f"leg_{lab}_ankle_ram_rod", ank, "steel")
-    ar.cyl((cx, -0.19, 0.20), (cx, -0.15, 0.085), 0.009, n=10)
-    ar.cyl((cx - 0.02, -0.15, 0.082), (cx + 0.02, -0.15, 0.082), 0.012, n=10, mat="robot_dark")
-    ar.done(0.0015, 1)
+    build_ram(f"leg_{lab}_ankle_ram", knee, ank, ank, "ankle", AA, AB, (-0.103, 0.103), 0.019, 0.009)
 
     # shin guard (armor_leg_X_4): raked blade
     F = PF((cx, 0.112, 0.335), (s, 0, 0), (0, 0.30, 1), Y, rt=0.9, fx=[(0.0, 22), (0.04, 30), (-0.04, 30)])
@@ -1519,6 +1611,9 @@ def build_leg(s):
     for ox in (-0.087, 0.087):
         ft.prism(side, (cx + ox, 0, 0), Y, Z, X, -0.008, 0.008)
         ft.bolt((cx + ox + (0.009 if ox > 0 else -0.009), 0, 0.10), (1 if ox > 0 else -1, 0, 0), 0.007, mat="steel")
+    for sg_ in (-1, 1):  # heel horns for the ankle-ram rods
+        lever(ft, EW[ank], AB, cx + sg_ * 0.085, th=0.01, w=0.038)
+        pin(ft, AB, cx + sg_ * 0.08, cx + sg_ * 0.122)
     ft.done(0.005, 1)
     toes = Part(f"leg_{lab}_toes", ank, "robot_paint")
     for off, spl in ((-0.058, -7.0), (0.058, 9.0)):
@@ -1541,8 +1636,12 @@ def build_cables():
                      [(s * 0.12, -0.25, 1.69), (s * 0.19, -0.235, 1.765), (s * 0.28, -0.18, 1.775), (s * 0.33, -0.13, 1.70), (s * 0.335, -0.105, 1.63)],
                      (0.013, 0.010), 0.016, phase=0.4)
         cable_bundle(f"cable_arm_{lab}_feed_b", f"shoulder_{lab}",
-                     [(s * 0.335, -0.105, 1.63), (s * 0.33, -0.10, 1.52), (s * 0.338, -0.105, 1.40), (s * 0.36, -0.125, 1.30), (s * 0.38, -0.14, 1.272)],
+                     [(s * 0.335, -0.105, 1.63), (s * 0.322, -0.105, 1.52), (s * 0.326, -0.11, 1.40), (s * 0.355, -0.13, 1.30), (s * 0.38, -0.142, 1.256)],
                      (0.013, 0.010), 0.016, phase=0.4)
+        SPARKS.append(("torso", V((s * 0.335, -0.105, 1.63))))           # torso-side cut end of the arm feed
+        SPARKS.append(("torso", V((s * 0.124, -0.25, 1.69))))            # feed exit at the capacitor mount
+        SPARKS.append((f"shoulder_{lab}", V((s * 0.335, -0.105, 1.625))))  # arm-side end of the feed
+        SPARKS.append((f"elbow_{lab}", V((s * 0.38, -0.142, 1.256))))     # forearm inlet
     cl = Part("cable_clamps", "torso", "robot_joint")
     for s in (1, -1):
         cl.cyl((s * 0.112, -0.252, 1.69), (s * 0.135, -0.248, 1.69), 0.024, n=10)
@@ -1550,14 +1649,16 @@ def build_cables():
     cl.done(0)
     for s, lab in ((1, "R"), (-1, "L")):
         cc = Part(f"cable_clamps_arm_{lab}", f"shoulder_{lab}", "robot_dark")
-        cc.tube((s * 0.33, -0.10, 1.53), (s * 0.33, -0.10, 1.51), 0.03, 0.017, n=10)
-        cc.box((s * 0.345, -0.088, 1.52), (0.02, 0.012, 0.03))
+        cc.tube((s * 0.322, -0.105, 1.53), (s * 0.322, -0.105, 1.51), 0.03, 0.017, n=10)
+        cc.box((s * 0.335, -0.09, 1.52), (0.02, 0.012, 0.03))
         cc.done(0.002, 1)
         cf = Part(f"cable_inlet_arm_{lab}", f"elbow_{lab}", "robot_joint")
-        cf.cyl((s * 0.38, -0.145, 1.272), (s * 0.38, -0.125, 1.272), 0.024, n=10)
+        cf.cyl((s * 0.38, -0.147, 1.256), (s * 0.38, -0.125, 1.256), 0.022, n=10)
         cf.done(0.002, 1)
     cable_bundle("cable_waist_R", "torso", [(0.07, 0.07, 1.29), (0.12, 0.10, 1.23), (0.10, 0.09, 1.17), (0.07, 0.05, 1.16)], (0.009, 0.008, 0.007), 0.012)
     cable_bundle("cable_waist_L", "torso", [(-0.07, -0.06, 1.29), (-0.12, -0.09, 1.23), (-0.10, -0.08, 1.17), (-0.07, -0.04, 1.16)], (0.009, 0.008), 0.012)
+    SPARKS.append(("torso", V((0.07, 0.05, 1.16))))
+    SPARKS.append(("torso", V((-0.07, -0.04, 1.16))))
 
 
 # =================================================================== PIPELINE
@@ -1620,15 +1721,155 @@ def shade(objs):
         wn.keep_sharp = True
 
 
-def parent_all():
+def apply_pivots():
+    """Ram halves and claw segments get a custom object frame: origin on their mount eye / knuckle,
+    local +Y along the part (towards the opposite mount), local X on the hinge axis."""
+    for ob, _ in REG:
+        if ob.name in PIVOTS:
+            o, xa, ya = PIVOTS[ob.name]
+            M = frame_matrix(o, xa, ya)
+            ob.data.transform(M.inverted() @ Matrix.Translation(ob.location))
+            ob.matrix_basis = M
+
+
+ZONES = ["head", "torso", "core", "arm_R", "arm_L", "leg_R", "leg_L"]
+SECOND_JOINT = {"elbow_R": "_forearm", "elbow_L": "_forearm", "knee_R": "_shin", "knee_L": "_shin"}
+
+
+def merge_key(name, pname):
+    if name.startswith(("armor_", "eye")) or name in ("core_glow", "arc_tip") or name in PIVOTS:
+        return None
+    if name.startswith("led_"):
+        return pname + "_leds", "joint"
+    if name.startswith("internal_"):
+        zone = next(z for z in ZONES if name.startswith("internal_" + z + "_"))
+        return "internal_" + zone + SECOND_JOINT.get(pname, ""), "centre"
+    return pname + "_body", "joint"
+
+
+def merge_objects():
+    """Draw-call merge: one multi-material body per joint, LEDs per joint, internals per zone (and joint)."""
+    keep, groups = [], {}
     for ob, pname in REG:
-        wl = ob.location.copy()
+        k = merge_key(ob.name, pname)
+        if k is None:
+            keep.append((ob, pname))
+        else:
+            groups.setdefault(k[0], [k[1], pname, []])[2].append((ob, pname))
+    merged = []
+    for gname in sorted(groups):
+        mode, pname, members = groups[gname]
+        assert all(pn == pname for _, pn in members), ("mixed parents in", gname)
+        obs = [o for o, _ in members]
+        if len(obs) > 1:
+            with bpy.context.temp_override(active_object=obs[0], object=obs[0], selected_objects=obs, selected_editable_objects=obs):
+                bpy.ops.object.join()
+        ob = obs[0]
+        ob.name = gname
+        ob.data.name = gname
+        if mode == "joint":  # origin on the joint: identity local transform under its empty
+            ob.data.transform(Matrix.Translation(ob.location - EW[pname]))
+            ob.location = EW[pname].copy()
+        else:
+            recenter(ob)
+        merged.append((ob, pname))
+    return keep + merged
+
+
+def parent_all():
+    rest = {}
+    for ob, pname in REG:
+        mw = ob.matrix_basis.copy()
+        rest[ob.name] = mw
         ob.parent = E[pname]
         ob.matrix_parent_inverse = Matrix.Identity(4)
-        ob.location = wl - EW[pname]
+        ob.matrix_basis = Matrix.Translation(-EW[pname]) @ mw
     bpy.context.view_layer.update()
     for ob, pname in REG:
-        assert (ob.matrix_world.translation - (ob.location + EW[pname])).length < 1e-5, ob.name
+        d = ob.matrix_world - rest[ob.name]
+        assert max(abs(d[i][j]) for i in range(4) for j in range(4)) < 1e-5, ob.name
+
+
+EXTRA = {}  # name -> (parent, world position): toe_/heel_ contacts and spark_ FX points
+
+
+POSE_CHECK = {}
+
+
+def add_empty(name, parent, loc, size=0.03):
+    o = bpy.data.objects.new(name, None)
+    o.empty_display_size = size
+    o.empty_display_type = "PLAIN_AXES"
+    bpy.context.scene.collection.objects.link(o)
+    o.parent = E[parent]
+    o.matrix_parent_inverse = Matrix.Identity(4)
+    o.location = V(loc) - EW[parent]
+    EXTRA[name] = (parent, [round(c, 4) for c in loc])
+    return o
+
+
+def add_extra_empties():
+    for lab in ("R", "L"):
+        ank = "ankle_" + lab
+        body = bpy.data.objects[ank + "_body"]
+        mw = body.matrix_world
+        low = [mw @ v.co for v in body.data.vertices if (mw @ v.co).z < 0.004]
+        cx = EW[ank].x
+        add_empty("toe_" + lab, ank, (cx, max(p.y for p in low), 0.0))
+        add_empty("heel_" + lab, ank, (cx, min(p.y for p in low), 0.0))
+    for i, (parent, pos) in enumerate(SPARKS):
+        add_empty(f"spark_{i + 1}", parent, pos, 0.02)
+
+
+def aim_rams():
+    """Emulates the game: every ram half aims its local +Y at the other half's origin (hinge kept on X)."""
+    bpy.context.view_layer.update()
+    W = {}
+    for r in RAMS:
+        for nm in (r["cylinder"], r["rod"]):
+            W[nm] = bpy.data.objects[nm].matrix_world.translation.copy()
+    for r in RAMS:
+        for me_, other in ((r["cylinder"], r["rod"]), (r["rod"], r["cylinder"])):
+            ob = bpy.data.objects[me_]
+            hinge = ob.parent.matrix_world.to_3x3() @ X
+            ob.matrix_world = frame_matrix(W[me_], hinge, W[other] - W[me_])
+    bpy.context.view_layer.update()
+
+
+def ram_tip_local(r):
+    """Rod tip (end inside the barrel) in the cylinder's local frame: x, z ~ 0 and 0 < y < barrel length."""
+    c, d = bpy.data.objects[r["cylinder"]], bpy.data.objects[r["rod"]]
+    return c.matrix_world.inverted() @ (d.matrix_world @ V((0, r["rod_length"], 0)))
+
+
+def ram_sweep():
+    """Rotates each ram's joint across its range in 5 deg steps, re-aims, and checks the rod stays in the barrel."""
+    res = []
+    for r in RAMS:
+        j = E[r["joint"]]
+        ys, off = [], 0.0
+        a0, a1 = r["range_deg"]
+        for t in list(range(a0, a1 + 1, 5)) + [a1]:
+            j.rotation_euler.x = math.radians(t)
+            aim_rams()
+            lt = ram_tip_local(r)
+            ys.append(lt.y)
+            off = max(off, abs(lt.x), abs(lt.z))
+        j.rotation_euler.x = 0.0
+        ok = off < 1e-4 and min(ys) > 0.03 and max(ys) < r["barrel_length"] - 0.02
+        assert ok, ("ram leaves barrel", r["cylinder"], min(ys), max(ys), off)
+        res.append({"pair": r["cylinder"][:-4], "rod_tip_depth_min": round(min(ys), 4), "rod_tip_depth_max": round(max(ys), 4),
+                    "barrel_length": r["barrel_length"], "max_off_axis": round(off, 6)})
+    for r in RAMS:  # back to the authored rest frames
+        for nm in (r["cylinder"], r["rod"]):
+            ob = bpy.data.objects[nm]
+            ob.matrix_basis = Matrix.Translation(-EW[ob.parent.name]) @ frame_matrix(*PIVOTS[nm])
+    bpy.context.view_layer.update()
+    return res
+
+
+def surfaces(objs):
+    return sum(len({m.name for m in o.data.materials if m}) for o in objs)
 
 
 def tri_count(objs):
@@ -1762,17 +2003,52 @@ def render_previews(mesh_objs):
     shot(os.path.join(PREV, "09_damaged_head.png"), cam, lights, (0.36, 0.86, 1.97), (0.0, 0.1, 1.84), 55, (1200, 900), scale=0.45)
     for o in armor:
         o.hide_render = False
-    # combat pose
+    # combat pose: arm aimed forward-up, torso twisted, left knee bent -90 deg; rams re-aimed like the game does
+    rest = {nm: bpy.data.objects[nm].matrix_basis.copy() for r in RAMS for nm in (r["cylinder"], r["rod"])}
     E["shoulder_R"].rotation_euler.x = math.radians(25)
     E["torso"].rotation_euler.z = math.radians(20)
-    E["hip_L"].rotation_euler.x = math.radians(24)
-    E["knee_L"].rotation_euler.x = math.radians(-42)
-    E["ankle_L"].rotation_euler.x = math.radians(16)
-    bpy.context.view_layer.update()
+    E["hip_L"].rotation_euler.x = math.radians(40)
+    E["knee_L"].rotation_euler.x = math.radians(-90)
+    E["ankle_L"].rotation_euler.x = math.radians(40)
+    E["elbow_L"].rotation_euler.x = math.radians(-25)
+    aim_rams()
+    POSE_CHECK["combat"] = {r["cylinder"][:-4]: [round(c, 4) for c in ram_tip_local(r)] for r in RAMS}
     shot(os.path.join(PREV, "10_combat_pose.png"), cam, lights, (1.9, 3.7, 1.45), (0, 0.1, 1.1), 50, full)
-    shot(os.path.join(PREV, "11_combat_pose_side.png"), cam, lights, (4.4, 1.2, 1.25), (0, 0.1, 1.08), 50, full)
-    for nm in ("shoulder_R", "torso", "hip_L", "knee_L", "ankle_L"):
+    shot(os.path.join(PREV, "11_combat_pose_side.png"), cam, lights, (-4.4, 1.0, 1.2), (0, 0.05, 1.0), 50, full)
+    kn = E["knee_L"].matrix_world.translation.copy()
+    clear = [o for o in mesh_objs if o.name.startswith(("armor_leg_L", "armor_arm_L"))]  # plates off: rams in view
+    for o in clear:
+        o.hide_render = True
+    # diagnostic tint: cylinders amber, rods cyan, so alignment reads at a glance
+    tint = {}
+    for col, key in (((1.0, 0.45, 0.05), "cylinder"), ((0.1, 0.8, 1.0), "rod")):
+        m = bpy.data.materials.new("diag_" + key)
+        bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+        bsdf.inputs["Base Color"].default_value = (*col, 1)
+        bsdf.inputs["Emission Color"].default_value = (*col, 1)
+        bsdf.inputs["Emission Strength"].default_value = 0.6
+        for r in RAMS:
+            me = bpy.data.objects[r[key]].data
+            tint[me.name] = [sl for sl in me.materials]
+            for i in range(len(me.materials)):
+                me.materials[i] = m
+    shot(os.path.join(PREV, "15_knee_ram_minus90.png"), cam, lights, kn + V((-1.6, -0.15, 0.0)), kn + V((0, -0.1, -0.1)), 50, (1200, 1000), scale=0.9, dim=2.5)
+    E["knee_L"].rotation_euler.x = math.radians(-110)
+    E["ankle_L"].rotation_euler.x = math.radians(-30)
+    aim_rams()
+    POSE_CHECK["knee_-110_ankle_-30"] = {r["cylinder"][:-4]: [round(c, 4) for c in ram_tip_local(r)] for r in RAMS}
+    kn = E["knee_L"].matrix_world.translation.copy()
+    shot(os.path.join(PREV, "16_knee_ram_minus110.png"), cam, lights, kn + V((-1.6, -0.15, 0.0)), kn + V((0, -0.1, -0.1)), 50, (1200, 1000), scale=0.9, dim=2.5)
+    for o in clear:
+        o.hide_render = False
+    for mname, mats in tint.items():
+        me = bpy.data.meshes[mname]
+        for i, m in enumerate(mats):
+            me.materials[i] = m
+    for nm in ("shoulder_R", "torso", "hip_L", "knee_L", "ankle_L", "elbow_L"):
         E[nm].rotation_euler = (0, 0, 0)
+    for nm, mb in rest.items():
+        bpy.data.objects[nm].matrix_basis = mb
     bpy.context.view_layer.update()
     # dark-room readability at 15 m (dim lights, emissives carry it)
     shot(os.path.join(PREV, "12_dark_15m.png"), cam, lights, (1.2, 15.0, 1.6), (0, 0, 1.1), 50, (1280, 720), dim=0.15)
@@ -1828,12 +2104,27 @@ def main():
     print("built", len(REG), "mesh objects", round(time.time() - T0, 1), "s")
 
     apply_geometry_mods()
-    objs = [o for o, _ in REG]
+    apply_pivots()
     print("modifiers applied", round(time.time() - T0, 1), "s")
+    bpy.context.view_layer.update()
+    pre = [o for o, _ in REG]
+    pre_count, pre_surf = len(pre), surfaces(pre)
+    pre_by_name = {o.name: o for o in pre}
+
+    def group_bounds(names):
+        a, b = world_bounds([pre_by_name[n] for n in names])
+        return {"min": [round(c, 3) for c in a], "max": [round(c, 3) for c in b],
+                "centre": [round((x + y) / 2, 3) for x, y in zip(a, b)], "size": [round(y - x, 3) for x, y in zip(a, b)]}
+    head_bounds = group_bounds([o.name for o, pn in REG if pn == "head" and not o.name.startswith(("head_antenna", "head_sensor_mast", "led_head", "head_cable", "head_neck"))])
+    core_bounds = group_bounds([o.name for o, pn in REG if pn == "core" and o.name.startswith(("core_glow", "core_coil", "core_insulators", "core_electrodes"))])
+    REG[:] = merge_objects()
+    objs = [o for o, _ in REG]
+    print("merged", pre_count, "->", len(objs), "objects", round(time.time() - T0, 1), "s")
     smart_uv(objs)
     print("uv done", round(time.time() - T0, 1), "s")
     shade(objs)
     parent_all()
+    add_extra_empties()
 
     # ---- validation
     bpy.context.view_layer.update()
@@ -1868,13 +2159,20 @@ def main():
         if o.name.startswith("armor_"):
             c = sum((V(b) for b in o.bound_box), V()) / 8
             assert c.length < 1e-4, ("armor origin not centred", o.name, c)
-    def group_bounds(pred):
-        g = [o for o in objs if pred(o)]
-        a, b = world_bounds(g)
-        return {"min": [round(c, 3) for c in a], "max": [round(c, 3) for c in b],
-                "centre": [round((x + y) / 2, 3) for x, y in zip(a, b)], "size": [round(y - x, 3) for x, y in zip(a, b)]}
-    report["head_bounds"] = group_bounds(lambda o: o.parent.name == "head" and not o.name.startswith(("head_antenna", "head_sensor_mast", "led_head", "head_cable", "head_neck")))
-    report["core_stack_bounds"] = group_bounds(lambda o: o.parent.name == "core" and o.name.startswith(("core_glow", "core_coil", "core_insulators", "core_electrodes")))
+    report["head_bounds"] = head_bounds
+    report["core_stack_bounds"] = core_bounds
+    report["objects_before_merge"] = pre_count
+    report["surfaces_before_merge"] = pre_surf
+    report["surfaces_after_merge"] = surfaces(objs)
+    report["rams"] = RAMS
+    for r in RAMS:  # authored rest frame: local +Y of each half points at the other half's origin
+        c, d = bpy.data.objects[r["cylinder"]], bpy.data.objects[r["rod"]]
+        for a_, b_ in ((c, d), (d, c)):
+            loc = a_.matrix_world.inverted() @ b_.matrix_world.translation
+            assert abs(loc.x) < 1e-5 and abs(loc.z) < 1e-5 and loc.y > 0, (a_.name, loc)
+    report["ram_sweep"] = ram_sweep()
+    report["extra_empties"] = EXTRA
+    report["objects"] = sorted(o.name for o in objs)
     with open(os.path.join(OUT, "teslabot_report.json"), "w") as fh:
         json.dump(report, fh, indent=1)
     print("TRIANGLES", tris, "OBJECTS", len(objs), "HEIGHT", report["height"], "WIDTH", report["width"], "DEPTH", report["depth"])
@@ -1883,6 +2181,13 @@ def main():
     print("UNPARENTED", unparented)
     print("HEAD", report["head_bounds"])
     print("CORE", report["core_stack_bounds"])
+    print("OBJECTS", pre_count, "->", len(objs), "SURFACES", pre_surf, "->", report["surfaces_after_merge"])
+    for r in RAMS:
+        print("RAM", r["cylinder"], r["cylinder_origin"], r["rod"], r["rod_origin"], "len", r["min_length"], r["max_length"],
+              "barrel", r["barrel_length"], "rod", r["rod_length"], "overlap", r["overlap_at_full_extension"])
+    for r in report["ram_sweep"]:
+        print("SWEEP", r)
+    print("EXTRA", EXTRA)
 
     # ---- export (rest pose, before any preview objects exist)
     for o in bpy.context.view_layer.objects:
@@ -1895,6 +2200,10 @@ def main():
 
     if not NO_RENDER:
         render_previews(objs)
+        report["pose_check_rod_tip_in_cylinder_local"] = POSE_CHECK
+        with open(os.path.join(OUT, "teslabot_report.json"), "w") as fh:
+            json.dump(report, fh, indent=1)
+        print("POSE_CHECK", POSE_CHECK)
     print("DONE", round(time.time() - T0, 1), "s")
 
 

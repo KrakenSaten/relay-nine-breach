@@ -344,7 +344,7 @@ func _finish_load() -> void:
 func toggle_fire_mode() -> void:
 	if def.auto:
 		auto_mode = not auto_mode
-		Sfx.play("ui_click", -8.0)
+		_play_first(["selector_switch", "ui_click"], -6.0)
 		ammo_changed.emit()
 
 
@@ -414,7 +414,7 @@ func _shoot() -> void:
 			Fx.tracer(muzzle_pos + dir * 0.5, hit.position)
 	# Presentation
 	var supp: bool = stats.suppressed
-	Sfx.play_local(def.shot_sound_supp if supp else def.shot_sound, -1.0 if not supp else -4.0, 0.05)
+	_shot_audio(supp)
 	Game.emit_noise(player.global_position, stats.noise, player)
 	_flash_t = 0.035 if not supp else 0.02
 	_flash.visible = stats.flash_mult > 0.5
@@ -564,16 +564,25 @@ func _reload_step() -> void:
 	var t := _reload_t
 	var out_t := 0.18
 	var in_t := 0.55 if _reload_empty else 0.62
-	if t >= out_t and not _reload_events.has("out"):
-		_reload_events.out = true
-		Sfx.play("mag_out", -4.0)
+	var pistol := id == "pistol"
+	# M3 timeline, synced to the left-hand choreography in _reload_left().
+	_rl_event("release", 0.13, "pistol_mag_release" if pistol else "rifle_mag_release", "mag_out", -2.0)
+	if _reload_empty:
+		_rl_event("drop", 0.34, "rifle_mag_drop", "", -4.0)          # empty mag hits the floor
+	else:
+		_rl_event("pocket", 0.34, "rifle_mag_pouch", "", -4.0)       # partial mag stowed
+	_rl_event("pouch", 0.42, "rifle_mag_pouch", "", -6.0)
 	if t >= in_t and not _reload_events.has("in"):
 		_reload_events["in"] = true
-		Sfx.play("mag_in", -3.0)
+		if not _play_first(["pistol_mag_seat" if pistol else "rifle_mag_seat", "mag_in"], -2.0):
+			pass
 		_finish_load()
-	if _reload_empty and t >= 0.76 and not _reload_events.has("bolt"):
-		_reload_events.bolt = true
-		Sfx.play("bolt", -3.0)
+	if _reload_empty:
+		if pistol:
+			_rl_event("slide", 0.8, "pistol_slide_rack", "bolt", -2.0)
+		else:
+			_rl_event("charge", 0.74, "rifle_charge_pull", "bolt", -2.0)
+			_rl_event("charge_rel", 0.81, "rifle_charge_release", "", -1.0)
 	# Magazine motion: drop out, hidden, come back up.
 	if mag_node:
 		var drop := Vector3.ZERO
@@ -743,3 +752,39 @@ func _exit_tree() -> void:
 	if _att_root and is_instance_valid(_att_root):
 		_att_root.free()
 		_att_root = null
+
+
+
+# ---------------------------------------------------------------- M3 audio helpers
+static func _has_snd(n: String) -> bool:
+	return ResourceLoader.exists("res://assets/audio/%s.wav" % n) or ResourceLoader.exists("res://assets/audio/%s_0.wav" % n)
+
+
+func _play_first(names: Array, vol: float) -> bool:
+	for n in names:
+		if n != "" and _has_snd(n):
+			Sfx.play_local(n, vol, 0.04)
+			return true
+	return false
+
+
+func _rl_event(key: String, at: float, snd: String, fallback: String, vol: float) -> void:
+	if _reload_t >= at and not _reload_events.has(key):
+		_reload_events[key] = true
+		_play_first([snd, fallback], vol)
+
+
+## Gunshot = dry shot (+ bolt-carrier mechanics for the rifle) + an indoor
+## reflection tail chosen by the room the player is in.
+func _shot_audio(supp: bool) -> void:
+	var base: String = def.shot_sound_supp if supp else def.shot_sound
+	if not supp and _has_snd(base.replace("_shot", "_shot_dry")):
+		Sfx.play_local(base.replace("_shot", "_shot_dry"), -1.0, 0.05)
+		var room := Game.room_at(player.global_position + Vector3.UP)
+		var tail := "shot_tail_hall" if room in ["hall", "dock"] else "shot_tail_small"
+		if _has_snd(tail):
+			Sfx.play_local(tail, -2.0 if id == "rifle" else -5.0, 0.03)
+	else:
+		Sfx.play_local(base, -1.0 if not supp else -4.0, 0.05)
+	if id == "rifle" and _has_snd("rifle_mech"):
+		Sfx.play_local("rifle_mech", -9.0 if not supp else -5.0, 0.06)
