@@ -11,6 +11,8 @@ extends RefCounted
 
 const KIT := "res://assets/models/env_kit.glb"
 const PH := "res://assets/models/ph/%s.glb"
+const DOCK_KIT := "res://assets/models/dock_kit.glb"
+const CONTROL_KIT := "res://assets/models/control_kit.glb"
 
 var b: LevelBuilder
 var kit: Node3D
@@ -120,6 +122,12 @@ func dress() -> void:
 	_doors()
 	_props()
 	_storytelling()
+	_dock_m3()
+	_control_m3()
+	_decals_m3()
+	for k in _kits.values():
+		(k as Node).free()   # out-of-tree templates must not outlive the level (exit crash)
+	_kits.clear()
 	kit.free()
 	kit = null
 
@@ -197,7 +205,7 @@ func _services() -> void:
 		kitp("duct_4", Vector3(x, 3.9, -27.0), 0, Vector3.ONE, false, false)
 	# Vents.
 	for v in [[Vector3(3.0, 2.6, -12.85), 0], [Vector3(-5.85, 2.6, -7.0), 90], [Vector3(20.85, 2.7, -29.0), -90],
-			[Vector3(32.85, 3.2, -35.0), -90], [Vector3(15.85, 4.5, 6.0), -90], [Vector3(0.15, 4.5, 4.0), 90],
+			[Vector3(15.85, 4.5, 2.0), -90], [Vector3(0.15, 4.5, 4.0), 90],
 			[Vector3(8.85, 2.4, -20.0), -90], [Vector3(6.15, 2.4, -17.0), 90]]:
 		kitp("vent_grille", v[0], v[1], Vector3.ONE, false, false)
 	# Floor drains.
@@ -261,7 +269,8 @@ func _props() -> void:
 	ph("utility_box_02", Vector3(20.6, 0.7, -36.0), -90, false)
 	ph("worn_metal_rack", Vector3(9.6, 0, -37.2), 90, true)
 	# Control
-	ph("utility_box_02", Vector3(32.6, 0.7, -31.0), -90, false)
+	if not ResourceLoader.exists(DOCK_KIT):
+		ph("utility_box_02", Vector3(32.6, 0.7, -31.0), -90, false)
 	ph("power_box_01", Vector3(21.4, 1.3, -38.5), 90, false)
 	ph("SchoolChair_01", Vector3(24.2, 0, -31.0), -100)
 	ph("security_camera_02", Vector3(32.5, 3.8, -26.6), -135, false)
@@ -282,3 +291,173 @@ func _storytelling() -> void:
 	# Kept clear of the patrol lane between the turbines.
 	ph("metal_tool_chest", Vector3(29.6, 0, -13.9), 80, true)
 	ph("hand_truck", Vector3(30.3, 0, -12.9), 110)
+
+
+
+# ------------------------------------------------------------------ M3: dock, control room, decals
+var _kits := {}
+
+
+func k3(kit_path: String, name: String, pos: Vector3, yaw_deg := 0.0, collide := false, cover := false, scl := Vector3.ONE) -> Node3D:
+	if not ResourceLoader.exists(kit_path):
+		return null
+	if not _kits.has(kit_path):
+		_kits[kit_path] = (load(kit_path) as PackedScene).instantiate()
+	var src: Node3D = _kits[kit_path].get_node_or_null(name)
+	if src == null:
+		push_warning("M3 kit piece missing: " + name)
+		return null
+	var inst: Node3D = src.duplicate()
+	(b.nav if collide else b).add_child(inst)
+	inst.transform = Transform3D(Basis(Vector3.UP, deg_to_rad(yaw_deg)).scaled(scl), pos)
+	MatLib.remap_scene(inst)
+	for mi in inst.find_children("*", "MeshInstance3D", true, false):
+		if mi.get_aabb().size.length() < 0.4:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mi.visibility_range_end = 30.0
+	if collide:
+		var aabb := _collider(inst, "metal")
+		if cover:
+			b.cover_props.append(aabb)
+	return inst
+
+
+func _dock_m3() -> void:
+	if not ResourceLoader.exists(DOCK_KIT):
+		return
+	# Freight lift (extraction) - gate faces into the dock (north).
+	k3(DOCK_KIT, "freight_lift", Vector3(3.0, 0.0, 11.8), 180)
+	# Roll-up bay door on the south wall, leveler in front of it.
+	k3(DOCK_KIT, "rollup_door", Vector3(11.5, 0.0, 13.85), 180)
+	k3(DOCK_KIT, "dock_leveler", Vector3(11.5, 0.012, 12.55), 180)
+	for x in [9.25, 13.75]:
+		k3(DOCK_KIT, "floor_bollard", Vector3(x, 0, 12.9), 0, true)
+	# 20 ft container along the east wall (hard cover, landmark).
+	k3(DOCK_KIT, "container_20ft", Vector3(14.35, 0.0, 7.6), 0, true, true)
+	# Forklift parked by the bay, pallets and stock.
+	k3(DOCK_KIT, "forklift", Vector3(13.0, 0.0, 10.4), 160, true, true)   # parked by the bay, clear of the spawn
+	k3(DOCK_KIT, "wheel_chock", Vector3(12.6, 0.0, 11.8), 160)
+	k3(DOCK_KIT, "pallet_stack", Vector3(6.6, 0.0, 12.9), 4, true, true)
+	k3(DOCK_KIT, "pallet_boxes", Vector3(5.5, 0.0, 6.5), -8, true, true)
+	k3(DOCK_KIT, "pallet", Vector3(5.6, 0.0, 9.6), 22, false)
+	# Overhead crane and services.
+	k3(DOCK_KIT, "gantry_beam_8", Vector3(8.0, 5.55, 7.0), 0)
+	k3(DOCK_KIT, "cable_reel", Vector3(10.2, 0.0, 1.0), 90, true)
+	for x in [2.0, 10.0]:
+		k3(DOCK_KIT, "wall_cable_run_4", Vector3(x, 2.2, 0.15), 0)
+	k3(DOCK_KIT, "fire_hose_cabinet", Vector3(0.15, 1.25, 5.2), 90)
+
+
+func _control_m3() -> void:
+	if not ResourceLoader.exists(CONTROL_KIT):
+		return
+	# Operator desk facing the relay console and the wall display.
+	k3(CONTROL_KIT, "control_desk_3", Vector3(27.0, 0.0, -32.8), 0, true, true)
+	for x in [25.6, 27.0, 28.4]:
+		k3(CONTROL_KIT, "office_chair", Vector3(x, 0.0, -31.9), 180 + randf_range(-25, 25))
+	# Mimic board along the east wall: the room's landmark.
+	k3(CONTROL_KIT, "mimic_panel", Vector3(32.85, 2.35, -32.6), -90)
+	# Instrument racks and relay cabinets.
+	k3(CONTROL_KIT, "instrument_rack", Vector3(21.45, 0.0, -36.6), 90, true)
+	k3(CONTROL_KIT, "instrument_rack", Vector3(21.45, 0.0, -35.75), 90, true)
+	k3(CONTROL_KIT, "relay_cabinet", Vector3(22.7, 0.0, -39.5), 0, true)
+	k3(CONTROL_KIT, "relay_cabinet", Vector3(30.9, 0.0, -39.5), 0, true)
+	k3(CONTROL_KIT, "emergency_stop", Vector3(28.7, 0.0, -35.9), 0, true)
+	k3(CONTROL_KIT, "wall_clock", Vector3(24.0, 3.3, -26.15), 180)
+	k3(CONTROL_KIT, "whiteboard", Vector3(30.8, 1.7, -26.15), 180)
+	for z in [-34.6, -30.4]:
+		k3(CONTROL_KIT, "cable_trench_cover", Vector3(24.0, 0.012, z), 90)
+	# Suspended ceiling grid (one MultiMesh for plain tiles; light tiles at the fixtures).
+	var src: Node3D = (_kits[CONTROL_KIT] as Node3D).get_node_or_null("ceiling_grid_tile")
+	var tile_mesh: Mesh = null
+	if src:
+		for mi in src.find_children("*", "MeshInstance3D", true, false) + ([src] if src is MeshInstance3D else []):
+			tile_mesh = (mi as MeshInstance3D).mesh
+			break
+	var lights := [Vector2(24.6, -33.0), Vector2(29.4, -33.0), Vector2(27.0, -37.8), Vector2(27.0, -28.2)]
+	if tile_mesh:
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = tile_mesh
+		var xs := []
+		var x := 21.75
+		while x < 32.9:
+			var z := -39.45
+			while z < -26.2:
+				var near_light := false
+				for lp in lights:
+					if absf(lp.x - x) < 0.61 and absf(lp.y - z) < 0.61:
+						near_light = true
+				if not near_light:
+					xs.append(Vector3(x, 4.3, z))
+				z += 1.2
+			x += 1.2
+		mm.instance_count = xs.size()
+		for i in xs.size():
+			mm.set_instance_transform(i, Transform3D(Basis(), xs[i]))
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.material_override = MatLib.flat(Color(0.78, 0.78, 0.76), 0.0, 0.85)
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		b.add_child(mmi)
+	for lp in lights:
+		var lt := k3(CONTROL_KIT, "ceiling_grid_tile_light", Vector3(lp.x, 4.3, lp.y), 0)
+		if lt:
+			var e: Node = lt.find_child("light_panel*", true, false)
+			if e:
+				b._register_light("control", e)
+
+
+## Wear and story decals (generated CC0 textures).
+func _decals_m3() -> void:
+	if not ResourceLoader.exists("res://assets/decals/oil_stain_1.png"):
+		return
+	# Floors: [texture, position, size, yaw]
+	var floor := [
+		["oil_stain_1", Vector3(12.8, 0, 9.8), 2.2, 20], ["oil_stain_2", Vector3(11.8, 0, 11.6), 1.6, 70],
+		["tire_marks_1", Vector3(11.6, 0, 8.6), 4.0, 70], ["floor_scuffs_1", Vector3(6.5, 0, 6.0), 3.0, 0],
+		["footprints_dust_1", Vector3(7.5, 0, 2.5), 2.0, 0], ["stencil_lift_2", Vector3(3.0, 0.09, 9.4), 1.6, 0],
+		["cracks_1", Vector3(13.0, 0, 3.5), 2.5, 45], ["puddle_1", Vector3(1.6, 0, 3.2), 1.8, 10],
+		["floor_scuffs_1", Vector3(20.0, 0, -11.5), 3.5, 90], ["oil_stain_2", Vector3(19.5, 0, -6.2), 1.4, 0],
+		["cracks_1", Vector3(25.0, 0, -18.0), 3.0, 10], ["puddle_1", Vector3(11.0, 0, -23.5), 2.2, 60],
+		["footprints_dust_1", Vector3(7.5, 0, -16.0), 1.8, 90], ["floor_scuffs_1", Vector3(27.0, 0, -30.0), 2.5, 0],
+		["oil_stain_1", Vector3(14.5, 0, -31.0), 1.2, 0], ["stencil_no_step", Vector3(11.5, 0.02, 12.4), 1.2, 180],
+	]
+	for f in floor:
+		_decal(f[0], f[1] + Vector3(0, 0.05, 0), Vector3.UP, f[2], f[3])
+	# Walls: grime streaks running down from the ceiling / fixtures, stencils
+	var walls := [
+		["grime_streak_1", Vector3(4.0, 3.5, 0.15), Vector3(0, 0, 1), 2.5], ["grime_streak_2", Vector3(15.85, 3.0, 2.5), Vector3(-1, 0, 0), 2.5],
+		["grime_streak_1", Vector3(0.15, 3.0, 3.0), Vector3(1, 0, 0), 3.0], ["grime_streak_2", Vector3(16.0, 6.5, -2.15), Vector3(0, 0, -1), 4.0],
+		["grime_streak_1", Vector3(24.0, 6.0, -25.85), Vector3(0, 0, 1), 4.0], ["grime_streak_1", Vector3(31.85, 5.5, -18.0), Vector3(-1, 0, 0), 4.0],
+		["grime_streak_2", Vector3(6.15, 2.6, -20.0), Vector3(1, 0, 0), 2.0], ["grime_streak_1", Vector3(8.85, 2.6, -6.0), Vector3(-1, 0, 0), 2.0],
+		["stencil_9b", Vector3(16.0, 5.0, -25.85), Vector3(0, 0, 1), 2.4], ["stencil_high_voltage", Vector3(28.0, 1.7, -20.45), Vector3(0, 0, 1), 1.2],
+		["stencil_9b", Vector3(0.15, 4.3, 7.0), Vector3(1, 0, 0), 1.6],
+	]
+	for w in walls:
+		_decal(w[0], w[1], w[2], w[3], 0.0)
+
+
+func _decal(tex: String, pos: Vector3, normal: Vector3, size: float, yaw_deg: float) -> void:
+	var d := Decal.new()
+	d.texture_albedo = load("res://assets/decals/%s.png" % tex)
+	if tex == "cracks_1":
+		d.texture_normal = load("res://assets/decals/cracks_1_normal.png")
+	d.size = Vector3(size, 0.25, size)
+	d.cull_mask = 1
+	d.upper_fade = 0.3
+	d.lower_fade = 0.3
+	d.distance_fade_enabled = true
+	d.distance_fade_begin = 35.0
+	d.distance_fade_length = 8.0
+	b.add_child(d)
+	d.global_position = pos
+	var up := normal.normalized()
+	var ref := Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT
+	if absf(up.y) < 0.5:
+		ref = Vector3.UP   # walls: keep the texture's top edge up
+	var x := ref.cross(up).normalized()
+	var basis := Basis(x, up, x.cross(up))
+	if absf(up.y) > 0.5:
+		basis = basis.rotated(up, deg_to_rad(yaw_deg))
+	d.global_transform.basis = basis

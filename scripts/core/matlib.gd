@@ -144,6 +144,12 @@ func _build_remap() -> void:
 		# Teslabot: worn safety paint over dark alloy.
 		"robot_paint": worn_paint(Color(0.5, 0.36, 0.18)),
 		"robot_bone": worn_paint(Color(0.6, 0.59, 0.55)),
+		# M3 kit materials
+		"wood_pallet": _finish(Color(0.5, 0.39, 0.26), 0.0, 0.82, 2.0, 0.5),
+		"cardboard": _finish(Color(0.55, 0.43, 0.29), 0.0, 0.9, 3.0, 0.3),
+		"diamond_plate": diamond_plate(),
+		"board_white": _finish(Color(0.86, 0.87, 0.86), 0.0, 0.25, 4.0, 0.1),
+		"painted_red": _finish(Color(0.55, 0.06, 0.04), 0.25, 0.5, 2.0, 0.4),
 		# First-person arms
 		"fabric_jacket": pbr("denim_fabric_05", 9.0, Color(0.36, 0.38, 0.33), 0.0, 1.0, "fp_jacket"),
 		"glove": pbr("brown_leather", 7.0, Color(0.2, 0.2, 0.21), 0.0, 1.0, "fp_glove"),

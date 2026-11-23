@@ -480,14 +480,18 @@ func _shell() -> void:
 func _dock() -> void:
 	floor_overlay(0.2, 0.2, 15.8, 13.8, MatLib.floor_painted())
 	# Lift platform with hazard edge (extraction)
-	box(Vector3(1.0, 0, 10.0), Vector3(5.0, 0.08, 13.6), MatLib.diamond_plate(), "metal")
-	box(Vector3(1.0, 0.0, 9.85), Vector3(5.0, 0.085, 10.0), MatLib.hazard(), "metal", false)
-	box(Vector3(0.6, 0, 9.6), Vector3(0.75, 1.1, 13.6), MatLib.flat(Color(0.7, 0.55, 0.05), 0.4, 0.5), "metal")
-	box(Vector3(0.3, 2.6, 9.7), Vector3(0.6, 6.0, 9.9), MatLib.flat(Color(0.08, 0.08, 0.08), 0.8, 0.4), "metal")
+	var m3 := ResourceLoader.exists("res://assets/models/dock_kit.glb")
+	# Lift deck (walkable). With the M3 kit the freight_lift model is the visual.
+	box(Vector3(1.0, 0, 10.0), Vector3(5.0, 0.08, 13.6), MatLib.diamond_plate(), "metal").visible = not m3
+	if not m3:
+		box(Vector3(1.0, 0.0, 9.85), Vector3(5.0, 0.085, 10.0), MatLib.hazard(), "metal", false)
+		box(Vector3(0.3, 2.6, 9.7), Vector3(0.6, 6.0, 9.9), MatLib.flat(Color(0.08, 0.08, 0.08), 0.8, 0.4), "metal")
+	box(Vector3(0.6, 0, 9.6), Vector3(0.75, 1.1, 13.6), MatLib.flat(Color(0.7, 0.55, 0.05), 0.4, 0.5), "metal").visible = not m3
 	place_sign("FREIGHT LIFT 2\nEXTRACTION", Vector3(0.17, 3.2, 11.8), 90, 72, Color(0.85, 0.7, 0.2))
 	# Roll-up bay door (closed) on south wall
-	box(Vector3(9.0, 0, 13.75), Vector3(14.0, 4.5, 13.85), MatLib.corrugated(), "metal")
-	box(Vector3(8.8, 4.5, 13.7), Vector3(14.2, 4.9, 13.85), MatLib.flat(Color(0.1, 0.1, 0.1), 0.8, 0.4), "metal")
+	if not m3:
+		box(Vector3(9.0, 0, 13.75), Vector3(14.0, 4.5, 13.85), MatLib.corrugated(), "metal")
+		box(Vector3(8.8, 4.5, 13.7), Vector3(14.2, 4.9, 13.85), MatLib.flat(Color(0.1, 0.1, 0.1), 0.8, 0.4), "metal")
 	place_sign("BAY 2", Vector3(11.5, 5.3, 13.83), 180, 120, Color(0.85, 0.84, 0.8))
 	# Cover and clutter
 	prop("crate", Vector3(4.0, 0, 5.0), 0, true)
@@ -497,8 +501,9 @@ func _dock() -> void:
 	prop("barrel", Vector3(14.6, 0, 2.0), 0, true)
 	prop("barrel", Vector3(14.9, 0, 2.9), 0, false)
 	prop("barrel", Vector3(1.3, 0, 1.4), 0, true)
-	prop("locker", Vector3(15.6, 0, 8.0), -90, false)
-	prop("locker", Vector3(15.6, 0, 8.6), -90, false)
+	if not m3:
+		prop("locker", Vector3(15.6, 0, 8.0), -90, false)
+		prop("locker", Vector3(15.6, 0, 8.6), -90, false)
 	# Armory case (loadout)
 	var case := prop("crate", Vector3(10.5, 0, 10.5), 90, true)
 	var arm := preload("res://scripts/level/armory.gd").new()
@@ -525,7 +530,7 @@ func _dock() -> void:
 	# Pipes along the north wall
 	var pipe := prop("pipe", Vector3(3.0, 5.2, 0.5), 90, false, "metal", false)
 	var pipe2 := prop("pipe", Vector3(10.0, 5.2, 0.5), 90, false, "metal", false)
-	terminal(Vector3(15.7, 1.3, 4.5), 90, "SHIFT LOG 2207", PackedStringArray([
+	terminal(Vector3(15.7, 1.3, 3.4), 90, "SHIFT LOG 2207", PackedStringArray([
 		"SHIFT LOG 22:07 - Relay Nine sync fault. Security units",
 		"rejected manual override and sealed the control wing.",
 		"Two techs missing. Do NOT approach the Tesla units."]))
@@ -730,7 +735,8 @@ func _lights() -> void:
 		if i == 3:
 			l.set_meta("flicker", true)
 	# OFFICE
-	light_spot(Vector3(-2, 3.5, -8), cool, 4.5, 6.0, 75, true, "office", Vector3.DOWN, "strip")
+	light_spot(Vector3(-2, 3.5, -8), cool, 6.0, 6.5, 78, true, "office", Vector3.DOWN, "strip")
+	light_omni(Vector3(0.0, 2.4, -8.0), Color(0.8, 0.86, 0.95), 0.6, 9.0, false, "office", false)
 	light_spot(Vector3(3, 3.5, -8), cool, 4.0, 6.0, 75, false, "office", Vector3.DOWN, "strip")
 	light_omni(Vector3(1.5, 1.2, -10.2), Color(0.3, 0.8, 0.65), 0.4, 2.5, false, "", false)
 	# PASSAGE
@@ -753,10 +759,13 @@ func _lights() -> void:
 	light_omni(Vector3(12.5, 1.0, -31.0), Color(0.3, 0.5, 1.0), 0.5, 4.0, false, "servers", false)
 	light_omni(Vector3(18.0, 1.0, -34.0), Color(0.3, 0.5, 1.0), 0.5, 4.0, false, "servers", false)
 	# CONTROL
-	light_spot(Vector3(24.5, 4.4, -33), cool, 6.5, 7.0, 78, true, "control", Vector3.DOWN, "strip")
-	light_spot(Vector3(27.0, 4.4, -37.5), cool, 5.0, 6.0, 75, false, "control", Vector3.DOWN, "strip")
-	light_spot(Vector3(27.0, 4.4, -28.5), cool, 4.0, 6.0, 75, false, "control", Vector3.DOWN, "strip")
-	light_spot(Vector3(29.5, 4.4, -33), cool, 6.5, 7.0, 78, false, "control", Vector3.DOWN, "strip")
+	var cfix := "" if ResourceLoader.exists("res://assets/models/dock_kit.glb") else "strip"
+	light_spot(Vector3(24.6, 4.25, -33.0), cool, 6.5, 7.0, 78, true, "control", Vector3.DOWN, cfix)
+	light_spot(Vector3(27.0, 4.25, -37.8), cool, 5.0, 6.0, 75, false, "control", Vector3.DOWN, cfix)
+	light_spot(Vector3(27.0, 4.25, -28.2), cool, 4.0, 6.0, 75, false, "control", Vector3.DOWN, cfix)
+	light_spot(Vector3(29.4, 4.25, -33.0), cool, 6.5, 7.0, 78, false, "control", Vector3.DOWN, cfix)
+	# Workstation glow from the operator screens
+	light_omni(Vector3(27.0, 1.3, -33.6), Color(0.45, 0.75, 0.85), 0.7, 3.5, false, "control", false)
 	_reflection_probes()
 	light_omni(Vector3(32.5, 3.8, -27.0), Color(1.0, 0.15, 0.08), 1.2, 6.0, false, "control", false)
 
