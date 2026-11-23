@@ -109,6 +109,7 @@ func _ready() -> void:
 			_rest[n] = bones[n].transform
 	_setup_materials()
 	_setup_hitboxes()
+	_collect_armor()
 	agent = NavigationAgent3D.new()
 	agent.path_desired_distance = 0.7
 	agent.target_desired_distance = 0.9
@@ -185,7 +186,7 @@ func _hitbox(zone: String, bone: String, offset: Vector3, size: Vector3) -> void
 
 
 func _setup_hitboxes() -> void:
-	_hitbox("head", "head", Vector3(0, 0.1, -0.03), Vector3(0.28, 0.2, 0.34))
+	_hitbox("head", "head", Vector3(0, 0.04, -0.07), Vector3(0.29, 0.22, 0.36))
 	_hitbox("torso", "torso", Vector3(0, 0.34, -0.02), Vector3(0.62, 0.62, 0.44))
 	_hitbox("core", "core", Vector3(0, 0.0, 0.05), Vector3(0.3, 0.38, 0.14))
 	_hitbox("pelvis", "pelvis", Vector3(0, -0.02, 0), Vector3(0.38, 0.24, 0.26))
@@ -386,6 +387,8 @@ func take_damage(amount: float, zone: String, pos: Vector3, dir: Vector3, normal
 	if zone == "core":
 		Game.stats.core_hits += 1
 	Fx.impact(pos, normal, "weak" if zone == "core" or (zone == "head" and not blinded) else "robot")
+	# Visible component damage: plates come off as their zone takes punishment.
+	_armor_damage(zone, dmg, dir)
 	# Zone damage consequences
 	if zone_hp.has(zone):
 		zone_hp[zone] -= amount
@@ -416,6 +419,7 @@ func _break_zone(zone: String, pos: Vector3) -> void:
 			if blinded:
 				return
 			blinded = true
+			_pop_plate("head", Vector3(0, 0.3, -1).normalized(), "armor_head_1")
 			for m in eye_mats:
 				m.emission_energy_multiplier = 0.4
 			eye_light.light_energy = 0.15
@@ -471,6 +475,9 @@ func _die(dir: Vector3, overload: bool) -> void:
 	if hum:
 		hum.stop()
 	Sfx.play_3d("robot_death", global_position + Vector3.UP, 2.0, 0.05, 8.0)
+	for i in (6 if overload else 3):
+		var zones := ["core", "torso"] if overload else ["torso", "arm_R", "arm_L", "head", "leg_L", "leg_R"]
+		_pop_plate(zones[randi() % zones.size()], dir + Vector3(randf_range(-0.6, 0.6), 0.8, randf_range(-0.6, 0.6)))
 	var core_pos: Vector3 = bones.core.global_position
 	if overload:
 		# Capacitor overload: an electrical burst that hurts everything nearby.
@@ -1045,3 +1052,94 @@ func _damage_fx(dt: float) -> void:
 				m.emission_energy_multiplier = randf_range(0.0, 2.0)
 	else:
 		_spark_t = 0.5
+
+
+
+# ------------------------------------------------------------------ armour plates
+## armor_<zone>_<n> nodes from the M2 model; each zone sheds plates in order
+## as accumulated damage crosses thresholds, revealing internal_* machinery.
+const ARMOR_BUDGET := {"head": 60.0, "torso": 170.0, "core": 50.0, "arm_R": 80.0, "arm_L": 70.0, "leg_L": 85.0, "leg_R": 85.0}
+var _armor := {}       # zone -> Array[Node3D] (remaining)
+var _armor_n := {}     # zone -> initial count
+var _armor_dmg := {}   # zone -> accumulated damage
+
+
+func _collect_armor() -> void:
+	for n in model.find_children("armor_*", "Node3D", true, false):
+		var parts: PackedStringArray = String(n.name).split("_")
+		if parts.size() < 3:
+			continue
+		var zone := parts[1] if parts.size() == 3 else parts[1] + "_" + parts[2]
+		if not _armor.has(zone):
+			_armor[zone] = []
+		# Only top-level armour pieces (not meshes nested inside another plate)
+		if n.get_parent() and String(n.get_parent().name).begins_with("armor_"):
+			continue
+		_armor[zone].append(n)
+	for z in _armor:
+		_armor_n[z] = _armor[z].size()
+		_armor_dmg[z] = 0.0
+
+
+func _armor_damage(zone: String, dmg: float, dir: Vector3) -> void:
+	var z := zone
+	if z == "pelvis":
+		z = "torso"
+	if not _armor.has(z) or _armor[z].is_empty():
+		return
+	_armor_dmg[z] += dmg
+	var n: int = _armor_n[z]
+	var step: float = ARMOR_BUDGET.get(z, 80.0) / float(n + 1)
+	var should_be_gone := int(_armor_dmg[z] / step)
+	while n - _armor[z].size() < should_be_gone and not _armor[z].is_empty():
+		_pop_plate(z, dir + Vector3(0, 0.5, 0))
+
+
+func _pop_plate(zone: String, dir: Vector3, preferred := "") -> void:
+	if not _armor.has(zone) or _armor[zone].is_empty():
+		return
+	var plate: Node3D = null
+	for p in _armor[zone]:
+		if preferred != "" and String(p.name).begins_with(preferred):
+			plate = p
+	if plate == null:
+		plate = _armor[zone][randi() % _armor[zone].size()]
+	_armor[zone].erase(plate)
+	if not is_instance_valid(plate) or not plate.is_visible_in_tree():
+		return
+	var xf := plate.global_transform
+	var rb := RigidBody3D.new()
+	rb.collision_layer = 0
+	rb.collision_mask = 1
+	rb.mass = 4.0
+	var piece: Node3D = plate.duplicate()
+	plate.visible = false
+	get_tree().current_scene.add_child(rb)
+	rb.global_transform = xf
+	rb.add_child(piece)
+	piece.transform = Transform3D.IDENTITY
+	var aabb := AABB()
+	var first := true
+	for mi in piece.find_children("*", "MeshInstance3D", true, true) + ([piece] if piece is MeshInstance3D else []):
+		var a: AABB = (mi as MeshInstance3D).get_aabb()
+		if mi != piece:
+			a = (mi as Node3D).transform * a
+		aabb = a if first else aabb.merge(a)
+		first = false
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = aabb.size.max(Vector3.ONE * 0.04)
+	cs.shape = bs
+	cs.position = aabb.get_center()
+	rb.add_child(cs)
+	var d := dir.normalized() if dir.length() > 0.01 else Vector3.UP
+	rb.linear_velocity = velocity + d * randf_range(2.0, 4.0) + Vector3.UP * randf_range(1.0, 2.5)
+	rb.angular_velocity = Vector3(randf_range(-8, 8), randf_range(-8, 8), randf_range(-8, 8))
+	Fx.mini_arcs(xf.origin, 2, 0.25)
+	Sfx.play_3d("impact_metal", xf.origin, -2.0, 0.1, 4.0)
+	# Debris settles, then is cleaned up.
+	var t := rb.create_tween()
+	t.tween_interval(6.0)
+	t.tween_callback(func(): if is_instance_valid(rb): rb.freeze = true)
+	t.tween_interval(24.0)
+	t.tween_callback(rb.queue_free)

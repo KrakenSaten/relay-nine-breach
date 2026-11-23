@@ -142,8 +142,11 @@ func _build_remap() -> void:
 		"steel": _finish(Color(0.6, 0.6, 0.61), 1.0, 0.3, 5.0, 0.15),
 		"glass_lens": _glass(),
 		# Teslabot: worn safety paint over dark alloy.
-		"robot_paint": _finish(Color(0.5, 0.25, 0.07), 0.2, 0.6, 1.6, 0.6),
-		"robot_bone": _finish(Color(0.58, 0.57, 0.53), 0.1, 0.55, 1.6, 0.6),
+		"robot_paint": worn_paint(Color(0.5, 0.36, 0.18)),
+		"robot_bone": worn_paint(Color(0.6, 0.59, 0.55)),
+		"ceramic": _finish(Color(0.78, 0.77, 0.72), 0.0, 0.25, 4.0, 0.15),
+		"rubber_cable": _finish(Color(0.02, 0.02, 0.022), 0.0, 0.75, 6.0, 0.2),
+		"glass_optic": _glass(),
 		"robot_dark": _finish(Color(0.07, 0.075, 0.08), 0.85, 0.42, 1.6, 0.5),
 		"robot_joint": _finish(Color(0.13, 0.13, 0.13), 1.0, 0.3, 3.0, 0.3),
 		"hazard": _finish(Color(0.7, 0.52, 0.06), 0.1, 0.6, 1.6, 0.5),
@@ -233,3 +236,57 @@ func remap_scene(root: Node) -> void:
 			var nm := mat.resource_name
 			if _remap.has(nm):
 				mi.set_surface_override_material(i, _remap[nm])
+
+
+
+## Worn industrial paint over steel. Object-space triplanar sampling of the
+## CC0 "container_side" scan drives luminance variation, scratches and
+## chipped-to-metal patches; the paint colour is a tint so any faction
+## colour works. Cheap: 3 texture fetches per projection, no extra passes.
+func worn_paint(tint: Color) -> ShaderMaterial:
+	var k := "worn_" + tint.to_html()
+	if _cache.has(k):
+		return _cache[k]
+	if not _cache.has("_worn_shader"):
+		var sh := Shader.new()
+		sh.code = """
+shader_type spatial;
+uniform vec4 tint : source_color = vec4(0.5, 0.3, 0.1, 1.0);
+uniform sampler2D alb : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D arm : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D nrm : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float scale = 2.2;
+varying vec3 op;
+varying vec3 on;
+void vertex() { op = VERTEX * scale; on = abs(NORMAL); }
+vec4 tri(sampler2D t) {
+	vec3 w = pow(on, vec3(4.0)); w /= (w.x + w.y + w.z);
+	return texture(t, op.zy) * w.x + texture(t, op.xz) * w.y + texture(t, op.xy) * w.z;
+}
+void fragment() {
+	vec3 a = tri(alb).rgb;
+	float lum = dot(a, vec3(0.299, 0.587, 0.114));
+	float sat = length(a - vec3(lum));
+	// Chips: where the scan departs from its dominant paint (rust/bare spots)
+	float chip = smoothstep(0.30, 0.42, lum);
+	vec3 paint = tint.rgb * (0.8 + 0.9 * (lum - 0.2));
+	vec3 metal = vec3(0.32, 0.3, 0.28) * (0.6 + lum);
+	ALBEDO = mix(paint, metal, chip * 0.75);
+	vec4 r = tri(arm);
+	ROUGHNESS = mix(clamp(r.g * 0.9 + 0.15, 0.35, 0.85), 0.38, chip);
+	METALLIC = mix(0.15, 0.85, chip * 0.75);
+	AO = r.r;
+	AO_LIGHT_AFFECT = 0.5;
+	NORMAL_MAP = tri(nrm).rgb;
+	NORMAL_MAP_DEPTH = 0.7;
+}
+"""
+		_cache["_worn_shader"] = sh
+	var m := ShaderMaterial.new()
+	m.shader = _cache["_worn_shader"]
+	m.set_shader_parameter("tint", tint)
+	m.set_shader_parameter("alb", _tex("concrete_floor_painted", "albedo"))
+	m.set_shader_parameter("arm", _tex("concrete_floor_painted", "arm"))
+	m.set_shader_parameter("nrm", _tex("concrete_floor_painted", "normal"))
+	_cache[k] = m
+	return m
