@@ -207,5 +207,5 @@ All runs: 0 script errors.
 **Rebuild:**
 
 ```powershell
-& C:\AAA	ools\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path C:\AAA\Breach --export-release "Windows Release" dist/BREACH_0.4.0/Breach.exe
+& C:\AAA\tools\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path C:\AAA\Breach --export-release "Windows Release" dist/BREACH_0.4.0/Breach.exe
 ```
