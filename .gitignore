@@ -1,0 +1,16 @@
+.godot/
+builds/
+staging/
+*.tmp
+# Keep curated evidence only; debug runs stay local.
+captures/*
+!captures/final/
+!captures/final_bench/
+!captures/showcase/
+!captures/nv/
+!captures/video2/
+!captures/overview_sheet.png
+!captures/m1_compare/
+!captures/m2_compare/
+!captures/m2_final/
+!captures/m2_bench/

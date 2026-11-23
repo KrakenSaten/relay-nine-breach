@@ -1,0 +1,68 @@
+[   3.77] AUTOTEST start, quality=High
+[   3.77] bots spawned: 10, cover points: 144
+[   3.77] nav path dock->control points: 13
+[   8.03] capture C:/AAA/Breach/captures/final/01_dock_start.png
+[   8.81] capture C:/AAA/Breach/captures/final/02_ads_reflex.png
+[   8.82] ADS debug: eye_local=(0.0, 0.079, 0.21) weapon.pos=(0.000143, -0.079328, -0.21) ads=1.00
+[   8.82] TELEPORT player -> (7.5, 0.05, -1.5)
+[  10.31] capture C:/AAA/Breach/captures/final/03_corridor.png
+[  10.31] TELEPORT player -> (13.2, 0.05, -2.6)
+[  12.31] capture C:/AAA/Breach/captures/final/04_hall_overview.png
+[  12.31] COMBAT phase: player exposed in hall for 14 s (god mode)
+[  13.10] capture C:/AAA/Breach/captures/final/05_bot_charging.png
+[  14.74]   perc @CharacterBody3D@916 d=8.0 ang=34 los=false hit=@StaticBody3D@122:<StaticBody3D#77594626153> aw=0.95 state=SEARCH lit=true
+[  14.74]   perc @CharacterBody3D@950 d=8.4 ang=102 los=false hit=@StaticBody3D@122:<StaticBody3D#77594626153> aw=0.95 state=SEARCH lit=true
+[  14.74]   perc @CharacterBody3D@984 d=19.3 ang=138 los=false hit=@StaticBody3D@161:<StaticBody3D#78752254126> aw=1.18 state=COMBAT lit=true
+[  14.75]   perc @CharacterBody3D@1018 d=8.8 ang=0 los=true hit=<null> aw=1.50 state=COMBAT lit=true
+[  14.75]   perc @CharacterBody3D@1052 d=13.8 ang=19 los=false hit=@StaticBody3D@489:<StaticBody3D#99220458503> aw=0.95 state=SEARCH lit=true
+[  14.75]   perc @CharacterBody3D@1086 d=12.5 ang=14 los=false hit=@StaticBody3D@489:<StaticBody3D#99220458503> aw=1.50 state=COMBAT lit=true
+[  14.75]   perc @CharacterBody3D@1120 d=15.0 ang=0 los=true hit=<null> aw=1.50 state=COMBAT lit=true
+[  16.79]   perc @CharacterBody3D@916 d=8.1 ang=63 los=false hit=@StaticBody3D@122:<StaticBody3D#77594626153> aw=0.95 state=SEARCH lit=true
+[  16.80]   perc @CharacterBody3D@950 d=8.2 ang=55 los=false hit=@StaticBody3D@122:<StaticBody3D#77594626153> aw=0.95 state=SEARCH lit=true
+[  16.80]   perc @CharacterBody3D@984 d=16.5 ang=5 los=false hit=@StaticBody3D@161:<StaticBody3D#78752254126> aw=0.95 state=SEARCH lit=true
+[  16.80]   perc @CharacterBody3D@1018 d=7.9 ang=13 los=false hit=@StaticBody3D@495:<StaticBody3D#99405007892> aw=1.50 state=COMBAT lit=true
+[  16.80]   perc @CharacterBody3D@1052 d=10.5 ang=80 los=true hit=<null> aw=0.95 state=SEARCH lit=true
+[  16.80]   perc @CharacterBody3D@1086 d=11.8 ang=80 los=true hit=<null> aw=1.50 state=COMBAT lit=true
+[  16.80]   perc @CharacterBody3D@1120 d=11.8 ang=0 los=true hit=<null> aw=1.50 state=COMBAT lit=true
+[  27.10] AI after exposure: state entries { "SEARCH": 13, "COMBAT": 8, "PATROL": 1 } | attack windups 28 | role-frames { "cover": 3585, "flanker": 1554, "assault": 1524 } | peek-frames 924 | player damage absorbed (god) 0
+[  27.10] ENGAGE: scripted aim at visible units (zones head/torso/core)
+[  28.10] capture C:/AAA/Breach/captures/final/06_firing_ads.png
+[  28.27] target @CharacterBody3D@1120 -> state DEAD hp -10
+[  29.20] target @CharacterBody3D@1018 -> state DEAD hp -10
+[  30.14] target @CharacterBody3D@1052 -> state DEAD hp -10
+[  33.68] target @CharacterBody3D@1086 -> state DEAD hp -10
+[  33.97] kills during engage: 4 (stats { "shots": 32, "hits": 32, "kills": 4, "head_hits": 0, "core_hits": 0, "core_kills": 0, "damage_taken": 0, "time": 0.0, "god_absorbed": 412.882261565856 })
+[  35.18] capture C:/AAA/Breach/captures/final/07_after_fight.png
+[  35.19] TELEPORT player -> (2.873905, 0.049947, -6.174758)
+[  35.38] core shot test: victim state=DEAD, core_kills=1
+[  36.15] capture C:/AAA/Breach/captures/final/08_core_overload.png
+[  37.11] capture C:/AAA/Breach/captures/final/09_wreck.png
+[  37.11] TELEPORT player -> (13.9, 0.05, -27.0)
+[  38.65] capture C:/AAA/Breach/captures/final/10_servers.png
+[  38.65] TELEPORT player -> (27.0, 0.05, -30.0)
+[  40.30] capture C:/AAA/Breach/captures/final/11_control.png
+[  40.30] TELEPORT player -> (27.0, 0.05, -35.6)
+[  40.31] hold: focus=RelayConsole connecting=0.07
+[  40.51] hold: focus=RelayConsole connecting=0.28
+[  40.71] hold: focus=RelayConsole connecting=0.48
+[  40.91] hold: focus=RelayConsole connecting=0.68
+[  41.11] hold: focus=RelayConsole connecting=0.87
+[  41.31] hold: focus=RelayConsole connecting=1.07
+[  41.52] hold: focus=RelayConsole connecting=1.28
+[  41.72] hold: focus=RelayConsole connecting=1.48
+[  41.91] hold: focus=RelayConsole connecting=1.68
+[  42.12] hold: focus=RelayConsole connecting=1.89
+[  42.36] hold: focus=RelayConsole connecting=2.01
+[  42.56] hold: focus=RelayConsole connecting=2.01
+[  42.56] console uploading=true state=HACK
+[  45.97] capture C:/AAA/Breach/captures/final/12_upload_defend.png
+[  51.56] bots alive during defense: 7, console jammed=false
+[  51.56] TIME SKIP: console progress forced to 0.98 to verify completion flow
+[  54.57] after upload: state=EXTRACT D6 locked=false
+[  54.57] TELEPORT player -> (3.0, 0.1, 11.8)
+[  59.57] extraction: state=COMPLETE
+[  60.19] capture C:/AAA/Breach/captures/final/13_extraction.png
+[  60.63] capture C:/AAA/Breach/captures/final/14_loadout.png
+[  61.07] capture C:/AAA/Breach/captures/final/15_settings.png
+[  61.53] capture C:/AAA/Breach/captures/final/16_complete.png
+[  61.53] AUTOTEST done. Final stats { "shots": 36, "hits": 36, "kills": 5, "head_hits": 0, "core_hits": 3, "core_kills": 1, "damage_taken": 0, "time": 0.0, "god_absorbed": 598.571756368147 }

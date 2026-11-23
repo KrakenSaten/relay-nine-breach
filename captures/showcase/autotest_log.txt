@@ -1,0 +1,22 @@
+[   3.25] TELEPORT player -> (8.0, 0.05, 2.6)
+[   7.16] capture C:/AAA/Breach/captures/showcase/s01_bot_front.png
+[   7.16] TELEPORT player -> (10.4, 0.05, 3.6)
+[   8.18] capture C:/AAA/Breach/captures/showcase/s02_bot_three_quarter.png
+[   8.18] TELEPORT player -> (8.6, 0.05, 9.0)
+[   9.17] capture C:/AAA/Breach/captures/showcase/s03_bot_back_core.png
+[   9.17] TELEPORT player -> (9.5, 0.05, 2.8)
+[   9.87] capture C:/AAA/Breach/captures/showcase/s04_bot_charge.png
+[  10.46] capture C:/AAA/Breach/captures/showcase/s05_bot_arc.png
+[  10.46] TELEPORT player -> (12.0, 0.05, 8.0)
+[  11.30] capture C:/AAA/Breach/captures/showcase/s06_rifle_hip.png
+[  11.94] capture C:/AAA/Breach/captures/showcase/s07_rifle_ads_reflex.png
+[  11.94] ADS dbg: aiming=true ads=0.32 pos=(0.152197, -0.179101, -0.377562) eye=(0.0, 0.079, 0.21) equip=1.00 reload=false sprint=false
+[  12.59] capture C:/AAA/Breach/captures/showcase/s08_rifle_alt_loadout.png
+[  13.23] capture C:/AAA/Breach/captures/showcase/s09_rifle_ads_prism.png
+[  14.15] capture C:/AAA/Breach/captures/showcase/s10_reload.png
+[  15.11] capture C:/AAA/Breach/captures/showcase/s11_pistol.png
+[  15.11] TELEPORT player -> (8.0, 0.05, 2.8)
+[  15.73] capture C:/AAA/Breach/captures/showcase/s12_bot_damaged.png
+[  15.73] TELEPORT player -> (8.0, 0.05, 9.0)
+[  16.32] capture C:/AAA/Breach/captures/showcase/s13_overload.png
+[  17.92] capture C:/AAA/Breach/captures/showcase/s14_wreck.png

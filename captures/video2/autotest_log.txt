@@ -1,0 +1,3 @@
+[   3.32] VIDEO: scripted combat in the turbine hall (god mode, scripted aim)
+[   3.32] TELEPORT player -> (9.9, 0.05, -11.0)
+[  56.91] VIDEO done: kills=5 shots=60 hits=37 god_absorbed=100.301636521668

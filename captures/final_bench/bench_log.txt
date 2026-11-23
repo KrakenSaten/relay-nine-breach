@@ -1,0 +1,8 @@
+[  27.15] BENCH { "preset": "Low", "frames": 6556, "avg_fps": 273.748766079055, "avg_ms": 3.65298450226151, "p95_ms": 6.331, "p99_ms": 10.4166666666667, "1pct_low_fps": 60.8046371790945 }
+[  27.56] capture C:/AAA/Breach/captures/final_bench/bench_0_Low.png
+[  53.68] BENCH { "preset": "Medium", "frames": 6965, "avg_fps": 290.596275902169, "avg_ms": 3.44120032817164, "p95_ms": 5.0, "p99_ms": 8.33333333333333, "1pct_low_fps": 56.826523513387 }
+[  54.31] capture C:/AAA/Breach/captures/final_bench/bench_1_Medium.png
+[  80.14] BENCH { "preset": "High", "frames": 4620, "avg_fps": 193.024675486364, "avg_ms": 5.18068478799565, "p95_ms": 6.48148148148148, "p99_ms": 8.755, "1pct_low_fps": 69.144589018369 }
+[  80.74] capture C:/AAA/Breach/captures/final_bench/bench_2_High.png
+[ 106.59] BENCH { "preset": "Ultra", "frames": 3510, "avg_fps": 146.680080482905, "avg_ms": 6.81755829903942, "p95_ms": 8.33333333333333, "p99_ms": 10.723, "1pct_low_fps": 57.8199276958879 }
+[ 107.19] capture C:/AAA/Breach/captures/final_bench/bench_3_Ultra.png
