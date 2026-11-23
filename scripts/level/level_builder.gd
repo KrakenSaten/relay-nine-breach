@@ -50,6 +50,7 @@ func build() -> void:
 	_control()
 	_lights()
 	_signage()
+	_audio_zones()
 	_enemy_spawns()
 
 
@@ -798,3 +799,48 @@ func build_cover_points() -> Array:
 					e["peek2"] = spk2
 				pts.append(e)
 	return pts
+
+
+
+# ------------------------------------------------------------------ audio zones
+const ROOM_AUDIO := {
+	"dock": ["Rev_Dock", "ambience_facility", Vector3(8, 3, 7), -14.0],
+	"corridor": ["Rev_Small", "ambience_facility", Vector3(7.5, 2.5, -15), -18.0],
+	"office": ["Rev_Small", "electric_buzz_loop", Vector3(0.5, 3.2, -8), -22.0],
+	"passage": ["Rev_Small", "", Vector3.ZERO, 0.0],
+	"hall": ["Rev_Hall", "ambience_hall", Vector3(20, 4, -14), -10.0],
+	"servers": ["Rev_Servers", "ambience_servers", Vector3(15, 1.5, -32), -12.0],
+	"control": ["Rev_Small", "electric_buzz_loop", Vector3(27, 4.0, -33), -20.0],
+}
+
+
+func _audio_zones() -> void:
+	for room in ROOM_AUDIO:
+		if not Game.rooms.has(room):
+			continue
+		var cfg: Array = ROOM_AUDIO[room]
+		var aabb: AABB = Game.rooms[room].aabb
+		var a := Area3D.new()
+		a.name = "Reverb_" + room
+		a.collision_layer = 1 << 5   # audio-only layer; rays never test it
+		a.collision_mask = 0
+		a.monitoring = false
+		a.reverb_bus_enabled = true
+		a.reverb_bus_name = cfg[0]
+		a.reverb_bus_amount = 1.0
+		a.reverb_bus_uniformity = 0.6
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = aabb.size
+		cs.shape = bs
+		a.add_child(cs)
+		add_child(a)
+		a.global_position = aabb.get_center()
+		if cfg[1] != "" and ResourceLoader.exists("res://assets/audio/%s.wav" % cfg[1]):
+			var holder := Node3D.new()
+			add_child(holder)
+			holder.global_position = cfg[2]
+			var p := Sfx.loop_3d(cfg[1], holder, cfg[3], 14.0)
+			if p:
+				p.max_distance = maxf(aabb.size.x, aabb.size.z) * 0.9
+				p.attenuation_filter_cutoff_hz = 9000.0

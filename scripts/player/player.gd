@@ -431,6 +431,8 @@ func _footstep(land: bool) -> void:
 		vol = -6.0
 		radius = 9.0
 	Sfx.play_3d("step_metal" if on_metal else "step_concrete", global_position, vol, 0.1, 3.0)
+	if not _crouched and randf() < (0.8 if _sprinting else 0.35):
+		Sfx.play_3d("foley_cloth", global_position + Vector3.UP, vol - 6.0, 0.1, 3.0)
 	Game.emit_noise(global_position, radius, self)
 
 

@@ -16,6 +16,7 @@ var _i2 := 0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_setup_buses()
 	for i in POOL_3D:
 		var p := AudioStreamPlayer3D.new()
 		p.unit_size = 6.0
@@ -24,6 +25,7 @@ func _ready() -> void:
 		p.attenuation_filter_cutoff_hz = 6000.0
 		p.attenuation_filter_db = -18.0
 		p.panning_strength = 1.0
+		p.area_mask = 1 << 5
 		add_child(p)
 		_pool3d.append(p)
 	for i in POOL_2D:
@@ -94,6 +96,7 @@ func loop_3d(name: String, parent: Node3D, volume_db := -6.0, unit := 3.0) -> Au
 	p.unit_size = unit
 	p.max_distance = 30.0
 	p.autoplay = true
+	p.area_mask = 1 << 5
 	parent.add_child(p)
 	return p
 
@@ -112,3 +115,49 @@ func loop_2d(name: String, volume_db := -10.0) -> AudioStreamPlayer:
 	add_child(p)
 	p.play()
 	return p
+
+
+
+# ---------------------------------------------------------------- M2 spatial audio
+## Reverb buses used by per-room Area3D reverb zones (see LevelBuilder).
+const REVERBS := {
+	"Rev_Small": {"room": 0.38, "damp": 0.55, "wet": 0.22, "pre": 12.0, "spread": 0.8},
+	"Rev_Hall": {"room": 0.92, "damp": 0.32, "wet": 0.34, "pre": 55.0, "spread": 1.0},
+	"Rev_Servers": {"room": 0.45, "damp": 0.75, "wet": 0.18, "pre": 10.0, "spread": 0.7},
+	"Rev_Dock": {"room": 0.75, "damp": 0.4, "wet": 0.28, "pre": 35.0, "spread": 1.0},
+}
+
+
+func _setup_buses() -> void:
+	for name in REVERBS:
+		if AudioServer.get_bus_index(name) != -1:
+			continue
+		AudioServer.add_bus()
+		var i := AudioServer.bus_count - 1
+		AudioServer.set_bus_name(i, name)
+		AudioServer.set_bus_send(i, "Master")
+		var r := AudioEffectReverb.new()
+		var c: Dictionary = REVERBS[name]
+		r.room_size = c.room
+		r.damping = c.damp
+		r.wet = c.wet
+		r.dry = 0.0
+		r.predelay_msec = c.pre
+		r.spread = c.spread
+		r.hipass = 0.15
+		AudioServer.add_bus_effect(i, r)
+	# Gentle master limiter: dense firefights must not clip.
+	if AudioServer.get_bus_effect_count(0) == 0:
+		var lim := AudioEffectHardLimiter.new()
+		lim.ceiling_db = -0.5
+		AudioServer.add_bus_effect(0, lim)
+
+
+## A one-shot at the listener (player weapon, foley). Played as 3D so room
+## reverb zones apply, with zero distance attenuation.
+func play_local(name: String, volume_db := 0.0, pitch_var := 0.04) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		play(name, volume_db, pitch_var)
+		return
+	play_3d(name, cam.global_position + Vector3(0, -0.1, 0), volume_db + 2.0, pitch_var, 40.0)

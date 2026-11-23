@@ -411,7 +411,7 @@ func _shoot() -> void:
 			Fx.tracer(muzzle_pos + dir * 0.5, hit.position)
 	# Presentation
 	var supp: bool = stats.suppressed
-	Sfx.play(def.shot_sound_supp if supp else def.shot_sound, -1.0 if not supp else -4.0, 0.05)
+	Sfx.play_local(def.shot_sound_supp if supp else def.shot_sound, -1.0 if not supp else -4.0, 0.05)
 	Game.emit_noise(player.global_position, stats.noise, player)
 	_flash_t = 0.035 if not supp else 0.02
 	_flash.visible = stats.flash_mult > 0.5
