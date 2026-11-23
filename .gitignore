@@ -29,3 +29,6 @@ captures/*
 !captures/m3_ai/
 !captures/m3_compare/
 !captures/m31_fixes/
+!captures/m4_report/
+!captures/m4_final_bench/
+!captures/m4_final_bench_route/

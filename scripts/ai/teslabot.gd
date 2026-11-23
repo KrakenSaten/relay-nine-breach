@@ -113,6 +113,11 @@ var _lod_t := 0.0
 var _sep := Vector3.ZERO
 var _sep_n := 0
 var _idle_ticks := 0
+var _far := false
+var _far_t := 0.0
+var _tick_n := 0
+var _ai_every := 1
+var _skip_dt := 0.0
 var _door_ray_n := 0
 
 
@@ -720,6 +725,25 @@ func _physics_process(dt: float) -> void:
 	if is_dormant():
 		_update_dormant(dt)
 		return
+	# AI LOD: units far from the player and not fighting tick at 40 Hz
+	# (dt accumulated; movement scaled below so speeds are unchanged).
+	_far_t -= dt
+	if _far_t <= 0.0:
+		_far_t = 0.5
+		var pl: Node3D = Game.player
+		_far = pl != null and pl.global_position.distance_to(global_position) > 22.0
+		if _far:
+			for dd in director.doors:
+				if Vector2(dd.center.x - global_position.x, dd.center.z - global_position.z).length() < 3.5:
+					_far = false   # full rate while negotiating a doorway
+					break
+	_tick_n += 1
+	_ai_every = 3 if (_far and state in [S.PATROL, S.SUSPICIOUS] and _stagger_t <= 0.0 and _attack_t < 0.0) else 1
+	if _tick_n % _ai_every != 0:
+		_skip_dt += dt
+		return
+	dt += _skip_dt
+	_skip_dt = 0.0
 	_recent_dmg = maxf(0.0, _recent_dmg - 60.0 * dt)
 	suppression = maxf(0.0, suppression - 0.3 * dt)
 	_push_t = maxf(0.0, _push_t - dt)
@@ -758,7 +782,14 @@ func _physics_process(dt: float) -> void:
 	else:
 		_idle_ticks = 0
 	if _idle_ticks < 3 or _idle_ticks % 8 == 0:
-		move_and_slide()
+		if _ai_every > 1:
+			# move_and_slide integrates over one physics tick; cover the skipped ones
+			var v := velocity
+			velocity *= float(_ai_every)
+			move_and_slide()
+			velocity = v if not is_on_floor() else Vector3(velocity.x / _ai_every, v.y, velocity.z / _ai_every)
+		else:
+			move_and_slide()
 	var _p3 := Time.get_ticks_usec()
 	var _p4 := Time.get_ticks_usec()
 	_damage_fx(dt)
@@ -792,7 +823,7 @@ func _process(delta: float) -> void:
 func _anim_lod() -> float:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
-		return 0.0
+		return 1.0 / 120.0
 	var d := cam.global_position.distance_to(global_position)
 	if not cam.is_position_in_frustum(global_position + Vector3.UP * 1.2):
 		return 1.0 / 30.0 if d < 10.0 else 1.0 / 15.0
@@ -800,7 +831,7 @@ func _anim_lod() -> float:
 		return 1.0 / 30.0
 	if d > 10.0:
 		return 1.0 / 60.0
-	return 0.0
+	return 1.0 / 120.0   # never more often than the old per-tick rate
 
 
 func _think() -> void:

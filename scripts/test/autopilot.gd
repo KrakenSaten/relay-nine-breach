@@ -384,6 +384,23 @@ func _bench() -> void:
 			Vector3(17, 0.05, -42.5), Vector3(22, 0.05, -46), Vector3(28.5, 0.05, -56)]
 		duration = 45.0
 		L("BENCH path: M4 route (lockdown released, blast door open), %.0f s per preset" % duration)
+	if "--bench-nobots" in OS.get_cmdline_user_args():
+		for bb in main.director.bots.duplicate():
+			main.director.bots.erase(bb)
+			bb.queue_free()
+		L("BENCH: all units removed (attribution run)")
+	if "--bench-m3bots" in OS.get_cmdline_user_args():
+		var keep := ["o1", "o2", "c1", "h1", "h2", "h3", "h4", "s1", "s2", "k1"]
+		for bb in main.director.bots.duplicate():
+			if not (bb.spawn_id in keep):
+				main.director.bots.erase(bb)
+				bb.queue_free()
+		L("BENCH: only the 10 M3 garrison units kept (attribution run)")
+	if "--bench-idlebots" in OS.get_cmdline_user_args():
+		for bb in main.director.bots:
+			bb.set_physics_process(false)
+			bb.set_process(false)
+		L("BENCH: all units frozen in place (render only)")
 	for d in main.level.doors.values():
 		if not d.locked:
 			d.target = deg_to_rad(95)
