@@ -37,6 +37,9 @@ func setup(world: Node3D) -> void:
 	for i in SPARK_POOL:
 		_sparks.append(_make_sparks(Color(1.0, 0.62, 0.22), 18))
 		_blue_sparks.append(_make_sparks(Color(0.55, 0.8, 1.0), 26))
+	_chips.clear()
+	for i in 10:
+		_chips.append(_make_chips())
 	for i in DUST_POOL:
 		_dust.append(_make_dust(Color(0.5, 0.5, 0.49, 0.32), 8, 0.8))
 		_smoke.append(_make_dust(Color(0.16, 0.16, 0.17, 0.28), 6, 1.6))
@@ -201,6 +204,7 @@ func impact(pos: Vector3, normal: Vector3, kind: String) -> void:
 	match kind:
 		"concrete":
 			_fire(_dust[_di], pos + normal * 0.02, normal); _di = (_di + 1) % DUST_POOL
+			_fire(_chips[_ci], pos + normal * 0.03, normal); _ci = (_ci + 1) % _chips.size()
 			_fire(_sparks[_si], pos, normal); _si = (_si + 1) % SPARK_POOL
 			decal(pos, normal, 0.08)
 			Sfx.play_3d("impact_concrete", pos, -4.0)
@@ -332,7 +336,16 @@ func _build_bolt(im: ImmediateMesh, from: Vector3, to: Vector3, width: float, br
 
 
 func overload(pos: Vector3) -> void:
-	flash(pos, Color(0.55, 0.78, 1.0), 12.0, 10.0, 0.45, true)
+	flash(pos, Color(0.55, 0.78, 1.0), 14.0, 12.0, 0.55, true)
+	shockwave(pos, 4.0, 0.28)
+	smoke_column(pos)
+	for i in 2:
+		_fire(_chips[_ci], pos, Vector3(randf_range(-1, 1), 0.6, randf_range(-1, 1)).normalized()); _ci = (_ci + 1) % _chips.size()
+	var p: Node = Game.player
+	if p and p.get("alive"):
+		var d: float = p.global_position.distance_to(pos)
+		if d < 12.0:
+			p._shake = minf(1.0, p._shake + (1.0 - d / 12.0) * 0.9)
 	for i in 3:
 		_fire(_blue_sparks[_bi], pos, Vector3(randf_range(-1, 1), randf_range(0, 1), randf_range(-1, 1)).normalized()); _bi = (_bi + 1) % SPARK_POOL
 	for i in 6:
@@ -351,6 +364,7 @@ func warmup(pos: Vector3, normal: Vector3) -> void:
 	tracer(pos + Vector3(0, 0, 3), pos)
 	smoke(pos, normal)
 	overload(pos)
+	dust_puff(pos)
 	flash(pos, Color(1, 0.7, 0.4), 1.0, 2.0, 0.05, true)
 
 
@@ -363,3 +377,129 @@ func dust_puff(pos: Vector3, scale := 1.0) -> void:
 	_di = (_di + 1) % DUST_POOL
 	_fire(p, pos, Vector3.UP)
 	p.scale = Vector3.ONE * scale
+
+
+
+# ---------------------------------------------------------------- M3 effects
+var _chips: Array[GPUParticles3D] = []
+var _ci := 0
+var _ring_mat: StandardMaterial3D
+var _ring_mesh: TorusMesh
+
+
+## Concrete chips: small lit debris that falls and fades (impacts, overloads).
+func _make_chips() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.one_shot = true
+	p.emitting = false
+	p.amount = 7
+	p.lifetime = 0.9
+	p.explosiveness = 1.0
+	p.local_coords = false
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var pm := ParticleProcessMaterial.new()
+	pm.direction = Vector3(0, 0, 1)
+	pm.spread = 40.0
+	pm.initial_velocity_min = 1.5
+	pm.initial_velocity_max = 4.5
+	pm.gravity = Vector3(0, -12.0, 0)
+	pm.angular_velocity_min = -720.0
+	pm.angular_velocity_max = 720.0
+	pm.scale_min = 0.5
+	pm.scale_max = 1.3
+	var sc := Curve.new()
+	sc.add_point(Vector2(0, 1.0))
+	sc.add_point(Vector2(0.8, 1.0))
+	sc.add_point(Vector2(1.0, 0.0))
+	var sct := CurveTexture.new()
+	sct.curve = sc
+	pm.scale_curve = sct
+	pm.collision_mode = ParticleProcessMaterial.COLLISION_RIGID
+	pm.collision_bounce = 0.25
+	pm.collision_friction = 0.6
+	p.process_material = pm
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.022, 0.016, 0.018)
+	bm.material = MatLib.flat(Color(0.42, 0.41, 0.39), 0.0, 0.9)
+	p.draw_pass_1 = bm
+	p.collision_base_size = 0.02
+	p.visibility_aabb = AABB(Vector3(-3, -3, -3), Vector3(6, 6, 6))
+	_world.add_child(p)
+	return p
+
+
+## Expanding additive ring: capacitor overload / breach shockwave.
+func shockwave(pos: Vector3, radius: float, dur: float) -> void:
+	if _ring_mat == null:
+		_ring_mat = MatLib.unshaded(Color(0.45, 0.7, 1.0, 0.32))
+		_ring_mesh = TorusMesh.new()
+		_ring_mesh.inner_radius = 0.975
+		_ring_mesh.outer_radius = 1.0
+		_ring_mesh.rings = 48
+		_ring_mesh.ring_segments = 6
+		_ring_mesh.material = _ring_mat
+	var mi := MeshInstance3D.new()
+	mi.mesh = _ring_mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.material_override = _ring_mat.duplicate()
+	_world.add_child(mi)
+	mi.global_position = pos
+	mi.scale = Vector3.ONE * 0.2
+	var m: StandardMaterial3D = mi.material_override
+	var t := mi.create_tween().set_parallel(true)
+	t.tween_property(mi, "scale", Vector3(radius, radius * 0.08, radius), dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.tween_property(m, "albedo_color:a", 0.0, dur)
+	t.chain().tween_callback(mi.queue_free)
+
+
+## A slow column of smoke rising from a wreck.
+func smoke_column(pos: Vector3) -> void:
+	for i in 3:
+		var tt := get_tree().create_timer(0.15 + i * 0.45)
+		tt.timeout.connect(func(): smoke(pos + Vector3(randf_range(-0.2, 0.2), 0.3 + i * 0.3, randf_range(-0.2, 0.2)), Vector3.UP))
+
+
+## Floating dust motes inside a box volume (visible in light shafts).
+func motes(center: Vector3, size: Vector3, amount: int) -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.amount = amount
+	p.lifetime = 14.0
+	p.preprocess = 14.0
+	p.local_coords = false
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = size * 0.5
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 180.0
+	pm.initial_velocity_min = 0.01
+	pm.initial_velocity_max = 0.06
+	pm.gravity = Vector3(0, -0.004, 0)
+	pm.turbulence_enabled = true
+	pm.turbulence_noise_strength = 0.4
+	pm.turbulence_noise_speed_random = 0.2
+	pm.turbulence_influence_min = 0.02
+	pm.turbulence_influence_max = 0.06
+	var ramp := Gradient.new()
+	ramp.colors = PackedColorArray([Color(1, 1, 1, 0), Color(1, 0.95, 0.85, 0.5), Color(1, 1, 1, 0)])
+	ramp.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+	var rt := GradientTexture1D.new()
+	rt.gradient = ramp
+	pm.color_ramp = rt
+	p.process_material = pm
+	var q := QuadMesh.new()
+	q.size = Vector2(0.012, 0.012)
+	var m := StandardMaterial3D.new()
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	m.vertex_color_use_as_albedo = true
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_texture = _soft_tex
+	m.albedo_color = Color(0.9, 0.88, 0.82)
+	m.roughness = 1.0
+	m.disable_receive_shadows = false
+	q.material = m
+	p.draw_pass_1 = q
+	p.visibility_aabb = AABB(-size * 0.6, size * 1.2)
+	_world.add_child(p)
+	p.global_position = center
+	return p

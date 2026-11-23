@@ -251,9 +251,10 @@ func _build_flash() -> void:
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	m.albedo_texture = t
+	m.albedo_texture = _flash_texture(randi())
 	m.albedo_color = Color(1.6, 1.3, 1.0)
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_flash_mat = m
 	# Side-on petals (long) and a front-facing star
 	for i in 3:
 		var q := QuadMesh.new()
@@ -419,6 +420,8 @@ func _shoot() -> void:
 	_flash_t = 0.035 if not supp else 0.02
 	_flash.visible = stats.flash_mult > 0.5
 	_flash.rotation.z = randf() * TAU
+	if _flash_mat and _flash_variants.size() > 0:
+		_flash_mat.albedo_texture = _flash_variants[randi() % _flash_variants.size()]
 	_flash.scale = Vector3.ONE * randf_range(0.8, 1.2)
 	_flash_light.light_energy = 3.5 * stats.flash_mult
 	_cycle = 1.0
@@ -788,3 +791,41 @@ func _shot_audio(supp: bool) -> void:
 		Sfx.play_local(base, -1.0 if not supp else -4.0, 0.05)
 	if id == "rifle" and _has_snd("rifle_mech"):
 		Sfx.play_local("rifle_mech", -9.0 if not supp else -5.0, 0.06)
+
+
+
+# ---------------------------------------------------------------- M3 muzzle flash
+var _flash_mat: StandardMaterial3D
+static var _flash_variants: Array[ImageTexture] = []
+
+
+## Procedural petal/star flash textures (3 variants, built once): a hot core,
+## irregular prongs and soft falloff, so consecutive shots never look stamped.
+static func _flash_texture(seed_: int) -> ImageTexture:
+	if _flash_variants.is_empty():
+		for v in 3:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 7919 * (v + 1)
+			var n := 128
+			var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+			var prongs := rng.randi_range(5, 7)
+			var phase := rng.randf() * TAU
+			var lens := []
+			for k in prongs:
+				lens.append(rng.randf_range(0.55, 1.0))
+			for y in n:
+				for x in n:
+					var dx := (x - n * 0.5) / (n * 0.5)
+					var dy := (y - n * 0.5) / (n * 0.5)
+					var r := sqrt(dx * dx + dy * dy)
+					var a := atan2(dy, dx) + phase
+					var sector := fposmod(a, TAU) / TAU * prongs
+					var idx := int(sector) % prongs
+					var f := fposmod(sector, 1.0)
+					var prong: float = pow(maxf(0.0, cos((f - 0.5) * PI)), 6.0) * lens[idx]
+					var core := exp(-r * r * 22.0)
+					var arm := prong * exp(-r * 2.4) * smoothstep(1.0, 0.2, r)
+					var vv := clampf(core * 1.2 + arm * 0.9, 0.0, 1.0)
+					img.set_pixel(x, y, Color(1.0, 0.75 + 0.25 * core, 0.45 + 0.55 * core, vv))
+			_flash_variants.append(ImageTexture.create_from_image(img))
+	return _flash_variants[seed_ % _flash_variants.size()]

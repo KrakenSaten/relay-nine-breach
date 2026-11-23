@@ -20,6 +20,16 @@ func _ready() -> void:
 	add_child(level)
 	level.build()
 	Fx.setup(self)
+	# Heightfield so debris particles land on floors and props.
+	var hf := GPUParticlesCollisionHeightField3D.new()
+	hf.size = Vector3(44.0, 12.0, 58.0)
+	hf.resolution = GPUParticlesCollisionHeightField3D.RESOLUTION_1024
+	hf.update_mode = GPUParticlesCollisionHeightField3D.UPDATE_MODE_WHEN_MOVED
+	add_child(hf)
+	hf.global_position = Vector3(13.5, 5.0, -13.0)
+	# Dust motes in the large spaces (visible in the light shafts).
+	Fx.motes(Vector3(20.5, 4.5, -14.0), Vector3(22.0, 8.5, 23.0), 260)
+	Fx.motes(Vector3(8.0, 3.0, 7.0), Vector3(15.0, 5.5, 13.0), 140)
 	level.bake_nav()
 	director = Director.new()
 	director.name = "Director"
@@ -122,7 +132,12 @@ func _setup_env() -> void:
 	we.environment = env
 	add_child(we)
 	var cam_attr := CameraAttributesPractical.new()
-	cam_attr.auto_exposure_enabled = false
+	# Gentle eye adaptation between dark corridors and bright halls.
+	cam_attr.auto_exposure_enabled = true
+	cam_attr.auto_exposure_scale = 0.35
+	cam_attr.auto_exposure_speed = 0.6
+	cam_attr.auto_exposure_min_sensitivity = 160.0
+	cam_attr.auto_exposure_max_sensitivity = 520.0
 	we.camera_attributes = cam_attr
 	Settings.register(env, get_viewport())
 
