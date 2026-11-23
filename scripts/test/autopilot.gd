@@ -30,6 +30,8 @@ func run(m: Node) -> void:
 		await _bench()
 	elif "--showcase" in OS.get_cmdline_user_args():
 		await _showcase()
+	elif "--aitest" in OS.get_cmdline_user_args():
+		await _aitest()
 	elif "--compare" in OS.get_cmdline_user_args():
 		await _compare()
 	elif "--video" in OS.get_cmdline_user_args():
@@ -265,6 +267,8 @@ func _track_ai(on: bool) -> void:
 
 
 func _physics_process(_d: float) -> void:
+	if _ai2_on:
+		_ai2_track()
 	if not has_meta("track"):
 		return
 	for b in main.director.bots:
@@ -511,3 +515,78 @@ func _compare() -> void:
 	player._request_switch(1)
 	await _wait(1.2)
 	await shot("c13_pistol")
+
+
+# ------------------------------------------------------------------ AI behaviour test
+var _ai2 := {"stacked": 0, "entering": 0, "suppressed": 0, "push": 0, "overwatch": 0, "pusher": 0, "flanker": 0, "cover": 0, "peek": 0, "entries_done": 0}
+var _ai2_on := false
+var _ai2_prev_entry := {}
+
+
+func _ai2_track() -> void:
+	for b in main.director.bots:
+		if b.state == Teslabot.S.DEAD:
+			continue
+		var ph: String = b._entry.get("phase", "")
+		if ph == "stacked": _ai2.stacked += 1
+		if ph == "entering": _ai2.entering += 1
+		if _ai2_prev_entry.get(b, "") == "entering" and ph == "":
+			_ai2.entries_done += 1
+		_ai2_prev_entry[b] = ph
+		if b.suppression > 0.55: _ai2.suppressed += 1
+		if b._push_t > 0.0: _ai2.push += 1
+		if b.state == Teslabot.S.COMBAT and _ai2.has(b.role): _ai2[b.role] += 1
+		if b._cover_phase == "peek": _ai2.peek += 1
+
+
+func _aitest() -> void:
+	L("AITEST: player hides in the security office; hall/corridor units are alerted by gunfire")
+	_ai2_on = true
+	# Office units are removed so the test measures units coming from outside.
+	for b in main.director.bots:
+		if Game.room_at(b.global_position + Vector3.UP) == "office":
+			b.explosion_damage(9999.0, b.global_position)
+	main.level.doors.D2.target = 0.0
+	teleport(Vector3(-3.5, 0.05, -11.5), Vector3(6, 1.2, -8.5))
+	player.bot_input.crouch_set = true
+	await _wait(2.0)
+	Game.emit_noise(Vector3(2.0, 0, -8.5), 60.0, player)
+	main.director.report_sighting(null, Vector3(2.0, 0, -8.5))
+	for b in main.director.bots:
+		if b.state != Teslabot.S.DEAD:
+			b.alert_to(Vector3(2.0, 0, -8.5))
+	var t := 0.0
+	while t < 22.0:
+		await _wait(0.25)
+		t += 0.25
+		if is_equal_approx(fmod(t, 5.5), 0.0):
+			for b in _bots():
+				L("  t=%.1f %s state=%s role=%s pos=%s vis=%s cover=%s phase=%s entry=%s nav_done=%s" % [t, b.name, Teslabot.S.keys()[b.state], b.role, b.global_position.snapped(Vector3.ONE * 0.1), b.target_visible, b._cover.get("pos", "-"), b._cover_phase, b._entry.get("phase", "-"), b.agent.is_navigation_finished()])
+	L("AITEST hunt (22 s): %s  D2 open=%s  god_absorbed=%.0f" % [_ai2, main.level.doors.D2.is_open(), Game.stats.get("god_absorbed", 0.0)])
+	var near := 0
+	for b in _bots():
+		if b.global_position.distance_to(player.global_position) < 8.0:
+			near += 1
+	L("AITEST units within 8 m of the hidden player: %d / %d alive" % [near, _bots().size()])
+	# Suppression: fire near (not at) the closest visible unit.
+	var sup_before: int = _ai2.suppressed
+	var target := _nearest_visible()
+	if target:
+		var tt := 0.0
+		player.bot_input.fire = true
+		while tt < 3.0:
+			_look(target.bones.torso.global_position + Vector3(1.1, 0.4, 0))
+			await _wait(0.05)
+			tt += 0.05
+			if player.weapon().ammo == 0:
+				break
+		player.bot_input.fire = false
+		await _wait(1.0)
+		L("AITEST near-miss fire: suppressed unit-frames +%d, target suppression=%.2f role=%s" % [_ai2.suppressed - sup_before, target.suppression, target.role])
+	var push_before: int = _ai2.push
+	player.weapon().ammo = 0
+	player.weapon().start_reload()
+	await _wait(1.5)
+	L("AITEST reload push: push unit-frames +%d" % [_ai2.push - push_before])
+	_ai2_on = false
+	L("AITEST final: %s" % [_ai2])

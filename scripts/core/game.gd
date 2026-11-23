@@ -7,6 +7,7 @@ signal noise(pos: Vector3, radius: float, source: Node)
 signal hack_progress(value: float)
 signal message(text: String, seconds: float)
 signal request_loadout
+signal reload_heard(pos: Vector3)
 
 enum State { BRIEFING, INFILTRATE, HACK, EXTRACT, COMPLETE, FAILED }
 

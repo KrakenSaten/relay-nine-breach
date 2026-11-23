@@ -27,7 +27,7 @@ var zone_hp := {}
 var blinded := false
 var arm_damaged := false
 var limp := 0.0               # 0..1
-var role := "assault"         # assault | flanker | cover
+var role := "assault"         # assault | flanker | cover | overwatch | pusher
 var awareness := 0.0
 var target_visible := false
 var last_seen_t := -100.0
@@ -80,6 +80,13 @@ var _alerted_once := false
 var _servo_cd := 0.0
 var _rest := {}
 var _crouch_b := 0.0
+## M2 combat refinement
+var suppression := 0.0          # 0..1, from near misses/hits; decays
+var _push_t := 0.0              # aggressive push window (e.g. player reloading)
+var _push_target := Vector3.ZERO
+var _entry: Dictionary = {}     # room-entry plan from the director
+var _visited: Array = []        # [pos, time] search memory
+var _scan_t := 0.0
 
 
 func _ready() -> void:
@@ -287,7 +294,7 @@ func alert_to(pos: Vector3) -> void:
 	stimulus = pos
 	awareness = maxf(awareness, 0.9)
 	_set_state(S.SEARCH)
-	_search_t = 12.0
+	_search_t = 28.0
 	_go(pos, RUN)
 
 
@@ -318,6 +325,51 @@ func _set_state(s: int) -> void:
 	state = s
 
 
+# ------------------------------------------------------------------ suppression / squad hooks
+## Near misses and hits pin the unit: it breaks for cover, delays or cancels a
+## charge, aims worse, and learns roughly where the fire came from even when
+## the shot was suppressed.
+func suppress(from: Vector3, amount: float) -> void:
+	if state == S.DEAD:
+		return
+	var before := suppression
+	suppression = minf(1.0, suppression + amount)
+	var guess := from + Vector3(randf_range(-2.5, 2.5), 0, randf_range(-2.5, 2.5))
+	if state != S.COMBAT:
+		last_known = guess
+		stimulus = guess
+		awareness = maxf(awareness, 0.95)
+		if state in [S.PATROL, S.SUSPICIOUS, S.SEARCH]:
+			_set_state(S.INVESTIGATE)
+	elif not target_visible:
+		last_known = guess
+	if suppression > 0.55:
+		if _attack_t >= 0.0 and _attack_t < WINDUP * 0.5:
+			_cancel_attack()
+		if role != "cover" and role != "overwatch":
+			role = "cover"
+			_cover = {}
+		if before <= 0.55 and director:
+			director.on_suppressed(self)
+
+
+func push(t: float) -> void:
+	if state == S.COMBAT and limp < 0.5:
+		_push_t = maxf(_push_t, t)
+
+
+func set_push_target(pos: Vector3) -> void:
+	_push_target = pos
+	_go(pos, RUN)
+
+
+func visited_recently(pt: Vector3) -> bool:
+	for v in _visited:
+		if v[0].distance_to(pt) < 2.5 and _t - v[1] < 20.0:
+			return true
+	return false
+
+
 # ------------------------------------------------------------------ damage
 func take_damage(amount: float, zone: String, pos: Vector3, dir: Vector3, normal: Vector3, attacker: Node) -> Dictionary:
 	if state == S.DEAD:
@@ -327,6 +379,8 @@ func take_damage(amount: float, zone: String, pos: Vector3, dir: Vector3, normal
 	hp -= dmg
 	_recent_dmg += dmg
 	var res := {"kill": false, "zone": zone, "weak": zone in ["head", "core"], "damage": dmg}
+	if attacker:
+		suppress(attacker.global_position, 0.22)
 	if zone == "head":
 		Game.stats.head_hits += 1
 	if zone == "core":
@@ -496,6 +550,7 @@ func _fire_arc() -> void:
 	var err := 0.05 + d * 0.012
 	if arm_damaged: err += 0.25
 	if blinded: err += 0.45
+	err += suppression * 0.35
 	var lat := Vector2(p.velocity.x, p.velocity.z).length()
 	err += lat * 0.05
 	var off := Vector3(randf_range(-1, 1), randf_range(-0.6, 0.8), randf_range(-1, 1)).normalized() * randf() * err
@@ -543,6 +598,8 @@ func _physics_process(dt: float) -> void:
 	if director == null:
 		return
 	_recent_dmg = maxf(0.0, _recent_dmg - 60.0 * dt)
+	suppression = maxf(0.0, suppression - 0.3 * dt)
+	_push_t = maxf(0.0, _push_t - dt)
 	_attack_cd -= dt
 	_door_cd -= dt
 	_sense_t -= dt
@@ -600,12 +657,22 @@ func _think() -> void:
 				_search_t = 8.0
 		S.SEARCH:
 			_search_t -= 0.35
-			if _search_t <= 0.0:
+			if _search_t <= 0.0 and director.since_seen() > 25.0:
 				awareness = 0.3
 				_set_state(S.PATROL)
+			elif _try_entry(last_known):
+				pass
 			elif not _has_move or agent.is_navigation_finished():
-				var around := last_known + Vector3(randf_range(-6, 6), 0, randf_range(-6, 6))
-				_go(director.snap(around), WALK * 1.3)
+				# Pause and scan at each point, then move to the next distinct one.
+				_scan_t -= 0.35
+				if _scan_t <= 0.0:
+					_visited.append([global_position, _t])
+					if _visited.size() > 12:
+						_visited.pop_front()
+					_go(director.search_point(self), WALK * 1.6)
+					_scan_t = randf_range(1.0, 2.0)
+				else:
+					_stop()
 		S.COMBAT:
 			_think_combat(p)
 
@@ -624,34 +691,105 @@ func _think_combat(p: Player) -> void:
 		_go(director.shared_last_known(last_known), RUN * 0.8)
 		return
 	var d := global_position.distance_to(p.global_position)
-	# Attack decision
-	if target_visible and _attack_t < 0.0 and _attack_cd <= 0.0 and d < 30.0:
+	# Attack decision (suppressed units hold fire unless the target is close)
+	var pinned := suppression > 0.7 and d > 6.0
+	if target_visible and not pinned and _attack_t < 0.0 and _attack_cd <= 0.0 and d < 30.0:
 		if _request_token():
 			_start_attack()
-			if d > 5.0:
+			if d > 5.0 and _push_t <= 0.0:
 				_stop()
 			return
 	if _attack_t >= 0.0:
 		return
+	# Room entry when the target is in an adjacent room and out of sight
+	if not target_visible and _try_entry(director.shared_last_known(last_known)):
+		return
+	if not _entry.is_empty():
+		director.entry_done(_entry.door, self)
+		_entry = {}
+	# Reload/opening push: close the distance hard.
+	if _push_t > 0.0:
+		_go(director.snap(p.global_position if target_visible else director.predicted_position()), RUN)
+		return
 	match role:
 		"flanker":
-			if not _has_move or agent.is_navigation_finished() or randf() < 0.15:
-				_go(director.flank_position(self, p.global_position), RUN)
+			if not _has_move or agent.is_navigation_finished() or randf() < 0.12:
+				_go(director.flank_position(self, last_known), RUN)
 			if d < 6.0 and target_visible:
 				_stop()
 		"cover":
 			_think_cover(p)
+		"overwatch":
+			# Hold the angle on the last known position; reposition only if blind to it.
+			if not director._ray_clear(eye_pos(), last_known + Vector3.UP * 1.2):
+				if not _has_move or agent.is_navigation_finished():
+					var c: Dictionary = director.find_cover(self, last_known + Vector3.UP * 1.4)
+					if not c.is_empty():
+						_cover = c
+						_go(c.peek, RUN)
+					else:
+						_go(director.snap(last_known.lerp(global_position, 0.6)), WALK * 1.5)
+			else:
+				_stop()
+		"pusher":
+			if agent.is_navigation_finished() or not _has_move:
+				# Arrived at the bearing: sweep into the predicted position.
+				_go(director.predicted_position(), RUN * 0.8)
 		_:
 			# Assault: hold a preferred band; close in when the target hides.
 			var pref := 9.0
 			if not target_visible or d > 16.0:
-				_go(director.snap(last_known), RUN)
+				_go(director.snap(director.predicted_position()), RUN)
 			elif d < 4.5:
 				var away := (global_position - p.global_position).normalized()
 				_go(director.snap(global_position + away * 3.0 + away.cross(Vector3.UP) * randf_range(-2, 2)), WALK * 1.4)
-			elif d > pref + 3.0 or randf() < 0.25:
-				var side := (p.global_position - global_position).normalized().cross(Vector3.UP) * randf_range(-3.0, 3.0)
-				_go(director.snap(global_position + side + (p.global_position - global_position).normalized() * 2.0), WALK * 1.4)
+			elif d > pref + 3.0 or randf() < 0.3:
+				# Strafe across the target's line instead of standing in the open.
+				var side := (p.global_position - global_position).normalized().cross(Vector3.UP) * randf_range(-3.5, 3.5)
+				_go(director.snap(global_position + side + (p.global_position - global_position).normalized() * 1.5), WALK * 1.6)
+
+
+## Stack on the near side of a doorway into the target's room, wait for a
+## partner (or briefly), open the door, then enter on crossing lines.
+func _try_entry(target: Vector3) -> bool:
+	var plan: Dictionary = director.plan_entry(self, target)
+	if plan.is_empty():
+		if not _entry.is_empty():
+			director.entry_done(_entry.door, self)
+			_entry = {}
+		return false
+	if _entry.is_empty() or _entry.door != plan.door:
+		_entry = plan
+		_entry.phase = "moving"
+		_go(plan.stack, RUN * 0.9)
+		return true
+	_entry.t = _entry.get("t", 0.0) + 0.35
+	if (_entry.phase == "moving" and _entry.t > 6.0) or (_entry.phase == "entering" and _entry.t > 4.5):
+		director.entry_done(_entry.door, self)
+		_entry = {}
+		_visited.append([global_position, _t])
+		return false
+	match _entry.phase:
+		"moving":
+			if agent.is_navigation_finished() or global_position.distance_to(_entry.stack) < 0.9:
+				_entry.phase = "stacked"
+				_stop()
+		"stacked":
+			_stop()
+			if director.entry_go(_entry.door, self):
+				var dn: Node = director.door_node(_entry.door)
+				if dn and not dn.is_open():
+					dn.bot_open(self)
+				_entry.phase = "entering"
+				_entry.t = 0.0
+				_go(_entry.inside, RUN)
+		"entering":
+			if agent.is_navigation_finished() or global_position.distance_to(_entry.inside) < 1.0:
+				director.entry_done(_entry.door, self)
+				_entry = {}
+				_visited.append([global_position, _t])
+				return false
+	return true
 
 
 func _think_cover(p: Player) -> void:
@@ -666,7 +804,7 @@ func _think_cover(p: Player) -> void:
 	if _cover_phase == "hide":
 		if agent.is_navigation_finished():
 			_cover_t += 0.35
-			if _cover_t > randf_range(0.8, 2.0) and _attack_cd <= 0.2:
+			if _cover_t > randf_range(0.8, 2.0) + suppression * 2.5 and _attack_cd <= 0.2 and suppression < 0.6:
 				_cover_phase = "peek"
 				_cover_t = 0.0
 				_go(_cover.peek, WALK * 1.6)
@@ -712,6 +850,10 @@ func _steer(dt: float) -> void:
 	var p: Player = Game.player
 	if state == S.COMBAT and p and (target_visible or _attack_t >= 0.0):
 		face = (p.global_position - global_position)
+	elif not _entry.is_empty() and _entry.phase == "stacked":
+		face = _entry.look - global_position
+	elif state == S.COMBAT and role == "overwatch":
+		face = last_known - global_position
 	elif state == S.SUSPICIOUS or (state == S.SEARCH and not _has_move):
 		face = stimulus - global_position
 	elif hv.length() > 0.3:

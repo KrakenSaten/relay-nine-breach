@@ -50,6 +50,7 @@ func _ready() -> void:
 		if NavigationServer3D.map_get_path(map, Vector3(8, 0, 11), Vector3(27, 0, -35), true).size() > 0:
 			break
 	director.cover_points = level.build_cover_points()
+	director.setup_doors(level.doors)
 	for s in level.spawns:
 		_spawn_bot(s.pos, s.patrol)
 	Game.state = Game.State.BRIEFING

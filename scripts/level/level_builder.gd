@@ -15,6 +15,7 @@ extends Node3D
 ##   CONTROL   x[21,33] z[-40,-26] relay control (D5 from servers, D6 locked)
 
 const T := 0.3   # wall thickness
+const DOOR_W := 1.42  # industrial leaf in a 1.5 m opening (robots need the width to path)
 
 var nav: NavigationRegion3D
 var dyn: Node3D
@@ -54,15 +55,17 @@ func build() -> void:
 
 func bake_nav() -> void:
 	var nm := NavigationMesh.new()
-	nm.agent_radius = 0.5
+	nm.agent_radius = 0.4
 	nm.agent_height = 2.0
-	nm.agent_max_climb = 0.25
+	nm.agent_max_climb = 0.2
 	nm.agent_max_slope = 40.0
-	nm.cell_size = 0.25
-	nm.cell_height = 0.25
+	nm.cell_size = 0.2
+	nm.cell_height = 0.2
 	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
 	nm.geometry_collision_mask = 1
 	nm.region_min_size = 4.0
+	NavigationServer3D.map_set_cell_size(get_world_3d().navigation_map, 0.2)
+	NavigationServer3D.map_set_cell_height(get_world_3d().navigation_map, 0.2)
 	nav.navigation_mesh = nm
 	nav.bake_navigation_mesh(false)
 
@@ -221,7 +224,7 @@ func make_door(id: String, hinge: Vector3, along_x: bool, locked := false) -> Do
 	dyn.add_child(d)
 	d.position = hinge
 	d.rotation.y = 0.0 if along_x else -PI / 2
-	d.build(props_root, 1.08)
+	d.build(props_root, DOOR_W)
 	d.set_locked(locked)
 	doors[id] = d
 	return d
@@ -410,12 +413,12 @@ func _shell() -> void:
 	wall_x(14, 0, 16, 6.3)
 	wall_z(0, 0, 14, 6.3)
 	wall_z(16, 0, 14, 6.3)
-	wall_x(0, 0, 16, 6.3, [[6.9, 8.1, 2.2], [12.0, 14.5, 3.0]])
+	wall_x(0, 0, 16, 6.3, [[6.75, 8.25, 2.2], [12.0, 14.5, 3.0]])
 	ceiling(0, 0, 16, 14, 6.0)
 	# CORRIDOR
-	wall_z(6, -30, 0, 3.9, [[-9.1, -7.9, 2.2]])
-	wall_z(9, -30, -26, 4.0, [[-29.6, -28.4, 2.2]])
-	wall_z(9, -26, -2, 9.3, [[-11.6, -10.4, 2.2]])
+	wall_z(6, -30, 0, 3.9, [[-9.25, -7.75, 2.2]])
+	wall_z(9, -30, -26, 4.0, [[-29.75, -28.25, 2.2]])
+	wall_z(9, -26, -2, 9.3, [[-11.75, -10.25, 2.2]])
 	wall_z(9, -2, 0, 6.3)
 	wall_x(-30, 6, 9, 3.9)
 	ceiling(6, -30, 9, 0, 3.6)
@@ -431,26 +434,26 @@ func _shell() -> void:
 	# HALL
 	wall_x(-2, 9, 32, 9.3, [[12.0, 14.5, 3.0]], MatLib.wall_concrete())
 	wall_z(32, -26, -2, 9.3, [], MatLib.grid_panel())
-	wall_x(-26, 9, 33, 9.3, [[13.4, 14.6, 2.2], [27.4, 28.6, 2.2]])
+	wall_x(-26, 9, 33, 9.3, [[13.25, 14.75, 2.2], [27.25, 28.75, 2.2]])
 	ceiling(9, -26, 32, -2, 9.0)
 	# SERVERS
 	wall_z(9, -38, -30, 4.0)
 	wall_x(-38, 9, 21, 4.0)
-	wall_z(21, -40, -26, 4.8, [[-32.6, -31.4, 2.2]])
+	wall_z(21, -40, -26, 4.8, [[-32.75, -31.25, 2.2]])
 	ceiling(9, -38, 21, -26, 3.6, MatLib.flat(Color(0.3, 0.31, 0.32), 0.5, 0.6))
 	# CONTROL
 	wall_x(-40, 21, 33, 4.8)
 	wall_z(33, -40, -26, 4.8)
 	ceiling(21, -40, 33, -26, 4.5)
 	# Doors
-	make_door("D1", Vector3(6.96, 0, 0), true)
-	make_door("D2", Vector3(6, 0, -9.04), false)
-	make_door("D3", Vector3(9, 0, -11.54), false)
-	make_door("D4", Vector3(13.46, 0, -26), true)
-	make_door("D5", Vector3(21, 0, -32.54), false)
-	make_door("D6", Vector3(27.46, 0, -26), true, true)
+	make_door("D1", Vector3(6.79, 0, 0), true)
+	make_door("D2", Vector3(6, 0, -9.21), false)
+	make_door("D3", Vector3(9, 0, -11.71), false)
+	make_door("D4", Vector3(13.29, 0, -26), true)
+	make_door("D5", Vector3(21, 0, -32.71), false)
+	make_door("D6", Vector3(27.29, 0, -26), true, true)
 	doors.D6.set_locked(true, "SEALED - RELAY LOCKDOWN")
-	make_door("D7", Vector3(9, 0, -29.54), false)
+	make_door("D7", Vector3(9, 0, -29.71), false)
 
 
 func _dock() -> void:
@@ -783,9 +786,15 @@ func build_cover_points() -> Array:
 				var side := 1.0 if off >= 0.0 else -1.0
 				var peek: Vector3 = c + n * (f[1] + 0.6) + t * side * (along + 0.9)
 				peek.y = 0
+				var peek2: Vector3 = c + n * (f[1] + 0.6) - t * side * (along + 0.9)
+				peek2.y = 0
 				var sp := NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map, pos)
 				var spk := NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map, peek)
 				if sp.distance_to(pos) > 0.6 or spk.distance_to(peek) > 0.8:
 					continue
-				pts.append({"pos": sp, "normal": n, "peek": spk, "owner": null})
+				var spk2 := NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map, peek2)
+				var e := {"pos": sp, "normal": n, "peek": spk, "owner": null}
+				if spk2.distance_to(peek2) < 0.8:
+					e["peek2"] = spk2
+				pts.append(e)
 	return pts

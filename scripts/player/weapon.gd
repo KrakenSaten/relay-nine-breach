@@ -295,6 +295,9 @@ func start_reload() -> void:
 	_reload_t = 0.0
 	_reload_loaded = false
 	_reload_events = {}
+	# Reloading is audible to nearby units, who use it as an opening.
+	Game.emit_noise(player.global_position, 8.0, player)
+	Game.reload_heard.emit(player.global_position)
 
 
 func cancel_reload() -> void:
@@ -365,6 +368,8 @@ func _shoot() -> void:
 	q.exclude = [player.get_rid()]
 	var hit = player.get_world_3d().direct_space_state.intersect_ray(q)
 	var muzzle_pos := muzzle.global_position if muzzle else global_position
+	var end_pt: Vector3 = hit.position if hit else to
+	_suppress_near(from, end_pt, hit.get("collider", null) if hit else null)
 	if hit:
 		var col: Object = hit.collider
 		var dist := from.distance_to(hit.position)
@@ -403,6 +408,23 @@ func _shoot() -> void:
 		Sfx.play("dry_fire", -14.0)
 	fired.emit()
 	ammo_changed.emit()
+
+
+## Rounds passing close to a unit (or impacting near it) suppress it.
+func _suppress_near(from: Vector3, to: Vector3, hit_col: Object) -> void:
+	var hit_bot: Object = null
+	if hit_col and hit_col.has_meta("bot"):
+		hit_bot = hit_col.get_meta("bot")
+	var seg := to - from
+	var len2 := seg.length_squared()
+	for b in get_tree().get_nodes_in_group("teslabot"):
+		if b == hit_bot or b.state == Teslabot.S.DEAD:
+			continue
+		var c: Vector3 = b.global_position + Vector3.UP * 1.3
+		var t := clampf((c - from).dot(seg) / maxf(len2, 0.001), 0.0, 1.0)
+		var dist := c.distance_to(from + seg * t)
+		if dist < 1.8:
+			b.suppress(player.global_position, 0.35 * (1.0 - dist / 1.8) + 0.12)
 
 
 func _eject_shell() -> void:
