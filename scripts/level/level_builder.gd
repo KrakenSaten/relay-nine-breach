@@ -48,6 +48,7 @@ func build() -> void:
 	_hall()
 	_servers()
 	_control()
+	Dressing.new(self).dress()
 	_lights()
 	_signage()
 	_audio_zones()
@@ -190,9 +191,18 @@ func _wall_piece(a: Vector3, b: Vector3, along_x: bool, upper: Material, lower: 
 
 
 func _frame(a: Vector3, b: Vector3, along_x: bool) -> void:
-	# Steel door/arch frame: two jambs and a header.
+	# Steel door/arch frame: two jambs and a header. Door openings (2.2 m)
+	# get the M2 kit frame from Dressing instead; only floor stripes here.
 	var m := MatLib.flat(Color(0.11, 0.115, 0.12), 0.85, 0.42)
 	var d := T / 2 + 0.04
+	if absf(b.y - 2.2) < 0.01 and ResourceLoader.exists("res://assets/models/env_kit.glb"):
+		if along_x:
+			_floor_stripe(Vector3(a.x, 0.005, a.z - 0.9), Vector3(b.x, 0.012, a.z - 0.75))
+			_floor_stripe(Vector3(a.x, 0.005, a.z + 0.75), Vector3(b.x, 0.012, a.z + 0.9))
+		else:
+			_floor_stripe(Vector3(a.x - 0.9, 0.005, a.z), Vector3(a.x - 0.75, 0.012, b.z))
+			_floor_stripe(Vector3(a.x + 0.75, 0.005, a.z), Vector3(a.x + 0.9, 0.012, b.z))
+		return
 	if along_x:
 		box(Vector3(a.x - 0.08, 0, a.z - d), Vector3(a.x, b.y + 0.08, a.z + d), m, "metal")
 		box(Vector3(b.x, 0, a.z - d), Vector3(b.x + 0.08, b.y + 0.08, a.z + d), m, "metal")
@@ -252,6 +262,8 @@ func light_spot(pos: Vector3, color: Color, energy: float, rng: float, angle: fl
 	else:
 		l.rotation = Vector3(-PI / 2, 0, 0)
 	_register_light(room, l)
+	if fixture in ["highbay", "strip"] and _kit_fixture(fixture, pos, room):
+		return l
 	if fixture == "highbay":
 		var f := MeshInstance3D.new()
 		var cm := CylinderMesh.new()
@@ -424,10 +436,10 @@ func _shell() -> void:
 	wall_x(-30, 6, 9, 3.9)
 	ceiling(6, -30, 9, 0, 3.6)
 	# OFFICE
-	wall_z(-6, -13, -3, 3.9)
-	wall_x(-13, -6, 6, 3.9)
-	wall_x(-3, -6, 6, 3.9)
-	ceiling(-6, -13, 6, -3, 3.6, MatLib.flat(Color(0.55, 0.55, 0.52), 0.0, 0.85))
+	wall_z(-6, -13, -3, 3.9, [], MatLib.wall_block())
+	wall_x(-13, -6, 6, 3.9, [], MatLib.wall_block())
+	wall_x(-3, -6, 6, 3.9, [], MatLib.wall_block())
+	ceiling(-6, -13, 6, -3, 3.6, MatLib.ceiling_tiles())
 	# PASSAGE (crouch shutter)
 	wall_z(12, -2, 0, 3.3)
 	wall_z(14.5, -2, 0, 3.3)
@@ -569,13 +581,9 @@ func _hall() -> void:
 	# Turbine housings: large machinery blocks (hard cover)
 	for z in [-8.0, -15.0]:
 		var x0 := 15.0
-		box(Vector3(x0, 0, z - 1.6), Vector3(x0 + 8.0, 3.2, z + 1.6), MatLib.machinery(), "metal")
-		box(Vector3(x0 + 0.3, 3.2, z - 1.2), Vector3(x0 + 7.7, 4.0, z + 1.2), MatLib.machinery(), "metal")
-		box(Vector3(x0 - 0.6, 0, z - 1.0), Vector3(x0, 2.2, z + 1.0), MatLib.flat(Color(0.12, 0.12, 0.13), 0.8, 0.45), "metal")
-		box(Vector3(x0 + 2.0, 4.0, z - 0.3), Vector3(x0 + 2.6, 9.0, z + 0.3), MatLib.flat(Color(0.25, 0.27, 0.28), 0.7, 0.5), "metal")
-		box(Vector3(x0 - 0.05, 2.6, z - 1.65), Vector3(x0 + 8.05, 2.75, z + 1.65), MatLib.hazard(), "metal", false)
+		_turbine(x0, z)
 		cover_props.append(AABB(Vector3(x0, 0, z - 1.6), Vector3(8.0, 3.2, 3.2)))
-		place_sign("TURBINE %s" % ("T1" if z == -8.0 else "T2"), Vector3(x0 + 4.0, 2.0, z + 1.62), 0, 90, Color(0.9, 0.9, 0.88))
+		place_sign("TURBINE %s" % ("T1" if z == -8.0 else "T2"), Vector3(x0 + 4.0, 1.3, z + 1.52), 0, 64, Color(0.12, 0.12, 0.12))
 	# Transformer block in the NE corner
 	box(Vector3(26.0, 0, -24.5), Vector3(30.0, 3.5, -20.5), MatLib.rust_panel(), "metal")
 	cover_props.append(AABB(Vector3(26, 0, -24.5), Vector3(4, 3.5, 4)))
@@ -635,7 +643,7 @@ func _hall() -> void:
 
 
 func _servers() -> void:
-	floor_overlay(9.15, -37.85, 20.85, -26.15, MatLib.pbr("metal_plate", 1.2, Color(0.35, 0.36, 0.38), 0.8, 1.0, "raised_floor"))
+	floor_overlay(9.15, -37.85, 20.85, -26.15, MatLib.floor_rubber())
 	for row in [-29.5, -32.5, -35.5]:
 		for i in 6:
 			var x := 10.9 + i * 0.66
@@ -652,7 +660,7 @@ func _servers() -> void:
 
 
 func _control() -> void:
-	floor_overlay(21.15, -39.85, 32.85, -26.15, MatLib.pbr("concrete_floor_painted", 0.45, Color(0.42, 0.45, 0.48), 0.0, 1.0, "control_floor"))
+	floor_overlay(21.15, -39.85, 32.85, -26.15, MatLib.floor_epoxy())
 	# Relay console objective
 	console = preload("res://scripts/level/relay_console.gd").new()
 	console.name = "RelayConsole"
@@ -705,7 +713,7 @@ func _lights() -> void:
 	light_spot(Vector3(4, 5.7, 11), cool, 8.0, 10.0, 60, false, "dock")
 	light_spot(Vector3(12, 5.7, 10), sodium, 11.0, 10.0, 60, true, "dock")
 	light_omni(Vector3(8, 2.5, 7), Color(0.75, 0.82, 1.0), 0.8, 12.0, false, "dock", false)
-	light_spot(Vector3(8, 5.5, 1.5), warm, 6.0, 8.0, 45, false, "dock", Vector3(0, -0.4, -1).normalized(), "")
+	light_spot(Vector3(8, 5.6, 3.0), warm, 2.5, 9.0, 70, false, "dock", Vector3(0, -0.75, -1).normalized(), "")
 	beacon = light_omni(Vector3(0.9, 3.0, 9.7), Color(1.0, 0.25, 0.1), 0.0, 8.0, false, "", false)
 	# CORRIDOR
 	for i in 5:
@@ -722,7 +730,7 @@ func _lights() -> void:
 	# HALL: high bays with volumetric shafts, plus cold light through upper slits
 	var hb := [Vector3(12, 8.4, -5), Vector3(19, 8.4, -4), Vector3(27, 8.4, -9), Vector3(12, 8.4, -17), Vector3(23, 8.4, -19), Vector3(29, 8.4, -23)]
 	for i in hb.size():
-		var l := light_spot(hb[i], sodium, 14.0, 13.0, 38, i % 2 == 0, "hall")
+		var l := light_spot(hb[i], sodium, 19.0, 15.0, 44, i % 2 == 0, "hall")
 		if i == 4:
 			l.set_meta("flicker", true)
 	light_spot(Vector3(31.6, 8.0, -12.0), moon, 9.0, 26.0, 18, true, "", Vector3(-1.0, -0.75, 0.15).normalized(), "")
@@ -737,8 +745,11 @@ func _lights() -> void:
 	light_omni(Vector3(12.5, 1.0, -31.0), Color(0.3, 0.5, 1.0), 0.5, 4.0, false, "servers", false)
 	light_omni(Vector3(18.0, 1.0, -34.0), Color(0.3, 0.5, 1.0), 0.5, 4.0, false, "servers", false)
 	# CONTROL
-	light_spot(Vector3(24.5, 4.4, -33), cool, 4.0, 6.0, 75, true, "control", Vector3.DOWN, "strip")
-	light_spot(Vector3(29.5, 4.4, -33), cool, 4.0, 6.0, 75, false, "control", Vector3.DOWN, "strip")
+	light_spot(Vector3(24.5, 4.4, -33), cool, 6.5, 7.0, 78, true, "control", Vector3.DOWN, "strip")
+	light_spot(Vector3(27.0, 4.4, -37.5), cool, 5.0, 6.0, 75, false, "control", Vector3.DOWN, "strip")
+	light_spot(Vector3(27.0, 4.4, -28.5), cool, 4.0, 6.0, 75, false, "control", Vector3.DOWN, "strip")
+	light_spot(Vector3(29.5, 4.4, -33), cool, 6.5, 7.0, 78, false, "control", Vector3.DOWN, "strip")
+	_reflection_probes()
 	light_omni(Vector3(32.5, 3.8, -27.0), Color(1.0, 0.15, 0.08), 1.2, 6.0, false, "control", false)
 
 
@@ -844,3 +855,105 @@ func _audio_zones() -> void:
 			if p:
 				p.max_distance = maxf(aabb.size.x, aabb.size.z) * 0.9
 				p.attenuation_filter_cutoff_hz = 9000.0
+
+
+
+var _kit_root: Node3D
+
+
+## M2 light fixtures from env_kit.glb; their emissive parts follow room power.
+func _kit_fixture(kind: String, pos: Vector3, room: String) -> bool:
+	if _kit_root == null:
+		if not ResourceLoader.exists("res://assets/models/env_kit.glb"):
+			return false
+		_kit_root = (load("res://assets/models/env_kit.glb") as PackedScene).instantiate()
+	var src: Node3D = _kit_root.get_node_or_null("highbay" if kind == "highbay" else "troffer")
+	if src == null:
+		return false
+	var f: Node3D = src.duplicate()
+	add_child(f)
+	# High-bay origin is its hook (bulb ~0.49 below); troffer origin is the ceiling plane.
+	f.position = pos + (Vector3(0, 0.47, 0) if kind == "highbay" else Vector3(0, 0.08, 0))
+	MatLib.remap_scene(f)
+	for mi in f.find_children("*", "MeshInstance3D", true, false):
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for nm in ["lamp_bulb", "light_panel"]:
+		var e: Node = f.find_child(nm + "*", true, false)
+		if e:
+			_register_light(room, e)
+	return true
+
+
+
+## Horizontal generator set: concrete plinth, ribbed cylindrical stator housing
+## with flanges, bearing pedestals, exciter cabinet, cooling duct to the roof.
+## Collision stays the simple 8 x 3.2 x 3.2 block used for cover.
+func _turbine(x0: float, z: float) -> void:
+	var dark := MatLib.flat(Color(0.09, 0.095, 0.1), 0.85, 0.4)
+	var steel := MatLib.flat(Color(0.42, 0.43, 0.44), 1.0, 0.33)
+	var paint := MatLib.machinery()
+	# Invisible collider (gameplay block)
+	var col := box(Vector3(x0, 0, z - 1.6), Vector3(x0 + 8.0, 3.2, z + 1.6), paint, "metal")
+	col.visible = false
+	box(Vector3(x0 - 0.3, 0, z - 1.75), Vector3(x0 + 8.3, 0.45, z + 1.75), MatLib.pbr("concrete_wall_009", 0.6, Color(0.7, 0.7, 0.68), 0.0, 1.0, "plinth"), "concrete", false)
+	# Hazard edge band on the plinth (edges only)
+	for zz in [z - 1.77, z + 1.62]:
+		box(Vector3(x0 - 0.32, 0.45, zz), Vector3(x0 + 8.32, 0.47, zz + 0.15), MatLib.hazard(), "concrete", false, null, false)
+	# Stator housing
+	_cyl(Vector3(x0 + 4.0, 1.95, z), 1.42, 6.6, paint, 48)
+	for i in 7:
+		_cyl(Vector3(x0 + 0.9 + i * 1.03, 1.95, z), 1.5, 0.14, dark, 48)
+	# Cooling ribs along the top
+	for i in 9:
+		box(Vector3(x0 + 1.0 + i * 0.68, 3.25, z - 0.55), Vector3(x0 + 1.12 + i * 0.68, 3.45, z + 0.55), dark, "metal", false)
+	# End bells + shaft + bearing pedestals
+	_cyl(Vector3(x0 + 0.45, 1.95, z), 1.15, 0.5, dark, 40)
+	_cyl(Vector3(x0 + 7.55, 1.95, z), 1.15, 0.5, dark, 40)
+	_cyl(Vector3(x0 - 0.15, 1.95, z), 0.28, 0.9, steel, 24)
+	for px in [x0 - 0.25, x0 + 8.15]:
+		box(Vector3(px - 0.25, 0.45, z - 0.55), Vector3(px + 0.25, 1.7, z + 0.55), dark, "metal", false)
+	# Exciter cabinet at the west end
+	box(Vector3(x0 - 0.75, 0.45, z - 0.9), Vector3(x0 - 0.3, 2.6, z + 0.9), MatLib.pbr("blue_metal_plate", 0.5, Color(0.5, 0.56, 0.62), 0.5, 1.0, "exciter"), "metal", false)
+	box(Vector3(x0 - 0.78, 2.1, z - 0.4), Vector3(x0 - 0.74, 2.3, z - 0.2), MatLib.flat(Color(1, 0.6, 0.1), 0.0, 0.4, Color(1, 0.55, 0.1), 4.0), "metal", false, null, false)
+	# Cooling duct up into the roof
+	box(Vector3(x0 + 2.0, 3.3, z - 0.45), Vector3(x0 + 2.9, 9.0, z + 0.45), MatLib.pbr("rusty_metal_sheet", 0.5, Color(0.6, 0.62, 0.64), 0.8, 1.0, "duct_steel"), "metal", false)
+	for y in [4.5, 6.0, 7.5]:
+		box(Vector3(x0 + 1.95, y, z - 0.5), Vector3(x0 + 2.95, y + 0.08, z + 0.5), dark, "metal", false)
+	# Nameplate band
+	box(Vector3(x0 + 2.8, 1.1, z + 1.46), Vector3(x0 + 5.2, 1.5, z + 1.5), MatLib.flat(Color(0.75, 0.74, 0.7), 0.6, 0.4), "metal", false)
+
+
+func _cyl(center: Vector3, r: float, length: float, mat: Material, segs := 32) -> void:
+	var mi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = r
+	cm.bottom_radius = r
+	cm.height = length
+	cm.radial_segments = segs
+	cm.rings = 1
+	mi.mesh = cm
+	mi.material_override = mat
+	mi.rotation = Vector3(0, 0, PI / 2)   # axis along X
+	nav.add_child(mi)
+	mi.position = center
+
+
+
+## One interior reflection probe per room (updated once): metal weapons,
+## robots and props reflect their actual surroundings instead of the sky.
+func _reflection_probes() -> void:
+	for name in Game.rooms:
+		var aabb: AABB = Game.rooms[name].aabb
+		var rp := ReflectionProbe.new()
+		rp.update_mode = ReflectionProbe.UPDATE_ONCE
+		rp.interior = true
+		rp.box_projection = true
+		rp.enable_shadows = false
+		rp.size = Vector3(aabb.size.x, minf(aabb.size.y, 10.0), aabb.size.z)
+		rp.ambient_mode = ReflectionProbe.AMBIENT_ENVIRONMENT
+		rp.cull_mask = 1
+		rp.max_distance = 40.0
+		add_child(rp)
+		var c := aabb.get_center()
+		rp.global_position = Vector3(c.x, 1.7, c.z)
+		rp.origin_offset = Vector3(0, c.y - 1.7, 0)

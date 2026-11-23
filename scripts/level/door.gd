@@ -27,7 +27,7 @@ func build(props_root: Node3D, w := 1.08) -> void:
 	add_child(body)
 	var slab: Node3D = props_root.get_node("door_slab").duplicate()
 	slab.transform = Transform3D.IDENTITY
-	slab.scale = Vector3(w, 1.0, 1.0)
+	slab.scale = Vector3(w / 1.42, 1.0, 1.0)  # M2 slab is modelled 1.42 m wide
 	body.add_child(slab)
 	MatLib.remap_scene(slab)
 	var cs := CollisionShape3D.new()

@@ -87,7 +87,11 @@ func unshaded(color: Color, additive := true) -> StandardMaterial3D:
 # --- World materials -------------------------------------------------------
 func floor_concrete() -> Material: return pbr("hangar_concrete_floor", 0.25, Color(0.82, 0.84, 0.88), 0.0, 1.0, "floor")
 func floor_painted() -> Material: return pbr("concrete_floor_painted", 0.3, Color(0.7, 0.74, 0.8), 0.0, 1.0, "floor_painted")
-func wall_concrete() -> Material: return pbr("concrete_wall_008", 0.33, Color(0.66, 0.68, 0.7), 0.0, 1.0, "wall")
+func wall_concrete() -> Material: return pbr("concrete_wall_009", 0.25, Color(0.78, 0.79, 0.8), 0.0, 1.0, "wall")
+func wall_block() -> Material: return pbr("concrete_wall_004", 0.45, Color(0.72, 0.74, 0.76), 0.0, 1.0, "wall_block")
+func floor_rubber() -> Material: return pbr("rubber_tiles", 0.6, Color(0.55, 0.57, 0.6), 0.0, 1.0, "floor_rubber")
+func floor_epoxy() -> Material: return pbr("painted_concrete_02", 0.3, Color(0.6, 0.63, 0.66), 0.0, 1.0, "floor_epoxy")
+func ceiling_tiles() -> Material: return pbr("polystyrene", 0.6, Color(0.7, 0.7, 0.68), 0.0, 1.0, "ceiling_tiles")
 func wall_lower() -> Material: return pbr("green_metal_rust", 0.4, Color(0.55, 0.62, 0.55), 0.4, 1.0, "wall_lower")
 func ceiling() -> Material: return pbr("corrugated_iron_02", 0.35, Color(0.45, 0.45, 0.46), 0.8, 1.0, "ceiling")
 func machinery() -> Material: return pbr("blue_metal_plate", 0.35, Color(0.85, 0.95, 1.1), 0.55, 1.0, "machinery")
@@ -145,6 +149,13 @@ func _build_remap() -> void:
 		"hazard": _finish(Color(0.7, 0.52, 0.06), 0.1, 0.6, 1.6, 0.5),
 		"screen": flat(Color(0.03, 0.06, 0.06), 0.0, 0.15, Color(0.25, 0.65, 0.55), 0.9),
 		"lamp_warm": flat(Color(1.0, 0.85, 0.65), 0.0, 0.4, Color(1.0, 0.8, 0.55), 4.0),
+		"painted_dark": _detail(Color(0.13, 0.14, 0.15), 0.4, 0.55, "metal_plate_02", 1.0),
+		"galvanized": _detail(Color(0.55, 0.56, 0.57), 0.9, 0.42, "rusty_metal_sheet", 0.6),
+		"cable_black": _finish(Color(0.02, 0.02, 0.02), 0.0, 0.7, 6.0, 0.2),
+		"lamp_cool": flat(Color(0.95, 0.97, 1.0), 0.0, 0.3, Color(0.85, 0.92, 1.0), 5.0),
+		"led_green": flat(Color(0.2, 1.0, 0.4), 0.0, 0.4, Color(0.15, 1.0, 0.35), 4.0),
+		"led_red": flat(Color(1.0, 0.1, 0.05), 0.0, 0.4, Color(1.0, 0.08, 0.04), 4.0),
+		"led_amber": flat(Color(1.0, 0.6, 0.1), 0.0, 0.4, Color(1.0, 0.55, 0.1), 4.0),
 		# Props
 		"crate_green": _detail(Color(0.17, 0.21, 0.15), 0.3, 0.62, "green_metal_rust", 0.8),
 		"painted_grey": _detail(Color(0.36, 0.37, 0.37), 0.3, 0.58, "painted_metal_shutter", 0.8),
