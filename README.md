@@ -15,6 +15,11 @@ This needs Godot 4.7.2 at `C:\AAA\tools\godot` (installed with
 be forced with `.\Play_BREACH.cmd --quality=0` (Low) through `3` (Ultra), or set
 in Settings.
 
+### Standalone build
+
+`dist/BREACH/Breach.exe` is a self-contained Windows x64 release (no Godot needed). See
+[docs/RELEASE.md](docs/RELEASE.md) for the size, dependencies, validation and rebuild command.
+
 ## Controls
 
 | Action | Key |

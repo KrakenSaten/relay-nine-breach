@@ -1,5 +1,7 @@
 .godot/
 builds/
+dist/
+dist_validation/
 staging/
 *.tmp
 # Keep curated evidence only; debug runs stay local.

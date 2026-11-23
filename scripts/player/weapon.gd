@@ -50,7 +50,7 @@ var _cycle := 0.0              # bolt/slide travel 0..1 after a shot
 var _parts := {}               # name -> [Node3D, rest Transform3D]
 
 const ATT_SCENE := "res://assets/models/attachments.glb"
-static var _att_root: Node3D
+var _att_root: Node3D   # attachment templates (out of tree; freed in _exit_tree)
 
 
 func setup(weapon_id: String, p: Node, att: Dictionary) -> void:
@@ -691,9 +691,11 @@ func hand_targets() -> Dictionary:
 
 func _mag_hand_xf() -> Variant:
 	if mag_node:
-		if not mag_node.has_meta("hand_L"):
-			mag_node.set_meta("hand_L", _find_prefixed(mag_node, "hand_L"))
-		var mh: Node3D = mag_node.get_meta("hand_L")
+		# Dictionary cache (Object.set_meta(null) would delete the key).
+		var key := "maghand_%d" % mag_node.get_instance_id()
+		if not _sock_cache.has(key):
+			_sock_cache[key] = _find_prefixed(mag_node, "hand_L")
+		var mh: Node3D = _sock_cache[key]
 		if mh and is_instance_valid(mh):
 			return _xf(mh)
 	return _sock_xf(["sock_hand_L_mag"])
@@ -734,3 +736,10 @@ func _reload_left(support: Transform3D) -> Array:
 		return [hand_ch.interpolate_with(support, _ease((t - 0.84) / 0.16)), ""]
 	var back_start := in_t + 0.04
 	return [mag.interpolate_with(support, _ease((t - back_start) / maxf(0.95 - back_start, 0.01))), ""]
+
+
+
+func _exit_tree() -> void:
+	if _att_root and is_instance_valid(_att_root):
+		_att_root.free()
+		_att_root = null

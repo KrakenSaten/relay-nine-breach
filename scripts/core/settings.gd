@@ -15,7 +15,7 @@ var ads_sens_mult := 0.8
 var master_volume := 0.85
 var vsync := false
 var fps_limit := 0
-var show_fps := true
+var show_fps := false   # F3 / Settings toggles the counter
 var render_scale := 1.0
 
 var _env: Environment
@@ -137,12 +137,15 @@ func apply() -> void:
 	_viewport.positional_shadow_atlas_size = shadow_size
 	# Anti-aliasing and resolution
 	_viewport.msaa_3d = Viewport.MSAA_DISABLED
-	_viewport.use_taa = q >= 2
-	_viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if q < 2 else Viewport.SCREEN_SPACE_AA_DISABLED
 	var scale := render_scale
 	if q == 0:
 		scale = minf(scale, 0.77)
+	# Set the upscaler before TAA: FSR2 does its own temporal AA.
+	var fsr := scale < 0.99
+	_viewport.use_taa = false
+	_viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2 if fsr else Viewport.SCALING_3D_MODE_BILINEAR
 	_viewport.scaling_3d_scale = scale
-	_viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_FSR2 if scale < 0.99 else Viewport.SCALING_3D_MODE_BILINEAR
+	_viewport.use_taa = q >= 2 and not fsr
+	_viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if q < 2 else Viewport.SCREEN_SPACE_AA_DISABLED
 	_viewport.mesh_lod_threshold = [4.0, 2.0, 1.0, 1.0][q]
 	changed.emit()

@@ -65,8 +65,10 @@ func _ready() -> void:
 		w._flash.visible = false
 	player.weapons[1].visible = false
 	Game.state = Game.State.BRIEFING
-	if Game.autotest:
-		var ap := preload("res://scripts/test/autopilot.gd").new()
+	# The test harness ships only in validation builds (excluded from release).
+	var ap_path := "res://scripts/test/autopilot.gd"
+	if Game.autotest and ResourceLoader.exists(ap_path):
+		var ap: Node = load(ap_path).new()
 		ap.name = "Autopilot"
 		add_child(ap)
 		ap.run(self)

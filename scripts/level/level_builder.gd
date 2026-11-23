@@ -53,6 +53,14 @@ func build() -> void:
 	_signage()
 	_audio_zones()
 	_enemy_spawns()
+	# Source scenes were only templates for duplication; free them now so
+	# nothing out-of-tree survives until engine teardown.
+	if props_root:
+		props_root.free()
+		props_root = null
+	if _kit_root:
+		_kit_root.free()
+		_kit_root = null
 
 
 func bake_nav() -> void:

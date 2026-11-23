@@ -85,7 +85,29 @@ func _bots() -> Array:
 
 
 # ------------------------------------------------------------------ autotest
+func _release_checks() -> void:
+	L("RELEASE build=%s debug=%s version=%s exe=%s" % [OS.has_feature("template"), OS.is_debug_build(), ProjectSettings.get_setting("application/config/version"), OS.get_executable_path()])
+	L("RELEASE project dir present next to exe: %s" % FileAccess.file_exists(OS.get_executable_path().get_base_dir().path_join("project.godot")))
+	L("RELEASE renderer=%s adapter=%s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_video_adapter_name()])
+	L("AUDIO driver=%s device=%s mix_rate=%d buses=%d" % [AudioServer.get_driver_name(), AudioServer.output_device, AudioServer.get_mix_rate(), AudioServer.bus_count])
+	var names := ["rifle_shot", "rifle_shot_suppressed", "pistol_shot", "pistol_shot_suppressed", "mag_out", "mag_in", "bolt", "dry_fire", "impact_metal", "impact_concrete", "robot_step", "robot_servo", "tesla_charge", "tesla_shot", "robot_alert", "robot_death", "robot_hit", "robot_weakpoint", "door_open", "door_breach", "step_concrete", "step_metal", "foley_cloth", "ambience_facility", "ambience_hall", "ambience_servers", "electric_buzz_loop", "heartbeat", "ui_objective", "hitmarker"]
+	var missing := []
+	for n in names:
+		if Sfx.stream(n) == null:
+			missing.append(n)
+	L("AUDIO streams checked=%d missing=%s" % [names.size(), missing])
+	var vp := get_viewport()
+	Settings.set_quality(0, false)
+	await _wait(0.5)
+	var low_scale := vp.scaling_3d_scale
+	var low_sdfgi: bool = main.env.sdfgi_enabled
+	Settings.set_quality(2, false)
+	await _wait(0.5)
+	L("SETTINGS preset switch Low->High: scale %.2f->%.2f sdfgi %s->%s taa=%s" % [low_scale, vp.scaling_3d_scale, low_sdfgi, main.env.sdfgi_enabled, vp.use_taa])
+
+
 func _autotest() -> void:
+	await _release_checks()
 	L("AUTOTEST start, quality=%s" % Settings.PRESETS[Settings.quality])
 	L("bots spawned: %d, cover points: %d" % [main.director.bots.size(), main.director.cover_points.size()])
 	var nav_ok := NavigationServer3D.map_get_path(get_viewport().world_3d.navigation_map, Vector3(8, 0, 11), Vector3(27, 0, -35), true)

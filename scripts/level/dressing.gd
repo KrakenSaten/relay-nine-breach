@@ -120,6 +120,8 @@ func dress() -> void:
 	_doors()
 	_props()
 	_storytelling()
+	kit.free()
+	kit = null
 
 
 ## Wall ribs (pilasters) and ceiling beams: the structural rhythm.
