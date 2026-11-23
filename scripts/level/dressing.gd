@@ -141,7 +141,7 @@ func _architecture() -> void:
 		kitp("wall_rib_9", Vector3(x, 0, r[1]), 0)
 	for z in spaced(r[1], r[3], 4.0, [[-11.75, -10.25], [-13.0, -5.0]]):
 		kitp("wall_rib_9", Vector3(r[0], 0, z), 90)
-	for z in spaced(r[1], r[3], 4.0, [[-13.6, -4.8]]):
+	for z in spaced(r[1], r[3], 4.0, [[-13.6, -4.8], [-18.75, -17.25]]):
 		kitp("wall_rib_9", Vector3(r[2], 0, z), -90)
 	for z in [-6.0, -10.0, -18.0, -22.0]:
 		for x in range(11, 31, 4):
@@ -153,7 +153,7 @@ func _architecture() -> void:
 		kitp("wall_rib_4", Vector3(x, 0, r[1]), 0, s6)
 	for x in spaced(r[0], r[2], 4.0, [[9.0, 14.0], [0.6, 5.4]]):
 		kitp("wall_rib_4", Vector3(x, 0, r[3]), 180, s6)
-	for z in spaced(r[1], r[3], 3.5, [[9.4, 14.0]]):
+	for z in spaced(r[1], r[3], 3.5, [[9.4, 14.0], [1.05, 2.95]]):
 		kitp("wall_rib_4", Vector3(r[0], 0, z), 90, s6)
 	for z in spaced(r[1], r[3], 3.5, [[3.8, 5.2], [7.6, 9.0]]):
 		kitp("wall_rib_4", Vector3(r[2], 0, z), -90, s6)
@@ -167,7 +167,7 @@ func _architecture() -> void:
 	# Corridor: slimmer ribs every 3 m (scaled), keeps the long run readable.
 	r = ROOMS.corridor
 	var s36 := Vector3(0.8, 0.9, 0.7)
-	for z in spaced(r[1], r[3], 3.0, [[-9.25, -7.75], [-15.2, -13.8], [-26.2, -24.8]]):
+	for z in spaced(r[1], r[3], 3.0, [[-9.25, -7.75], [-15.2, -13.8], [-26.2, -24.8], [-29.25, -27.75]]):
 		kitp("wall_rib_4", Vector3(r[0], 0, z), 90, s36)
 	for z in spaced(r[1], r[3], 3.0, [[-11.75, -10.25], [-29.75, -28.25], [-15.0, -14.0]]):
 		kitp("wall_rib_4", Vector3(r[2], 0, z), -90, s36)
@@ -178,7 +178,7 @@ func _architecture() -> void:
 		kitp("wall_rib_4", Vector3(x, 0, r[1]), 0, s45)
 	for z in spaced(r[1], r[3], 3.0, [[-32.75, -31.25]]):
 		kitp("wall_rib_4", Vector3(r[0], 0, z), 90, s45)
-	for z in spaced(r[1], r[3], 3.0, [[-39.2, -37.2], [-28.6, -27.4], [-35.8, -29.4]]):   # no ribs behind the mimic board
+	for z in spaced(r[1], r[3], 3.0, [[-39.2, -37.2], [-28.75, -27.25], [-35.8, -29.4]]):   # no ribs behind the mimic board
 		kitp("wall_rib_4", Vector3(r[2], 0, z), -90, s45)
 
 
@@ -203,13 +203,13 @@ func _services() -> void:
 	for row in [-29.5, -32.5, -35.5]:
 		for x in [12.0, 16.0, 19.0]:
 			kitp("cable_tray_4", Vector3(x, 2.55, row), 0, Vector3(0.75, 1, 1), false, false)
-	for x in [11.0, 15.0, 19.0]:
+	for x in [11.0]:
 		kitp("duct_4", Vector3(x, 3.05, -37.45), 0, Vector3.ONE, false, false)
 	# Control: duct + tray.
 	for x in [23.0, 27.0, 31.0]:
 		kitp("duct_4", Vector3(x, 3.9, -27.0), 0, Vector3.ONE, false, false)
 	# Vents.
-	for v in [[Vector3(3.0, 2.6, -12.85), 0], [Vector3(-5.85, 2.6, -7.0), 90], [Vector3(20.85, 2.7, -29.0), -90],
+	for v in [[Vector3(3.0, 2.6, -12.85), 0], [Vector3(-5.85, 2.6, -5.4), 90], [Vector3(20.85, 2.7, -29.0), -90],
 			[Vector3(15.85, 4.5, 2.0), -90], [Vector3(0.15, 4.5, 4.0), 90],
 			[Vector3(8.85, 2.4, -20.0), -90], [Vector3(6.15, 2.4, -17.0), 90]]:
 		kitp("vent_grille", v[0], v[1], Vector3.ONE, false, false)
@@ -267,7 +267,7 @@ func _props() -> void:
 	ph("power_box_01", Vector3(26.0, 1.2, -2.4), 180, false)
 	ph("metal_tool_chest", Vector3(23.6, 0, -6.0), 180, true, true)
 	ph("modular_industrial_pipes_01", Vector3(31.6, 1.0, -22.0), -90, false)   # kit origin is mid-height
-	ph("modular_electric_cables", Vector3(31.75, 3.5, -17.9), -90, false)
+	ph("modular_electric_cables", Vector3(31.75, 3.5, -21.5), -90, false)   # clear of D10
 	ph("hanging_industrial_lamp", Vector3(19.0, 7.6, -11.5), 0, false)
 	ph("security_camera_02", Vector3(31.5, 6.0, -2.5), -135, false)
 	# Servers

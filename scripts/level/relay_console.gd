@@ -14,6 +14,8 @@ var done := false
 var progress := 0.0
 var jammed := false
 var screen_light: OmniLight3D
+var powered := true                 # M4: needs main power (switchgear breakers)
+var unpowered_text := "CONSOLE UNPOWERED"
 var _tick := 0.0
 
 
@@ -24,11 +26,13 @@ func get_prompt(_p: Node) -> String:
 		return "UPLINK ACTIVE - DEFEND THE CONSOLE"
 	if Game.state != Game.State.INFILTRATE:
 		return ""
+	if not powered:
+		return unpowered_text
 	return "[HOLD F] CONNECT RELAY OVERRIDE"
 
 
 func hold(_p: Node, delta: float) -> float:
-	if uploading or done:
+	if uploading or done or not powered or Game.state != Game.State.INFILTRATE:
 		return 0.0
 	if delta < 0.0:
 		connecting = 0.0

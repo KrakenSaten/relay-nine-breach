@@ -82,16 +82,21 @@ func interact(p: Node3D) -> void:
 		speed = 2.0
 	else:
 		# Swing away from the user: user on +Z side pushes door to -Z side.
-		target = -_side_sign(p.global_position) * deg_to_rad(100)
+		target = _side_sign(p.global_position) * deg_to_rad(100)   # rotation +Y swings the leaf toward -Z: away from a +Z user
 		speed = 2.0
 	Sfx.play_3d("door_open", global_position + Vector3.UP, -4.0)
 	Game.emit_noise(global_position, 7.0, p)
 
 
+## Robots open doors away from themselves; a leaf already open toward the
+## robot (it would trap it on the hinge side) is pushed over to the far side.
 func bot_open(bot: Node3D) -> void:
-	if locked or is_open():
+	if locked:
 		return
-	target = -_side_sign(bot.global_position) * deg_to_rad(100)
+	var away := _side_sign(bot.global_position) * deg_to_rad(100)
+	if is_open() and signf(target) == signf(away):
+		return
+	target = away
 	speed = 1.6
 	Sfx.play_3d("door_open", global_position + Vector3.UP, -3.0)
 
@@ -104,7 +109,7 @@ func breach(p: Node3D) -> void:
 	if is_open():
 		return
 	var side := _side_sign(p.global_position)
-	target = -side * deg_to_rad(105)
+	target = side * deg_to_rad(105)
 	speed = 11.0
 	_breach_t = 0.35
 	Sfx.play_3d("door_breach", global_position + Vector3.UP, 4.0, 0.05, 8.0)

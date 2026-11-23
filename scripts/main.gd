@@ -1,6 +1,6 @@
 extends Node3D
 ## Bootstraps the mission: environment, level, navigation, player, Teslabots,
-## HUD/menus and the objective flow (infiltrate -> hack/defend -> extract).
+## HUD/menus. The objective flow, encounters and checkpoints live in Mission.
 
 var level: LevelBuilder
 var player: Player
@@ -8,7 +8,7 @@ var director: Director
 var hud: CanvasLayer
 var menus: CanvasLayer
 var env: Environment
-var _extract_t := 0.0
+var mission: Mission
 var _flicker := []
 var _end_t := -1.0
 
@@ -19,22 +19,30 @@ func _ready() -> void:
 	level.name = "Level"
 	add_child(level)
 	level.build()
+	mission = Mission.new()
+	mission.name = "Mission"
+	add_child(mission)
+	mission.setup(self, level)   # applies checkpoint world state before the bake
 	Fx.setup(self)
 	# Heightfield so debris particles land on floors and props.
 	var hf := GPUParticlesCollisionHeightField3D.new()
-	hf.size = Vector3(44.0, 12.0, 58.0)
+	hf.size = Vector3(78.0, 14.0, 80.0)
 	hf.resolution = GPUParticlesCollisionHeightField3D.RESOLUTION_1024
 	hf.update_mode = GPUParticlesCollisionHeightField3D.UPDATE_MODE_WHEN_MOVED
 	add_child(hf)
-	hf.global_position = Vector3(13.5, 5.0, -13.0)
+	hf.global_position = Vector3(13.0, 5.0, -24.0)
 	# Dust motes in the large spaces (visible in the light shafts).
 	Fx.motes(Vector3(20.5, 4.5, -14.0), Vector3(22.0, 8.5, 23.0), 260)
 	Fx.motes(Vector3(8.0, 3.0, 7.0), Vector3(15.0, 5.5, 13.0), 140)
+	Fx.motes(Vector3(-15.0, 4.5, -16.5), Vector3(17.0, 8.0, 25.0), 160)
+	Fx.motes(Vector3(41.0, 5.0, -16.0), Vector3(17.0, 9.0, 27.0), 160)
+	Fx.motes(Vector3(22.0, 6.0, -52.0), Vector3(19.0, 11.0, 19.0), 180)
 	level.bake_nav()
 	director = Director.new()
 	director.name = "Director"
 	add_child(director)
 	director.setup(get_world_3d())
+	mission.director = director
 	player = Player.new()
 	player.name = "Player"
 	add_child(player)
@@ -47,8 +55,6 @@ func _ready() -> void:
 	menus.player = player
 	menus.deploy.connect(_on_deploy)
 	player.died.connect(func(): _end_t = 2.5)
-	level.console.connected.connect(_on_console_connected)
-	level.console.completed.connect(_on_console_completed)
 	for l in level.find_children("*", "Light3D", true, false):
 		if l.has_meta("flicker"):
 			_flicker.append([l, l.light_energy, 0.0])
@@ -57,12 +63,11 @@ func _ready() -> void:
 	var map := get_world_3d().navigation_map
 	for i in 120:
 		await get_tree().physics_frame
-		if NavigationServer3D.map_get_path(map, Vector3(8, 0, 11), Vector3(27, 0, -35), true).size() > 0:
+		if NavigationServer3D.map_get_path(map, Vector3(8, 0, 11), Vector3(15, 0, -31), true).size() > 0:
 			break
 	director.cover_points = level.build_cover_points()
 	director.setup_doors(level.doors)
-	for s in level.spawns:
-		_spawn_bot(s.pos, s.patrol)
+	mission.spawn_start()
 	# Shader warm-up in front of the camera while the briefing covers the screen.
 	var cam_t := player.camera.global_transform
 	Fx.warmup(cam_t.origin - cam_t.basis.z * 4.0 + Vector3(0, -0.8, 0), cam_t.basis.z)
@@ -81,7 +86,13 @@ func _ready() -> void:
 		var ap: Node = load(ap_path).new()
 		ap.name = "Autopilot"
 		add_child(ap)
+		if mission.restoring:
+			mission.resume()
 		ap.run(self)
+	elif mission.restoring:
+		mission.resume()
+		menus.hide_all()
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
 		menus.open("briefing")
 
@@ -142,54 +153,9 @@ func _setup_env() -> void:
 	Settings.register(env, get_viewport())
 
 
-func _spawn_bot(pos: Vector3, patrol: Array) -> Teslabot:
-	var b := Teslabot.new()
-	var pts: Array[Vector3] = []
-	for p in patrol:
-		pts.append(director.snap(p))
-	b.patrol_points = pts
-	director.register(b)
-	add_child(b)
-	b.global_position = director.snap(pos) + Vector3(0, 0.05, 0)
-	if not pts.is_empty():
-		b.look_at(b.global_position + (pts[0] - b.global_position + Vector3(0.01, 0, 0.01)).normalized(), Vector3.UP)
-	return b
-
-
 func _on_deploy() -> void:
 	Game.begin_mission()
-	Game.set_objective("REACH RELAY CONTROL AND CONNECT THE OVERRIDE", level.console.global_position)
-	Game.say("Insertion complete. Comms dark. The armory case behind you configures your carbine.", 5.0)
-
-
-func _on_console_connected() -> void:
-	Game.set_state(Game.State.HACK)
-	Game.set_objective("DEFEND THE CONSOLE - OVERRIDE UPLOADING", level.console.global_position)
-	Game.say("Relay Nine has detected the uplink. Units converging on your position.", 4.0)
-	Game.emit_noise(level.console.global_position, 60.0, player)
-	for b in director.bots:
-		if b.state != Teslabot.S.DEAD:
-			b.alert_to(level.console.global_position)
-	var waves := [[0.5, Vector3(30.5, 0, -4.0)], [7.0, Vector3(10.5, 0, -36.8)], [15.0, Vector3(20.0, 0, -3.5)], [24.0, Vector3(30.0, 0, -20.0)]]
-	for w in waves:
-		get_tree().create_timer(w[0]).timeout.connect(_reinforce.bind(w[1]))
-
-
-func _reinforce(pos: Vector3) -> void:
-	if Game.state == Game.State.HACK:
-		var b := _spawn_bot(pos, [])
-		b.alert_to(level.console.global_position)
-
-
-func _on_console_completed() -> void:
-	Game.set_state(Game.State.EXTRACT)
-	level.doors.D6.set_locked(false)
-	Game.set_objective("EXTRACT - FREIGHT LIFT 2", level.extraction_pos)
-	Game.say("Override complete. Control wing unsealed. Get to the lift.", 4.0)
-	Sfx.play("extraction_alarm", -6.0)
-	# Ambush: two units reposition into the dock.
-	for p in [[Vector3(13.5, 0, 11.5), [Vector3(13.5, 0, 11.5), Vector3(5.5, 0, 7.5)]], [Vector3(2.5, 0, 3.0), [Vector3(2.5, 0, 3.0), Vector3(9.5, 0, 2.0)]]]:
-		_spawn_bot(p[0], p[1])
+	mission.begin()
 
 
 func _process(delta: float) -> void:
@@ -200,18 +166,6 @@ func _process(delta: float) -> void:
 		if f[2] <= 0.0:
 			f[2] = randf_range(0.03, 0.4) if randf() < 0.7 else randf_range(1.0, 3.0)
 			l.light_energy = f[1] * (randf_range(0.0, 0.35) if randf() < 0.45 else 1.0)
-	# Extraction
-	if Game.state == Game.State.EXTRACT:
-		level.beacon.light_energy = 3.0 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 160.0))
-		if player.alive and level.extraction_area.overlaps_body(player):
-			_extract_t += delta
-			Game.say("EXTRACTING... %.1f" % maxf(0.0, 4.0 - _extract_t), 0.3)
-			if _extract_t >= 4.0:
-				Game.set_state(Game.State.COMPLETE)
-				Sfx.play("ui_hack_done", 0.0)
-				_end_t = 1.0
-		else:
-			_extract_t = 0.0
 	if _end_t > 0.0:
 		_end_t -= delta
 		if _end_t <= 0.0 and not Game.autotest:

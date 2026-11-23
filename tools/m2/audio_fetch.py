@@ -71,6 +71,8 @@ SOURCES = {
     "oga_rts_war_qubodup": (OGA + "sci-fi-rts-war-unit-sounds", [F + "qubodup-rts_warsounds_v2.7z"]),
     "oga_heartbeat_qubodup": (OGA + "heartbeat-single-sound", [F + "heartbeat.mp3_.flac"]),
     "oga_sirens_aquinn": (OGA + "sirens-and-alarm-noise", [F + "siren_0.mp3"]),
+    # M4
+    "oga_chain_winch_bart": (OGA + "chain-winch-sounds", [F + "winch.zip"]),
 }
 
 

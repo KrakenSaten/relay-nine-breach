@@ -222,6 +222,10 @@ func update(dt: float, crouch: float, aim_yaw: float, aim_pitch: float, aiming: 
 		hy_t = clampf(aim_yaw - ty, -0.5, 0.5)
 	else:
 		hy_t = bot._head_scan()
+	if bot.dormant_k > 0.0:
+		# powered down: head bowed, scan stilled
+		hy_t *= 1.0 - bot.dormant_k
+		hp_t = lerpf(hp_t, 0.5, bot.dormant_k)
 	var hy := _spring("head_yaw", hy_t, 8.0, dt)
 	var hp := _spring("head_pitch", hp_t, 8.0, dt)
 	_pose("head", Vector3(hp, hy, 0))

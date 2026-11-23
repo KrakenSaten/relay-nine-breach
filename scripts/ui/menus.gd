@@ -62,7 +62,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("pause"):
 		if screen == "":
-			if Game.state in [Game.State.INFILTRATE, Game.State.HACK, Game.State.EXTRACT]:
+			if Game.is_active():
 				open("pause")
 		elif screen in ["pause", "settings", "loadout"] and Game.state != Game.State.BRIEFING:
 			if screen == "pause":
@@ -72,7 +72,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif screen in ["settings", "loadout"]:
 			open("briefing")
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("loadout") and screen == "" and Game.state in [Game.State.INFILTRATE, Game.State.HACK, Game.State.EXTRACT]:
+	elif event.is_action_pressed("loadout") and screen == "" and Game.is_active():
 		open("loadout")
 		get_viewport().set_input_as_handled()
 	elif screen == "briefing" and event is InputEventKey and event.pressed and event.physical_keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
@@ -152,7 +152,8 @@ func _briefing() -> void:
 	_title("BREACH", 54)
 	_text("SUBSTATION 9-B  //  02:40 LOCAL  //  SINGLE OPERATOR", 14, Color(0.6, 0.62, 0.6))
 	_spacer()
-	_text("Relay Nine has seized the substation's security network. Its Teslabot units have sealed the control wing and are holding it against anyone. Reach RELAY CONTROL, connect the override and defend the console for the 40-second upload. Then extract on Freight Lift 2.", 17)
+	_text("Relay Nine has seized the substation's security network. Its Teslabot units have sealed the control wing and cut its power. Release the lockdown from the security office and close both main breakers in the switchgear hall, in either order. Then connect the override at RELAY CONTROL and defend the 40-second upload. Extract on Freight Lift 2.", 17)
+	_text("Routes: the service corridor, the crouch-only shutter into the turbine hall, or the maintenance crawlway from the dock to the pump station (units cannot follow you through it). The pump station's steam purge blinds units in that hall.", 15, Color(0.7, 0.72, 0.7))
 	_text("Teslabots telegraph every discharge with a blue charge glow. Strafe during the charge. Their rear capacitor stack overloads under fire; destroying a head optic blinds the unit. Breaker panels kill a room's lights and cut their sight range until they switch to infrared. Your night vision (N) runs on a battery.", 15, Color(0.7, 0.72, 0.7))
 	_spacer()
 	_text("WASD move   SHIFT sprint   CTRL/C crouch   Q/E lean   RMB aim   LMB fire   R reload   B fire mode\n1/2 weapons   F interact (hold at console)   V breach door   G deploy shield   N night vision   T loadout   ESC pause   F3 FPS", 14, Color(0.62, 0.64, 0.62))
@@ -179,6 +180,8 @@ func _pause() -> void:
 	_button("RESUME", hide_all)
 	_button("LOADOUT", func(): open("loadout"))
 	_button("SETTINGS", func(): open("settings"))
+	if _has_checkpoint():
+		_button("RESTART FROM CHECKPOINT - " + String(Game.checkpoint.name).to_upper(), _restart_checkpoint)
 	_button("RESTART MISSION", _restart)
 	_button("QUIT TO DESKTOP", func(): get_tree().quit())
 
@@ -269,18 +272,31 @@ func _pick(slot: String, att: String) -> void:
 
 
 func _restart() -> void:
+	Game.checkpoint = {}
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+
+func _restart_checkpoint() -> void:
+	Game.checkpoint.pending = true
+	get_tree().paused = false
+	get_tree().reload_current_scene()
+
+
+func _has_checkpoint() -> bool:
+	return Game.checkpoint.has("name") and Game.state != Game.State.COMPLETE
 
 
 func _end(win: bool) -> void:
 	var s := Game.stats
 	_title("MISSION COMPLETE" if win else "OPERATOR DOWN", 44, ACCENT if win else Color(1, 0.35, 0.25))
-	_text("Relay Nine override uploaded. Extraction confirmed." if win else "The Teslabots hold Substation 9-B.", 17)
+	_text("Relay Nine destroyed. Extraction on Freight Lift 2 confirmed." if win else "The Teslabots hold Substation 9-B.", 17)
 	_spacer()
 	var acc = 0.0 if s.shots == 0 else float(s.hits) / s.shots * 100.0
 	_text("TIME  %d:%02d      KILLS  %d      ACCURACY  %.0f%%      CORE OVERLOADS  %d      OPTIC HITS  %d      DAMAGE TAKEN  %d" % [
 		int(Game.elapsed()) / 60, int(Game.elapsed()) % 60, s.kills, acc, s.core_kills, s.head_hits, s.damage_taken], 15, Color(0.85, 0.86, 0.84))
 	_spacer()
+	if not win and _has_checkpoint():
+		_button("RESTART FROM CHECKPOINT - " + String(Game.checkpoint.name).to_upper(), _restart_checkpoint, null, true)
 	_button("RESTART MISSION", _restart)
 	_button("QUIT TO DESKTOP", func(): get_tree().quit())

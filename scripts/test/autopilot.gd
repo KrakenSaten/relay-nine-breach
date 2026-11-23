@@ -2,6 +2,7 @@ extends Node
 ## Automated verification and capture harness (not part of normal play).
 ##   --autotest --shots=<dir>   scripted run: captures, AI combat log, mission flow
 ##   --bench --shots=<dir>      fly-through frame-time benchmark for all presets
+##   --m4mission / --m4cp / --m4nav / --m4ai / --m4spots / --m4video  (see m4_tests.gd)
 ## Teleports and time skips used here are listed in the log so captures are not
 ## mistaken for uninterrupted play.
 
@@ -23,10 +24,27 @@ func run(m: Node) -> void:
 			out_dir = a.get_slice("=", 1)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	player.bot_input = {"god": true}
-	Game.begin_mission()
-	Game.set_objective("REACH RELAY CONTROL AND CONNECT THE OVERRIDE", main.level.console.global_position)
+	if not main.mission.restoring:
+		Game.begin_mission()
+		main.mission.begin()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	if "--bench" in OS.get_cmdline_user_args():
+	var args := OS.get_cmdline_user_args()
+	var m4 = load("res://scripts/test/m4_tests.gd").new(self)
+	if "--m4mission" in args:
+		await m4.mission()
+	elif "--m4cp" in args:
+		await m4.checkpoint_test()
+		if Game.checkpoint.get("pending", false):
+			return   # scene is reloading; phase B continues in the new autopilot
+	elif "--m4nav" in args:
+		await m4.nav()
+	elif "--m4ai" in args:
+		await m4.ai()
+	elif "--m4spots" in args:
+		await m4.spots()
+	elif "--m4video" in args:
+		await m4.video()
+	elif "--bench" in OS.get_cmdline_user_args():
 		await _bench()
 	elif "--showcase" in OS.get_cmdline_user_args():
 		await _showcase()
@@ -106,7 +124,7 @@ func _release_checks() -> void:
 	L("RELEASE project dir present next to exe: %s" % FileAccess.file_exists(OS.get_executable_path().get_base_dir().path_join("project.godot")))
 	L("RELEASE renderer=%s adapter=%s" % [RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_video_adapter_name()])
 	L("AUDIO driver=%s device=%s mix_rate=%d buses=%d" % [AudioServer.get_driver_name(), AudioServer.output_device, AudioServer.get_mix_rate(), AudioServer.bus_count])
-	var names := ["rifle_shot", "rifle_shot_suppressed", "pistol_shot", "pistol_shot_suppressed", "mag_out", "mag_in", "bolt", "dry_fire", "impact_metal", "impact_concrete", "robot_step", "robot_servo", "tesla_charge", "tesla_shot", "robot_alert", "robot_death", "robot_hit", "robot_weakpoint", "door_open", "door_breach", "step_concrete", "step_metal", "foley_cloth", "ambience_facility", "ambience_hall", "ambience_servers", "electric_buzz_loop", "heartbeat", "ui_objective", "hitmarker"]
+	var names := ["rifle_shot", "rifle_shot_suppressed", "pistol_shot", "pistol_shot_suppressed", "mag_out", "mag_in", "bolt", "dry_fire", "impact_metal", "impact_concrete", "robot_step", "robot_servo", "tesla_charge", "tesla_shot", "robot_alert", "robot_death", "robot_hit", "robot_weakpoint", "door_open", "door_breach", "step_concrete", "step_metal", "foley_cloth", "ambience_facility", "ambience_hall", "ambience_servers", "electric_buzz_loop", "heartbeat", "ui_objective", "hitmarker", "alarm_loop", "blast_door_open", "breaker_close", "capacitor_hit", "capacitor_destroyed", "core_overload", "lift_call", "lift_arrive", "lift_motor_loop", "robot_wake", "relay_voice_beep", "ambience_pump", "ambience_switchgear", "ambience_core", "crawl_step", "arc_crackle"]
 	var missing := []
 	for n in names:
 		if Sfx.stream(n) == null:
@@ -245,7 +263,12 @@ func _autotest() -> void:
 	teleport(Vector3(27.0, 0.05, -30.0), Vector3(27.0, 1.2, -37.0))
 	await _wait(1.5)
 	await shot("11_control")
-	# Hack flow
+	# Hack flow (M4: lockdown + power are prerequisites; shortcut logged)
+	L("SHORTCUT: M4 lockdown and breakers completed by signal (see --m4mission for the real interactions)")
+	main.mission.ex.lockdown_panel.done.emit()
+	main.mission.ex.breakers[0].done.emit()
+	main.mission.ex.breakers[1].done.emit()
+	await _wait(0.5)
 	teleport(Vector3(27.0, 0.05, -35.6), Vector3(27.0, 1.1, -37.0))
 	player.bot_input.interact = true
 	for i in 12:
@@ -260,7 +283,7 @@ func _autotest() -> void:
 	L("TIME SKIP: console progress forced to 0.98 to verify completion flow")
 	main.level.console.progress = 0.98
 	await _wait(3.0)
-	L("after upload: state=%s D6 locked=%s" % [Game.State.keys()[Game.state], main.level.doors.D6.locked])
+	L("after upload: state=%s stage=%s D3 locked=%s (M4 complication)" % [Game.State.keys()[Game.state], main.mission.stage, main.level.doors.D3.locked])
 	teleport(Vector3(3.0, 0.1, 11.8), Vector3(8, 1.5, 4))
 	await _wait(5.0)
 	L("extraction: state=%s" % Game.State.keys()[Game.state])
@@ -405,6 +428,13 @@ func _bench() -> void:
 	var f := FileAccess.open(out_dir.path_join("bench.json"), FileAccess.WRITE)
 	f.store_string(JSON.stringify(res, "  "))
 	f.close()
+
+
+func _write_log_named(fname: String) -> void:
+	var f := FileAccess.open(out_dir.path_join(fname), FileAccess.WRITE)
+	if f:
+		f.store_string("\n".join(log_lines))
+		f.close()
 
 
 func _write_log() -> void:
@@ -785,13 +815,16 @@ func _audit() -> void:
 	var map := get_viewport().world_3d.navigation_map
 	var routes := [["dock->console", Vector3(8, 0, 11), Vector3(27, 0, -35.5)], ["dock->office", Vector3(8, 0, 11), Vector3(-2, 0, -8)],
 		["hall->servers", Vector3(20, 0, -11.5), Vector3(15.3, 0, -33)], ["corridor->control", Vector3(7.5, 0, -20), Vector3(27, 0, -29)],
-		["control->lift", Vector3(27, 0, -29), Vector3(3, 0, 11.5)]]
+		["control->lift", Vector3(27, 0, -29), Vector3(3, 0, 11.5)], ["corridor->pump", Vector3(7.5, 0, -20), Vector3(-15, 0, -11)],
+		["hall->switchgear", Vector3(20, 0, -18), Vector3(40, 0, -18)], ["pump gallery", Vector3(-15, 0, -23), Vector3(-12, 4.2, -28.8)],
+		["switchgear gallery", Vector3(40, 0, -7), Vector3(49, 4.2, -21.5)]]
 	for r in routes:
 		var path := NavigationServer3D.map_get_path(map, r[1], r[2], true)
 		var endd: float = path[path.size() - 1].distance_to(r[2]) if path.size() > 0 else 999.0
 		L("  NAV %s points=%d end_gap=%.2f %s" % [r[0], path.size(), endd, "OK" if endd < 1.0 else "BLOCKED"])
-	for s in main.level.spawns:
-		for pp in s.patrol:
+	for id in main.mission.specs:
+		var s: Dictionary = main.mission.specs[id]
+		for pp in s.patrol + [s.pos]:
 			var sp := NavigationServer3D.map_get_closest_point(map, pp)
 			if sp.distance_to(pp) > 0.8:
 				L("  NAV patrol point off-mesh %s -> %s" % [pp, sp])

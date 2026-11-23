@@ -94,6 +94,19 @@ var _push_target := Vector3.ZERO
 var _entry: Dictionary = {}     # room-entry plan from the director
 var _visited: Array = []        # [pos, time] search memory
 var _scan_t := 0.0
+# M4: guard posts, sentries and dormant units
+var spawn_id := ""
+var post := Vector3.ZERO        # guard post (centre of the leash)
+var leash := 0.0                # > 0: movement confined to this radius around the post
+var post_face := Vector3.ZERO   # facing while holding the post
+var dormant := false            # powered down in a charge bay until wake()
+var dormant_k := 0.0            # 0 awake .. 1 slumped (read by BotAnim)
+var _wake_t := 0.0
+var _waking := false
+var _wake_delay := 0.0
+var _wake_target := Vector3.ZERO
+var _hum_db := -14.0
+var _door_scan_t := 0.0
 
 
 func _ready() -> void:
@@ -157,6 +170,64 @@ func _ready() -> void:
 	_attack_cd = randf_range(0.5, 1.5)
 	_think_t = randf() * 0.4
 	_sense_t = randf() * 0.15
+	if dormant:
+		dormant_k = 1.0
+		_set_powered(0.0)
+
+
+## Optics, eye light and idle hum (0 = powered down, 1 = live).
+func _set_powered(k: float) -> void:
+	for m in eye_mats:
+		m.emission_energy_multiplier = 16.0 * k
+	eye_light.visible = k > 0.05
+	eye_light.light_energy = 1.2 * k
+	if hum:
+		hum.volume_db = lerpf(-60.0, _hum_db, k)
+
+
+## Wake a dormant unit (scripted event or when damaged); it then hunts `target`.
+func wake(target: Vector3, delay := 0.0) -> void:
+	if not dormant or state == S.DEAD:
+		return
+	dormant = false
+	_waking = true
+	_wake_target = target
+	_wake_delay = delay
+	_wake_t = 0.0
+	if delay <= 0.0:
+		Sfx.play_3d("robot_wake" if ResourceLoader.exists("res://assets/audio/robot_wake.wav") else "robot_alert", eye_pos(), 0.0, 0.03, 10.0)
+
+
+func is_dormant() -> bool:
+	return dormant or _waking
+
+
+func _update_dormant(dt: float) -> void:
+	if _waking:
+		if _wake_delay > 0.0:
+			_wake_delay -= dt
+			if _wake_delay <= 0.0:
+				Sfx.play_3d("robot_wake" if ResourceLoader.exists("res://assets/audio/robot_wake.wav") else "robot_alert", eye_pos(), 0.0, 0.03, 10.0)
+		else:
+			_wake_t += dt
+			var k := clampf(_wake_t / 1.6, 0.0, 1.0)
+			dormant_k = 1.0 - k * k * (3.0 - 2.0 * k)
+			# optics stutter on, then hold
+			_set_powered(k if fmod(_wake_t, 0.18) > 0.06 or k > 0.8 else k * 0.2)
+			if _wake_t >= 1.8:
+				_waking = false
+				dormant_k = 0.0
+				_set_powered(1.0)
+				awareness = 0.9
+				if _wake_target != Vector3.ZERO and state != S.COMBAT:
+					alert_to(_wake_target)
+				return
+	if not is_on_floor():
+		velocity.y -= 12.0 * dt
+	else:
+		velocity = Vector3(0, -0.5, 0)
+	move_and_slide()
+	anim.update(dt, 0.3 * dormant_k, 0.0, 0.0, false, false, 0.0, 0.0)
 
 
 func _setup_materials() -> void:
@@ -244,6 +315,8 @@ func _sense(dt: float) -> void:
 	var range_ := SIGHT_LIT if Game.is_lit(aim) else (SIGHT_DARK_IR if alert else SIGHT_DARK)
 	if blinded:
 		range_ *= 0.35
+	if Game.room_obscured(Game.room_at(aim + Vector3.UP * 0.1)) or Game.room_obscured(Game.room_at(eye)):
+		range_ = minf(range_, 3.0)
 	var to := (aim - eye)
 	var flat := Vector3(to.x, 0, to.z).normalized()
 	var ang := head_forward().angle_to(flat)
@@ -277,7 +350,7 @@ func _sense(dt: float) -> void:
 
 
 func _on_noise(pos: Vector3, radius: float, source: Node) -> void:
-	if state == S.DEAD:
+	if state == S.DEAD or is_dormant():
 		return
 	var d := global_position.distance_to(pos)
 	if d > radius:
@@ -304,7 +377,7 @@ func _on_noise(pos: Vector3, radius: float, source: Node) -> void:
 
 func alert_to(pos: Vector3) -> void:
 	# Called by the director when a squadmate spots the player.
-	if state == S.DEAD or state == S.COMBAT:
+	if state == S.DEAD or state == S.COMBAT or is_dormant():
 		return
 	last_known = pos
 	stimulus = pos
@@ -390,6 +463,8 @@ func visited_recently(pt: Vector3) -> bool:
 func take_damage(amount: float, zone: String, pos: Vector3, dir: Vector3, normal: Vector3, attacker: Node) -> Dictionary:
 	if state == S.DEAD:
 		return {"kill": false, "zone": zone}
+	if dormant and attacker:
+		wake(attacker.global_position)
 	var mult: float = ZONE_MULT.get(zone, 1.0)
 	var dmg := amount * mult
 	hp -= dmg
@@ -613,6 +688,11 @@ func _fire_arc() -> void:
 
 # ------------------------------------------------------------------ movement
 func _go(pos: Vector3, speed: float) -> void:
+	if leash > 0.0:
+		var off := pos - post
+		off.y = 0.0
+		if off.length() > leash:
+			pos = director.snap(post + off.normalized() * leash)
 	_move_target = pos
 	_move_speed = speed
 	_has_move = true
@@ -629,6 +709,9 @@ func _physics_process(dt: float) -> void:
 		_animate_death(dt)
 		return
 	if director == null:
+		return
+	if is_dormant():
+		_update_dormant(dt)
 		return
 	_recent_dmg = maxf(0.0, _recent_dmg - 60.0 * dt)
 	suppression = maxf(0.0, suppression - 0.3 * dt)
@@ -668,7 +751,11 @@ func _think() -> void:
 	match state:
 		S.PATROL:
 			if patrol_points.is_empty():
-				_stop()
+				if leash > 0.0 and Vector2(global_position.x - post.x, global_position.z - post.z).length() > 0.9:
+					if not _has_move or agent.is_navigation_finished():
+						_go(post, WALK)
+				else:
+					_stop()
 				return
 			if not _has_move or agent.is_navigation_finished():
 				if _wait > 0.0:
@@ -895,6 +982,8 @@ func _steer(dt: float) -> void:
 		face = stimulus - global_position
 	elif hv.length() > 0.3:
 		face = hv
+	elif state == S.PATROL and post_face != Vector3.ZERO:
+		face = post_face
 	if debug_face != Vector3.ZERO:
 		face = debug_face
 	face.y = 0
@@ -929,6 +1018,31 @@ func _steer(dt: float) -> void:
 func _try_open_doors(desired: Vector3) -> void:
 	if _door_cd > 0.0 or desired.length() < 0.1:
 		return
+	# Path-based: open a closed door the planned path runs through (an angled
+	# approach along a wall never points the probe ray at the leaf).
+	_door_scan_t -= get_physics_process_delta_time()
+	if _door_scan_t <= 0.0:
+		_door_scan_t = 0.2
+		var path := agent.get_current_navigation_path()
+		var i0 := agent.get_current_navigation_path_index()
+		for dd in director.doors:
+			var d: Node = dd.node
+			if d.locked:
+				continue
+			var c: Vector3 = dd.center
+			if Vector2(c.x - global_position.x, c.z - global_position.z).length() > 2.6:
+				continue
+			var prev := global_position
+			for k in range(i0, mini(i0 + 6, path.size())):
+				var q := Geometry3D.get_closest_point_to_segment(c, prev, path[k])
+				if Vector2(q.x - c.x, q.z - c.z).length() < 0.9:
+					var was: float = d.target
+					d.bot_open(self)
+					if d.target != was:
+						_door_cd = 1.5
+						return
+					break
+				prev = path[k]
 	var from := global_position + Vector3.UP * 1.0
 	var q := PhysicsRayQueryParameters3D.create(from, from + desired.normalized() * 1.6, 1)
 	q.exclude = [get_rid()]

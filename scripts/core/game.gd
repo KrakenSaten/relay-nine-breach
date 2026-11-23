@@ -9,7 +9,7 @@ signal message(text: String, seconds: float)
 signal request_loadout
 signal reload_heard(pos: Vector3)
 
-enum State { BRIEFING, INFILTRATE, HACK, EXTRACT, COMPLETE, FAILED }
+enum State { BRIEFING, INFILTRATE, HACK, EXTRACT, COMPLETE, FAILED, CORE }
 
 var state := State.BRIEFING
 var player: Node = null
@@ -20,6 +20,9 @@ var rooms := {}            # name -> {aabb: AABB, lit: bool, lights: Array}
 var stats := {}
 var start_time := 0.0
 var autotest := false
+var emergency := false     # relay countermeasures active (red lighting, alarm)
+var checkpoint := {}       # survives scene reloads; filled by Mission
+var _obscured := {}        # room -> time (s) until which it is filled with steam
 
 
 func _ready() -> void:
@@ -35,7 +38,22 @@ func reset_stats() -> void:
 func begin_mission() -> void:
 	reset_stats()
 	start_time = Time.get_ticks_msec() / 1000.0
+	emergency = false
+	_obscured.clear()
 	set_state(State.INFILTRATE)
+
+
+func is_active() -> bool:
+	return state in [State.INFILTRATE, State.HACK, State.EXTRACT, State.CORE]
+
+
+# --- Steam / smoke ----------------------------------------------------------
+func obscure_room(name: String, seconds: float) -> void:
+	_obscured[name] = Time.get_ticks_msec() / 1000.0 + seconds
+
+
+func room_obscured(name: String) -> bool:
+	return name != "" and _obscured.get(name, 0.0) > Time.get_ticks_msec() / 1000.0
 
 
 func set_state(s: int) -> void:
@@ -43,11 +61,13 @@ func set_state(s: int) -> void:
 	mission_state_changed.emit(s)
 
 
-func set_objective(text: String, pos: Vector3) -> void:
+func set_objective(text: String, pos: Vector3, quiet := false) -> void:
+	var changed := text != objective_text
 	objective_text = text
 	objective_pos = pos
 	objective_changed.emit(text, pos)
-	Sfx.play("ui_objective", -6.0, 0.0)
+	if changed and not quiet:
+		Sfx.play("ui_objective", -6.0, 0.0)
 
 
 func elapsed() -> float:

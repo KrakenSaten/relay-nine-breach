@@ -13,6 +13,8 @@ extends Node3D
 ##   HALL      x[9,32]  z[-26,-2]  turbine hall, 9 m high
 ##   SERVERS   x[9,21]  z[-38,-26] server room (D4 from hall, D7 from corridor)
 ##   CONTROL   x[21,33] z[-40,-26] relay control (D5 from servers, D6 locked)
+## M4 adds the pump station, tunnel, crawlway, switchgear hall and relay core
+## (see Expansion).
 
 const T := 0.3   # wall thickness
 const DOOR_W := 1.42  # industrial leaf in a 1.5 m opening (robots need the width to path)
@@ -29,6 +31,12 @@ var extraction_pos := Vector3(3.0, 0, 11.8)
 var extraction_area: Area3D
 var beacon: OmniLight3D
 var room_lights := {}
+var expansion: Expansion
+var _nav_blocks := {}
+
+## Nav-only blockers live on this physics layer: the navmesh bake sees them,
+## the player, the robots and every gameplay ray ignore them.
+const NAV_BLOCK_LAYER := 1 << 11
 
 
 func build() -> void:
@@ -48,6 +56,8 @@ func build() -> void:
 	_hall()
 	_servers()
 	_control()
+	expansion = Expansion.new(self)
+	expansion.build()
 	Dressing.new(self).dress()
 	_lights()
 	_signage()
@@ -72,12 +82,56 @@ func bake_nav() -> void:
 	nm.cell_size = 0.2
 	nm.cell_height = 0.2
 	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
-	nm.geometry_collision_mask = 1
+	nm.geometry_collision_mask = 1 | NAV_BLOCK_LAYER
 	nm.region_min_size = 4.0
 	NavigationServer3D.map_set_cell_size(get_world_3d().navigation_map, 0.2)
 	NavigationServer3D.map_set_cell_height(get_world_3d().navigation_map, 0.2)
 	nav.navigation_mesh = nm
 	nav.bake_navigation_mesh(false)
+
+
+## Block (or unblock) a doorway for navigation only; call rebake() after.
+func nav_block(id: String, center: Vector3, size: Vector3) -> void:
+	if _nav_blocks.has(id):
+		return
+	var sb := StaticBody3D.new()
+	sb.name = "NavBlock_" + id
+	sb.collision_layer = NAV_BLOCK_LAYER
+	sb.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = size
+	cs.shape = bs
+	sb.add_child(cs)
+	nav.add_child(sb)
+	sb.global_position = center
+	_nav_blocks[id] = sb
+
+
+func nav_unblock(id: String) -> void:
+	if _nav_blocks.has(id):
+		_nav_blocks[id].free()
+		_nav_blocks.erase(id)
+
+
+## Block a door's opening (hinge-based door node) for navigation.
+func nav_block_door(id: String) -> void:
+	var d: Door = doors[id]
+	var center: Vector3 = d.global_position + d.global_transform.basis.x * (d.width * 0.5)
+	var along_x := absf(d.global_transform.basis.x.x) > 0.5
+	nav_block("door_" + id, center + Vector3(0, 1.1, 0), Vector3(1.7, 2.2, 0.5) if along_x else Vector3(0.5, 2.2, 1.7))
+
+
+func nav_unblock_door(id: String) -> void:
+	nav_unblock("door_" + id)
+
+
+## Re-bake the navmesh in the background; the old mesh stays live until done.
+func rebake() -> void:
+	if nav.is_baking():
+		nav.bake_finished.connect(rebake, CONNECT_ONE_SHOT)
+		return
+	nav.bake_navigation_mesh(true)
 
 
 # ------------------------------------------------------------------ helpers
@@ -161,7 +215,8 @@ func wall_x(z: float, x0: float, x1: float, h: float, openings := [], upper: Mat
 		_wall_piece(Vector3(s[0], 0, z - T / 2), Vector3(s[1], h, z + T / 2), true, upper, lower)
 	for o in openings:
 		_wall_piece(Vector3(o[0], o[2], z - T / 2), Vector3(o[1], h, z + T / 2), true, upper, null)
-		_frame(Vector3(o[0], 0, z), Vector3(o[1], o[2], z), true)
+		if o.size() < 4 or o[3]:
+			_frame(Vector3(o[0], 0, z), Vector3(o[1], o[2], z), true)
 
 
 func wall_z(x: float, z0: float, z1: float, h: float, openings := [], upper: Material = null, lower: Material = null) -> void:
@@ -170,7 +225,8 @@ func wall_z(x: float, z0: float, z1: float, h: float, openings := [], upper: Mat
 		_wall_piece(Vector3(x - T / 2, 0, s[0]), Vector3(x + T / 2, h, s[1]), false, upper, lower)
 	for o in openings:
 		_wall_piece(Vector3(x - T / 2, o[2], o[0]), Vector3(x + T / 2, h, o[1]), false, upper, null)
-		_frame(Vector3(x, 0, o[0]), Vector3(x, o[2], o[1]), false)
+		if o.size() < 4 or o[3]:
+			_frame(Vector3(x, 0, o[0]), Vector3(x, o[2], o[1]), false)
 
 
 func _split(a: float, b: float, openings: Array) -> Array:
@@ -432,19 +488,19 @@ func _shell() -> void:
 	box(Vector3(-7, -0.4, -41), Vector3(34, 0, 15), MatLib.floor_concrete(), "concrete")
 	# DOCK
 	wall_x(14, 0, 16, 6.3)
-	wall_z(0, 0, 14, 6.3)
+	wall_z(0, 0, 14, 6.3, [[1.05, 2.95, 1.25, false]])   # M4 crawlway mouth
 	wall_z(16, 0, 14, 6.3)
 	wall_x(0, 0, 16, 6.3, [[6.75, 8.25, 2.2], [12.0, 14.5, 3.0]])
 	ceiling(0, 0, 16, 14, 6.0)
 	# CORRIDOR
-	wall_z(6, -30, 0, 3.9, [[-9.25, -7.75, 2.2]])
+	wall_z(6, -30, 0, 3.9, [[-9.25, -7.75, 2.2], [-29.25, -27.75, 2.2]])   # D2, D9 (M4 tunnel)
 	wall_z(9, -30, -26, 4.0, [[-29.75, -28.25, 2.2]])
 	wall_z(9, -26, -2, 9.3, [[-11.75, -10.25, 2.2]])
 	wall_z(9, -2, 0, 6.3)
 	wall_x(-30, 6, 9, 3.9)
 	ceiling(6, -30, 9, 0, 3.6)
 	# OFFICE
-	wall_z(-6, -13, -3, 3.9, [], MatLib.wall_block())
+	wall_z(-6, -13, -3, 3.9, [[-7.75, -6.25, 2.2]], MatLib.wall_block())   # D8 (M4 pump station)
 	wall_x(-13, -6, 6, 3.9, [], MatLib.wall_block())
 	wall_x(-3, -6, 6, 3.9, [], MatLib.wall_block())
 	ceiling(-6, -13, 6, -3, 3.6, MatLib.ceiling_tiles())
@@ -454,17 +510,17 @@ func _shell() -> void:
 	ceiling(12, -2, 14.5, 0, 3.0)
 	# HALL
 	wall_x(-2, 9, 32, 9.3, [[12.0, 14.5, 3.0]], MatLib.wall_concrete())
-	wall_z(32, -26, -2, 9.3, [], MatLib.grid_panel())
+	wall_z(32, -26, -2, 9.3, [[-18.75, -17.25, 2.2]], MatLib.grid_panel())   # D10 (M4 switchgear)
 	wall_x(-26, 9, 33, 9.3, [[13.25, 14.75, 2.2], [27.25, 28.75, 2.2]])
 	ceiling(9, -26, 32, -2, 9.0)
 	# SERVERS
 	wall_z(9, -38, -30, 4.0)
-	wall_x(-38, 9, 21, 4.0)
+	wall_x(-38, 9, 21, 4.0, [[14.2, 16.8, 3.4, false]])   # M4 blast door (kit frame)
 	wall_z(21, -40, -26, 4.8, [[-32.75, -31.25, 2.2]])
 	ceiling(9, -38, 21, -26, 3.6, MatLib.flat(Color(0.3, 0.31, 0.32), 0.5, 0.6))
 	# CONTROL
 	wall_x(-40, 21, 33, 4.8)
-	wall_z(33, -40, -26, 4.8)
+	wall_z(33, -40, -26, 4.8, [[-28.75, -27.25, 2.2]])   # D11 (M4 switchgear)
 	ceiling(21, -40, 33, -26, 4.5)
 	# Doors
 	make_door("D1", Vector3(6.79, 0, 0), true)
@@ -500,7 +556,7 @@ func _dock() -> void:
 	prop("barrier", Vector3(8.0, 0, 3.5), 0, true, "concrete")
 	prop("barrel", Vector3(14.6, 0, 2.0), 0, true)
 	prop("barrel", Vector3(14.9, 0, 2.9), 0, false)
-	prop("barrel", Vector3(1.3, 0, 1.4), 0, true)
+	prop("barrel", Vector3(2.2, 0, 0.8), 0, true)   # beside the crawlway mouth
 	if not m3:
 		prop("locker", Vector3(15.6, 0, 8.0), -90, false)
 		prop("locker", Vector3(15.6, 0, 8.6), -90, false)
@@ -706,7 +762,7 @@ func _control() -> void:
 		"RELAY NINE: Sync lost 41h. Units obey the relay, not people.",
 		"Uplink override requires 40s of uninterrupted upload.",
 		"Expect units to converge on the console during transfer."]))
-	breaker("control", Vector3(32.75, 1.5, -28.0), -90)
+	breaker("control", Vector3(21.25, 1.5, -27.8), 90)   # D11 now occupies the east wall here
 
 
 func _lights() -> void:
@@ -833,6 +889,12 @@ const ROOM_AUDIO := {
 	"hall": ["Rev_Hall", "ambience_hall", Vector3(20, 4, -14), -10.0],
 	"servers": ["Rev_Servers", "ambience_servers", Vector3(15, 1.5, -32), -12.0],
 	"control": ["Rev_Small", "ambience_control", Vector3(27, 3.0, -33), -13.0],
+	"pump": ["Rev_Hall", "ambience_pump", Vector3(-15, 3.0, -16), -11.0],
+	"tunnel": ["Rev_Small", "", Vector3.ZERO, 0.0],
+	"crawl": ["Rev_Small", "", Vector3.ZERO, 0.0],
+	"switchgear": ["Rev_Hall", "ambience_switchgear", Vector3(41, 4.0, -16), -11.0],
+	"antechamber": ["Rev_Small", "", Vector3.ZERO, 0.0],
+	"core": ["Rev_Hall", "ambience_core", Vector3(22, 5.0, -52), -9.0],
 }
 
 
