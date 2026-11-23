@@ -1,0 +1,73 @@
+[   7.78] AUTOTEST start, quality=High
+[   7.78] bots spawned: 10, cover points: 160
+[   7.80] nav path dock->control points: 38
+[  12.49] capture C:/AAA/Breach/captures/m2_core/01_dock_start.png
+[  13.30] capture C:/AAA/Breach/captures/m2_core/02_ads_reflex.png
+[  13.30] ADS debug: eye_local=(0.0, 0.079, 0.197) weapon.pos=(0.000354, -0.079157, -0.197) ads=1.00
+[  13.31] TELEPORT player -> (7.5, 0.05, -1.5)
+[  14.80] capture C:/AAA/Breach/captures/m2_core/03_corridor.png
+[  15.73] capture C:/AAA/Breach/captures/m2_core/03b_corridor_dark_nightvision.png
+[  15.73] night vision: on=true battery=0.99
+[  16.03] capture C:/AAA/Breach/captures/m2_core/03c_corridor_dark_no_nv.png
+[  16.04] TELEPORT player -> (13.2, 0.05, -2.6)
+[  18.09] capture C:/AAA/Breach/captures/m2_core/04_hall_overview.png
+[  18.10] COMBAT phase: player exposed in hall for 14 s (god mode)
+[  19.00] capture C:/AAA/Breach/captures/m2_core/05_bot_charging.png
+[  20.26]   perc @CharacterBody3D@1169 d=9.2 ang=81 los=false hit=@StaticBody3D@145 at (8.85, 1.733705, -7.067088) bot=(6.851185, 0.000839, -9.181413) aw=0.95 state=SEARCH lit=true
+[  20.26]   perc @CharacterBody3D@1203 d=10.6 ang=89 los=false hit=@StaticBody3D@110 at (5.85, 1.858443, -9.393512) bot=(5.429437, 0.000089, -9.772712) aw=0.95 state=SEARCH lit=true
+[  20.28]   perc @CharacterBody3D@1237 d=10.6 ang=20 los=false hit=@AnimatableBody3D@299 at (7.896292, 1.861946, -11.25004) bot=(7.679749, 0.000842, -11.59558) aw=0.95 state=SEARCH lit=true
+[  20.30]   perc @CharacterBody3D@1271 d=7.8 ang=0 los=true hit=<null> at <null> bot=(14.55058, 0.00084, -10.22908) aw=1.50 state=COMBAT lit=true
+[  20.31]   perc @CharacterBody3D@1305 d=11.2 ang=65 los=true hit=<null> at <null> bot=(24.10359, 0.000839, -5.041957) aw=0.95 state=SEARCH lit=true
+[  20.33]   perc @CharacterBody3D@1339 d=11.8 ang=58 los=false hit=@StaticBody3D@440 at (21.53795, 1.837857, -9.6) bot=(22.19113, 0.000837, -10.19907) aw=1.50 state=COMBAT lit=true
+[  20.34]   perc @CharacterBody3D@1373 d=14.8 ang=70 los=true hit=<null> at <null> bot=(14.94248, 0.000839, -17.23116) aw=1.50 state=COMBAT lit=true
+[  22.32]   perc @CharacterBody3D@1169 d=7.5 ang=0 los=true hit=<null> at <null> bot=(11.17415, 0.000835, -9.742319) aw=1.50 state=COMBAT lit=true
+[  22.34]   perc @CharacterBody3D@1203 d=10.6 ang=55 los=false hit=@StaticBody3D@110 at (5.85, 1.858752, -9.425863) bot=(5.429437, 0.000089, -9.772712) aw=0.95 state=SEARCH lit=true
+[  22.35]   perc @CharacterBody3D@1237 d=10.8 ang=24 los=false hit=@AnimatableBody3D@299 at (8.687374, 1.860005, -11.80066) bot=(8.428309, 0.000176, -12.27378) aw=0.95 state=SEARCH lit=true
+[  22.37]   perc @CharacterBody3D@1271 d=7.6 ang=0 los=true hit=<null> at <null> bot=(14.2951, 0.000841, -10.11748) aw=1.50 state=COMBAT lit=true
+[  22.38]   perc @CharacterBody3D@1305 d=11.8 ang=0 los=true hit=<null> at <null> bot=(24.66674, 0.000838, -5.472914) aw=1.50 state=COMBAT lit=true
+[  22.40]   perc @CharacterBody3D@1339 d=8.4 ang=112 los=true hit=<null> at <null> bot=(15.12485, 0.000821, -10.7306) aw=1.50 state=COMBAT lit=true
+[  22.41]   perc @CharacterBody3D@1373 d=15.1 ang=78 los=false hit=@StaticBody3D@476 at (16.27007, 1.847761, -16.6) bot=(16.4265, 0.000831, -17.32947) aw=1.50 state=SEARCH lit=true
+[  32.89] AI after exposure: state entries { "SEARCH": 12, "COMBAT": 11 } | attack windups 54 | role-frames { "cover": 5280, "flanker": 1726, "assault": 3074 } | peek-frames 1596 | player damage absorbed (god) 0
+[  32.91] ENGAGE: scripted aim at visible units (zones head/torso/core)
+[  33.56] capture C:/AAA/Breach/captures/m2_core/06_firing_ads.png
+[  34.06] target @CharacterBody3D@1169 -> state DEAD hp -16
+[  34.96] target @CharacterBody3D@1339 -> state DEAD hp -18
+[  36.07] target @CharacterBody3D@1373 -> state DEAD hp -24
+[  39.28] target @CharacterBody3D@1271 -> state DEAD hp -37
+[  40.12] target @CharacterBody3D@1305 -> state DEAD hp -51
+[  41.00] target @CharacterBody3D@1407 -> state DEAD hp -8
+[  41.31] kills during engage: 6 (stats { "shots": 52, "hits": 52, "kills": 6, "head_hits": 17, "core_hits": 0, "core_kills": 0, "damage_taken": 0, "time": 0.0, "god_absorbed": 810.920954036243 })
+[  42.19] capture C:/AAA/Breach/captures/m2_core/07_after_fight.png
+[  42.21] TELEPORT player -> (5.7324, 0.050836, 8.660006)
+[  42.47] core shot test: victim state=DEAD, core_kills=1
+[  42.88] capture C:/AAA/Breach/captures/m2_core/08_core_overload.png
+[  44.07] capture C:/AAA/Breach/captures/m2_core/09_wreck.png
+[  44.08] TELEPORT player -> (13.9, 0.05, -27.0)
+[  45.52] capture C:/AAA/Breach/captures/m2_core/10_servers.png
+[  45.53] TELEPORT player -> (27.0, 0.05, -30.0)
+[  47.07] capture C:/AAA/Breach/captures/m2_core/11_control.png
+[  47.07] TELEPORT player -> (27.0, 0.05, -35.6)
+[  47.10] hold: focus=RelayConsole connecting=0.07
+[  47.28] hold: focus=RelayConsole connecting=0.27
+[  47.49] hold: focus=RelayConsole connecting=0.47
+[  47.69] hold: focus=RelayConsole connecting=0.67
+[  47.89] hold: focus=RelayConsole connecting=0.87
+[  48.09] hold: focus=RelayConsole connecting=1.07
+[  48.29] hold: focus=RelayConsole connecting=1.27
+[  48.49] hold: focus=RelayConsole connecting=1.47
+[  48.70] hold: focus=RelayConsole connecting=1.67
+[  48.90] hold: focus=RelayConsole connecting=1.87
+[  49.10] hold: focus=RelayConsole connecting=2.01
+[  49.30] hold: focus=RelayConsole connecting=2.01
+[  49.31] console uploading=true state=HACK
+[  52.56] capture C:/AAA/Breach/captures/m2_core/12_upload_defend.png
+[  58.31] bots alive during defense: 5, console jammed=false
+[  58.31] TIME SKIP: console progress forced to 0.98 to verify completion flow
+[  61.31] after upload: state=EXTRACT D6 locked=false
+[  61.31] TELEPORT player -> (3.0, 0.1, 11.8)
+[  66.31] extraction: state=COMPLETE
+[  66.60] capture C:/AAA/Breach/captures/m2_core/13_extraction.png
+[  66.81] capture C:/AAA/Breach/captures/m2_core/14_loadout.png
+[  67.10] capture C:/AAA/Breach/captures/m2_core/15_settings.png
+[  67.42] capture C:/AAA/Breach/captures/m2_core/16_complete.png
+[  67.43] AUTOTEST done. Final stats { "shots": 56, "hits": 56, "kills": 7, "head_hits": 17, "core_hits": 4, "core_kills": 1, "damage_taken": 0, "time": 0.0, "god_absorbed": 1144.01970880615 }

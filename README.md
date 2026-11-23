@@ -32,6 +32,7 @@ in Settings.
 ## Docs
 
 * [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): systems and design
-* [docs/REPORT.md](docs/REPORT.md): what works, what doesn't, measured performance, next steps
+* [docs/REPORT_M2.md](docs/REPORT_M2.md): M2 visual overhaul, AI refinement, performance, regression results
+* [docs/REPORT.md](docs/REPORT.md): M1 report
 * [ASSETS.md](ASSETS.md): every asset source and license
 * `captures/`: screenshots and a gameplay clip from the running build

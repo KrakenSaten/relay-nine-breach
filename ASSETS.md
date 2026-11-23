@@ -21,3 +21,16 @@ Rebuild generated assets:
 & "C:\Program Files\Blender Foundation\Blender 5.3\blender.exe" -b --factory-startup -P tools/build_models.py -- assets/models
 python -I tools/synth_audio.py assets/audio
 ```
+
+
+## M2 additions
+
+| Asset | Source | License | Location |
+| --- | --- | --- | --- |
+| VK-9 / P-12 / attachments / first-person arms | Original, `tools/m2/weapons.py` (+ `wpn_*.py`), Blender 5.3 | First-party | `assets/models/{rifle,pistol,attachments,arms}.glb` |
+| M2 Teslabot | Original, `tools/m2/teslabot.py` | First-party | `assets/models/teslabot.glb` |
+| Environment kit + replacement props | Original, `tools/m2/env_kit.py` | First-party | `assets/models/{env_kit,props}.glb` |
+| 18 Poly Haven models, 11 texture sets | Poly Haven API | CC0 1.0 | `assets/models/ph/`, `assets/textures/` (full list: `docs/SOURCES_ENV.md`) |
+| 80 sound effects (71 from CC0 recordings on OpenGameArt; licence checked per asset page) | See `docs/SOURCES_AUDIO.md`; processing by `tools/m2/audio_build.py`, synthesis by `tools/m2/synth_audio_v2.py` | CC0 / first-party | `assets/audio/` |
+
+Note: the Poly Haven "korean_fire_extinguisher_01" was downloaded but is not placed (it carries a Hangul label).

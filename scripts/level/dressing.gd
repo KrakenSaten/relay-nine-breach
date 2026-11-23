@@ -62,6 +62,10 @@ func ph(id: String, pos: Vector3, yaw_deg := 0.0, collide := true, cover := fals
 		_ph[id] = load(path)
 	var inst: Node3D = (_ph[id] as PackedScene).instantiate()
 	(b.nav if collide else b).add_child(inst)
+	for mi in inst.find_children("*", "MeshInstance3D", true, false):
+		mi.visibility_range_end = 32.0
+		if mi.get_aabb().size.length() < 0.5:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	inst.transform = Transform3D(Basis(Vector3.UP, deg_to_rad(yaw_deg)).scaled(Vector3.ONE * scl), pos)
 	if collide:
 		var aabb := _collider(inst, "metal")

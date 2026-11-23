@@ -1,0 +1,12 @@
+[  32.19] PERF Low: draw_calls=5105 objects=11649 prims=2814472 process_ms=6.49 physics_ms=2.42 nav_ms=0.00
+[  32.20] BENCH { "preset": "Low", "frames": 4315, "avg_fps": 180.245155968864, "avg_ms": 5.54799930475104, "p95_ms": 9.25925925925926, "p99_ms": 12.2133333333335, "1pct_low_fps": 58.2026170884218 }
+[  32.75] capture C:/AAA/Breach/captures/m2_bench/bench_0_Low.png
+[  58.65] PERF Medium: draw_calls=211 objects=616 prims=205510 process_ms=6.18 physics_ms=2.58 nav_ms=0.01
+[  58.65] BENCH { "preset": "Medium", "frames": 4327, "avg_fps": 180.691867212053, "avg_ms": 5.53428339321126, "p95_ms": 8.873, "p99_ms": 13.739, "1pct_low_fps": 42.6616102620283 }
+[  59.26] capture C:/AAA/Breach/captures/m2_bench/bench_1_Medium.png
+[  85.09] PERF High: draw_calls=662 objects=1084 prims=398881 process_ms=10.04 physics_ms=2.45 nav_ms=0.00
+[  85.09] BENCH { "preset": "High", "frames": 3402, "avg_fps": 142.143783687858, "avg_ms": 7.03513002155591, "p95_ms": 9.809, "p99_ms": 12.9303333333345, "1pct_low_fps": 44.6232654959237 }
+[  85.74] capture C:/AAA/Breach/captures/m2_bench/bench_2_High.png
+[ 111.52] PERF Ultra: draw_calls=1504 objects=3458 prims=2130951 process_ms=22.51 physics_ms=2.41 nav_ms=0.01
+[ 111.52] BENCH { "preset": "Ultra", "frames": 3053, "avg_fps": 127.632153626137, "avg_ms": 7.83501626815151, "p95_ms": 9.02777777777778, "p99_ms": 10.5301851851852, "1pct_low_fps": 67.8505498658836 }
+[ 112.15] capture C:/AAA/Breach/captures/m2_bench/bench_3_Ultra.png

@@ -85,6 +85,7 @@ func setup(weapon_id: String, p: Node, att: Dictionary) -> void:
 
 func apply_loadout(att: Dictionary) -> void:
 	loadout = att.duplicate()
+	_sock_cache.clear()
 	# Remove old attachment instances
 	for c in model.find_children("att_*", "Node3D", true, false):
 		c.queue_free()
@@ -643,10 +644,15 @@ func _xf(n: Node3D) -> Transform3D:
 	return transform * t
 
 
+var _sock_cache := {}
+
+
 func _sock_xf(names: Array) -> Variant:
 	for nm in names:
-		var n := _find_prefixed(model, nm)
-		if n:
+		if not _sock_cache.has(nm):
+			_sock_cache[nm] = _find_prefixed(model, nm)
+		var n: Node3D = _sock_cache[nm]
+		if n and is_instance_valid(n):
 			return _xf(n)
 	return null
 
@@ -660,11 +666,12 @@ func hand_targets() -> Dictionary:
 	var l = null
 	var grip_id: String = loadout.get("grip", "none") if id == "rifle" else "none"
 	if grip_id != "none":
-		var g := model.find_child("att_" + grip_id, true, false)
-		if g:
-			var gh := _find_prefixed(g, "hand_L")
-			if gh:
-				l = _xf(gh)
+		if not _sock_cache.has("grip_" + grip_id):
+			var gn := model.find_child("att_" + grip_id, true, false)
+			_sock_cache["grip_" + grip_id] = _find_prefixed(gn, "hand_L") if gn else null
+		var gh: Node3D = _sock_cache["grip_" + grip_id]
+		if gh and is_instance_valid(gh):
+			l = _xf(gh)
 		if l == null:
 			l = _sock_xf(["sock_hand_L_vgrip" if grip_id == "grip_vertical" else "sock_hand_L_agrip"])
 		out.kind = "fist" if grip_id == "grip_vertical" else "open"
@@ -684,8 +691,10 @@ func hand_targets() -> Dictionary:
 
 func _mag_hand_xf() -> Variant:
 	if mag_node:
-		var mh := _find_prefixed(mag_node, "hand_L")
-		if mh:
+		if not mag_node.has_meta("hand_L"):
+			mag_node.set_meta("hand_L", _find_prefixed(mag_node, "hand_L"))
+		var mh: Node3D = mag_node.get_meta("hand_L")
+		if mh and is_instance_valid(mh):
 			return _xf(mh)
 	return _sock_xf(["sock_hand_L_mag"])
 

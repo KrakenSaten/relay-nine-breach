@@ -1,0 +1,2 @@
+[  42.47] core shot test: victim state=DEAD, core_kills=1
+[  66.31] extraction: state=COMPLETE

@@ -103,6 +103,13 @@ func _ready() -> void:
 	model = (load("res://assets/models/teslabot.glb") as PackedScene).instantiate()
 	add_child(model)
 	MatLib.remap_scene(model)
+	# Shadow budget: only large exterior parts cast shadows.
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var sz: float = mi.get_aabb().size.length()
+		if String(mi.name).begins_with("internal_") or sz < 0.22 or String(mi.name).begins_with("led") or String(mi.name).begins_with("eye"):
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if sz < 0.12:
+			mi.visibility_range_end = 22.0
 	for n in ["pelvis", "torso", "head", "core", "shoulder_L", "shoulder_R", "elbow_L", "elbow_R", "hip_L", "hip_R", "knee_L", "knee_R", "ankle_L", "ankle_R", "muzzle"]:
 		bones[n] = model.find_child(n, true, false)
 		if bones[n]:

@@ -1,0 +1,243 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+[   7.47] AITEST: player hides in the security office; hall/corridor units are alerted by gunfire
+[   7.48] TELEPORT player -> (-3.5, 0.05, -11.5)
+[  13.44]   t=5.5 @CharacterBody3D@1237 state=COMBAT role=cover pos=(6.2, 0.0, -8.2) vis=true cover=- phase= entry=entering nav_done=false
+[  13.44]   t=5.5 @CharacterBody3D@1271 state=SEARCH role=assault pos=(9.6, 0.0, -12.3) vis=false cover=- phase= entry=- nav_done=false
+[  13.44]   t=5.5 @CharacterBody3D@1305 state=SEARCH role=assault pos=(11.0, 0.0, -13.0) vis=false cover=- phase= entry=- nav_done=false
+[  13.44]   t=5.5 @CharacterBody3D@1339 state=SEARCH role=assault pos=(9.0, 0.0, -10.7) vis=false cover=- phase= entry=- nav_done=false
+[  13.44]   t=5.5 @CharacterBody3D@1373 state=SEARCH role=assault pos=(10.4, 0.0, -12.4) vis=false cover=- phase= entry=- nav_done=false
+[  13.44]   t=5.5 @CharacterBody3D@1407 state=SEARCH role=assault pos=(12.7, 0.0, -26.6) vis=false cover=- phase= entry=- nav_done=false
+[  13.44]   t=5.5 @CharacterBody3D@1441 state=SEARCH role=assault pos=(12.4, 0.0, -17.5) vis=false cover=- phase= entry=- nav_done=false
+[  13.44]   t=5.5 @CharacterBody3D@1475 state=SEARCH role=assault pos=(28.0, 0.0, -26.5) vis=false cover=- phase= entry=- nav_done=false
+[  19.05]   t=11.0 @CharacterBody3D@1237 state=SEARCH role=cover pos=(2.2, 0.0, -7.8) vis=false cover=- phase= entry=- nav_done=false
+[  19.05]   t=11.0 @CharacterBody3D@1271 state=SEARCH role=assault pos=(9.6, 0.0, -12.3) vis=false cover=- phase= entry=- nav_done=false
+[  19.06]   t=11.0 @CharacterBody3D@1305 state=SEARCH role=assault pos=(11.2, 0.0, -12.3) vis=false cover=- phase= entry=- nav_done=false
+[  19.06]   t=11.0 @CharacterBody3D@1339 state=SEARCH role=assault pos=(6.6, 0.0, -9.8) vis=false cover=- phase= entry=- nav_done=false
+[  19.06]   t=11.0 @CharacterBody3D@1373 state=SEARCH role=assault pos=(10.4, 0.0, -12.4) vis=false cover=- phase= entry=- nav_done=false
+[  19.06]   t=11.0 @CharacterBody3D@1407 state=SEARCH role=assault pos=(12.7, 0.0, -26.6) vis=false cover=- phase= entry=- nav_done=false
+[  19.06]   t=11.0 @CharacterBody3D@1441 state=SEARCH role=assault pos=(10.4, 0.0, -13.2) vis=false cover=- phase= entry=- nav_done=false
+[  19.06]   t=11.0 @CharacterBody3D@1475 state=SEARCH role=assault pos=(28.0, 0.0, -26.5) vis=false cover=- phase= entry=- nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1237 state=SEARCH role=cover pos=(-1.1, 0.0, -5.2) vis=false cover=- phase= entry=- nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1271 state=SEARCH role=assault pos=(9.6, 0.0, -12.3) vis=false cover=- phase= entry=- nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1305 state=SEARCH role=assault pos=(11.2, 0.0, -12.3) vis=false cover=- phase= entry=- nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1339 state=SEARCH role=assault pos=(6.6, 0.0, -9.8) vis=false cover=- phase= entry=moving nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1373 state=SEARCH role=assault pos=(10.4, 0.0, -12.4) vis=false cover=- phase= entry=- nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1407 state=SEARCH role=assault pos=(12.7, 0.0, -26.6) vis=false cover=- phase= entry=- nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1441 state=SEARCH role=assault pos=(10.4, 0.0, -13.2) vis=false cover=- phase= entry=- nav_done=false
+[  24.69]   t=16.5 @CharacterBody3D@1475 state=SEARCH role=assault pos=(28.0, 0.0, -26.5) vis=false cover=- phase= entry=- nav_done=false
+[  30.37]   t=22.0 @CharacterBody3D@1237 state=COMBAT role=cover pos=(-1.1, 0.0, -5.1) vis=false cover=(-0.946, 0.4, -6.0) phase=peek entry=- nav_done=true
+[  30.38]   t=22.0 @CharacterBody3D@1271 state=SEARCH role=assault pos=(9.6, 0.0, -12.3) vis=false cover=- phase= entry=- nav_done=false
+[  30.38]   t=22.0 @CharacterBody3D@1305 state=SEARCH role=assault pos=(11.2, 0.0, -12.3) vis=false cover=- phase= entry=- nav_done=false
+[  30.38]   t=22.0 @CharacterBody3D@1339 state=SEARCH role=assault pos=(6.6, 0.0, -9.8) vis=false cover=- phase= entry=moving nav_done=false
+[  30.38]   t=22.0 @CharacterBody3D@1373 state=SEARCH role=assault pos=(10.4, 0.0, -12.4) vis=false cover=- phase= entry=- nav_done=false
+[  30.38]   t=22.0 @CharacterBody3D@1407 state=SEARCH role=assault pos=(12.7, 0.0, -26.6) vis=false cover=- phase= entry=- nav_done=false
+[  30.38]   t=22.0 @CharacterBody3D@1441 state=SEARCH role=assault pos=(10.4, 0.0, -13.2) vis=false cover=- phase= entry=- nav_done=false
+[  30.38]   t=22.0 @CharacterBody3D@1475 state=SEARCH role=assault pos=(28.0, 0.0, -26.5) vis=false cover=- phase= entry=- nav_done=false
+[  30.38] AITEST hunt (22 s): { "stacked": 84, "entering": 756, "suppressed": 0, "push": 0, "overwatch": 0, "pusher": 0, "flanker": 0, "cover": 1907, "peek": 615, "entries_done": 2 }  D2 open=true  god_absorbed=29
+[  30.38] AITEST units within 8 m of the hidden player: 1 / 8 alive
+[  31.88] AITEST reload push: push unit-frames +181
+[  31.88] AITEST final: { "stacked": 84, "entering": 756, "suppressed": 0, "push": 181, "overwatch": 0, "pusher": 0, "flanker": 0, "cover": 2079, "peek": 756, "entries_done": 2 }
+ERROR: Pages in use exist at exit in PagedAllocator: N33RendererSceneRenderImplementation22RenderForwardClustered32GeometryInstanceSurfaceDataCacheE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: Pages in use exist at exit in PagedAllocator: N33RendererSceneRenderImplementation22RenderForwardClustered32GeometryInstanceForwardClusteredE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: 3 shaders of type SceneForwardClusteredShaderRD were never freed
+   at: ~ShaderRD (servers/rendering/renderer_rd/shader_rd.cpp:1236)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance depenERROR: 96 RID allocations of type 'N10RendererRD11MeshStorage4MeshE' were leaked at exit.
+ERROR: 40 RID allocations of type 'N10RendererRD15MaterialStorage8MaterialE' were leaked at exit.
+ERROR: 3 RID allocations of type 'N10RendererRD15MaterialStorage6ShaderE' were leaked at exit.
+ERROR: 69 RID allocations of type 'N17RendererSceneCull8InstanceE' were leaked at exit.
+dency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: Leaked instance dependency: Bug - did not call instance_notify_deleted when freeing.
+   at: ~Dependency (servers/rendering/storage/utilities.cpp:56)
+WARNING: 40 RIDs of type "UniformBuffer" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:8686)
+WARNING: 1072 RIDs of type "IndexArray" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:8686)
+WARNING: 1072 RIDs of type "IndexBuffer" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:8686)
+WARNING: 392 RIDs of type "VertexArray" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:8686)
+WARNING: 468 RIDs of type "VertexBuffer" were leaked.
+   at: _free_rids (servers/rendering/rendering_device.cpp:8686)
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)
+WARNING: 275 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 139 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

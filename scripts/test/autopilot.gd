@@ -134,7 +134,7 @@ func _autotest() -> void:
 					var q := PhysicsRayQueryParameters3D.create(b.eye_pos(), player.get_aim_point(), 1)
 					q.exclude = [b.get_rid()]
 					var h := player.get_world_3d().direct_space_state.intersect_ray(q)
-					L("  perc %s d=%.1f ang=%.0f los=%s hit=%s at %s bot=%s aw=%.2f state=%s lit=%s" % [b.name, d, rad_to_deg(b.head_forward().angle_to(flat)), h.is_empty(), (h.collider.get_child(0).shape.size if h else null), h.get("position", null), b.global_position, b.awareness, Teslabot.S.keys()[b.state], Game.is_lit(player.get_aim_point())])
+					L("  perc %s d=%.1f ang=%.0f los=%s hit=%s at %s bot=%s aw=%.2f state=%s lit=%s" % [b.name, d, rad_to_deg(b.head_forward().angle_to(flat)), h.is_empty(), (h.collider.name if h else null), h.get("position", null), b.global_position, b.awareness, Teslabot.S.keys()[b.state], Game.is_lit(player.get_aim_point())])
 		for b in _bots():
 			if not charged and b._attack_t > 0.35 and b.target_visible:
 				_look(b.bones.muzzle.global_position)
@@ -177,6 +177,10 @@ func _autotest() -> void:
 	# Core overload demo: approach a unit from behind and shoot the capacitor
 	var victim := _first_alive_far()
 	if victim:
+		# Deterministic setup: target in the open dock, facing away.
+		victim.global_position = Vector3(8.0, 0.0, 6.0)
+		victim.rotation = Vector3.ZERO
+		await _wait(0.2)
 		var back: Vector3 = victim.global_position + victim.global_transform.basis.z * 3.5
 		victim._stagger(3.0)
 		teleport(back + Vector3(0, 0.05, 0), victim.bones.core.global_position)
@@ -296,6 +300,9 @@ func _bench() -> void:
 			d.target = deg_to_rad(95)
 	var res := []
 	var presets := [0, 1, 2, 3]
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--bench-presets="):
+			presets = Array(arg.get_slice("=", 1).split(",")).map(func(x): return int(x))
 	var original := Settings.quality
 	for q in presets:
 		Settings.set_quality(q, false)
@@ -325,6 +332,10 @@ func _bench() -> void:
 			_look(look)
 			await get_tree().process_frame
 		_recording = false
+		L("PERF %s: draw_calls=%d objects=%d prims=%d process_ms=%.2f physics_ms=%.2f nav_ms=%.2f" % [Settings.PRESETS[q],
+			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
+			Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+			Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS) * 1000.0])
 		var ft: Array = _frame_times.duplicate()
 		ft.sort()
 		var n := ft.size()
@@ -499,6 +510,8 @@ func _compare() -> void:
 		teleport(p[1], p[2])
 		await _wait(1.2)
 		await shot(p[0])
+		await _wait(0.3)
+		L("PERF %s: process_ms=%.2f physics_ms=%.2f draw_calls=%d objects=%d nodes=%d fps=%d" % [p[0], Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0, Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME), Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Engine.get_frames_per_second()])
 	teleport(Vector3(12.0, 0.05, 8.0), Vector3(12.0, 1.0, 4.0))
 	await _wait(1.0)
 	await shot("c10_weapon_hip")

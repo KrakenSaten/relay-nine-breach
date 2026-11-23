@@ -14,3 +14,7 @@ captures/*
 !captures/m2_compare/
 !captures/m2_final/
 !captures/m2_bench/
+!captures/m1_vs_m2/
+!captures/m2_video/
+!captures/m2_core/
+!captures/m2_ai/
