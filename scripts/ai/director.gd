@@ -152,7 +152,7 @@ func _squad_plan() -> void:
 		if b.target_visible:
 			any_visible = true
 	hidden_for = 0.0 if any_visible else hidden_for + 0.5
-	if hidden_for < 1.5 or eng.size() < 2:
+	if hidden_for < 1.0 or eng.size() < 2:
 		for b in eng:
 			if b.role in ["overwatch", "pusher"] and any_visible:
 				b.role = assign_role(b)

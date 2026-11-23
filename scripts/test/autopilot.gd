@@ -30,6 +30,8 @@ func run(m: Node) -> void:
 		await _bench()
 	elif "--showcase" in OS.get_cmdline_user_args():
 		await _showcase()
+	elif "--aitest2" in OS.get_cmdline_user_args():
+		await _aitest2()
 	elif "--aitest" in OS.get_cmdline_user_args():
 		await _aitest()
 	elif "--botanim" in OS.get_cmdline_user_args():
@@ -678,3 +680,37 @@ func _botanim() -> void:
 	bot.take_damage(900.0, "torso", bot.bones.torso.global_position, dir, -dir, null)
 	await _wait(3.0)
 	L("BOTANIM done: state=%s" % Teslabot.S.keys()[bot.state])
+
+
+# ------------------------------------------------------------------ overwatch trigger test
+func _aitest2() -> void:
+	L("AITEST2: engage >=2 units in the hall, then break line of sight")
+	for b in main.director.bots:
+		if Game.room_at(b.global_position + Vector3.UP) != "hall":
+			b.set_physics_process(false)
+			b.global_position += Vector3(0, -50, 0)
+			b.state = Teslabot.S.DEAD
+	teleport(Vector3(13.2, 0.05, -2.6), Vector3(22, 1.5, -11))
+	var t := 0.0
+	while t < 20.0:
+		await _wait(0.25)
+		t += 0.25
+		var eng: Array = main.director.engaged()
+		if eng.size() >= 2:
+			break
+	L("  engaged units: %d after %.1f s" % [main.director.engaged().size(), t])
+	# Break line of sight completely: into the corridor behind closed D3.
+	main.level.doors.D3.target = 0.0
+	main.level.doors.D3.open_angle = 0.0
+	main.level.doors.D3.body.rotation.y = 0.0
+	teleport(Vector3(7.5, 0.05, -14.5), Vector3(7.5, 1.4, -25))
+	var roles := {}
+	for i in 24:
+		await _wait(0.5)
+		var line := []
+		for b in main.director.engaged():
+			roles[b.role] = roles.get(b.role, 0) + 1
+			line.append("%s/%s%s" % [b.role, "V" if b.target_visible else "-", "" if b._has_move else "(hold)"])
+		if i % 4 == 0:
+			L("  t+%.1f hidden_for=%.1f engaged=%d %s" % [(i + 1) * 0.5, main.director.hidden_for, main.director.engaged().size(), line])
+	L("AITEST2 role samples while hidden: %s" % [roles])

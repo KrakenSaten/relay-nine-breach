@@ -717,7 +717,8 @@ func _think_combat(p: Player) -> void:
 	var since := _t - last_seen_t
 	if target_visible:
 		last_known = p.global_position
-	if since > 4.0:
+	var hold_limit := 8.0 if role in ["overwatch", "pusher"] else 4.0
+	if since > hold_limit:
 		# Lost contact: search where the target was last known.
 		_set_state(S.SEARCH)
 		_search_t = 14.0
