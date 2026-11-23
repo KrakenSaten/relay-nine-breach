@@ -55,6 +55,13 @@ func run(m: Node) -> void:
 			return
 	elif "--rv_traffic" in args:
 		await load("res://scripts/test/m4_review.gd").new(self).traffic()
+	elif "--rv_ammo" in args:
+		await load("res://scripts/test/m4_ammo_tests.gd").new(self).ammo()
+	elif "--rv_ammocp" in args:
+		await load("res://scripts/test/m4_ammo_tests.gd").new(self).ammo_cp()
+		if Game.get_meta("rv_reload_pending", false):
+			Game.set_meta("rv_reload_pending", false)
+			return
 	elif "--rv_fixshots" in args:
 		await load("res://scripts/test/m4_review.gd").new(self).fixshots()
 	elif "--rv_blast" in args:

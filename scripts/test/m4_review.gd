@@ -110,6 +110,8 @@ func doors() -> void:
 	var objs := [["lockdown_panel", ex.lockdown_panel], ["breaker_A", ex.breakers[0]], ["breaker_B", ex.breakers[1]], ["lift_panel", ex.lift_panel], ["steam_valve", ex.steam_valve]]
 	for i in ex.capacitors.size():
 		objs.append(["capacitor_%d" % i, ex.capacitors[i]])
+	for c in ex.caches:
+		objs.append([c.cache_name.replace(" ", "_").to_lower(), c])
 	for o in objs:
 		var n: Node3D = o[1]
 		var aabb: AABB = lv._world_aabb(n)
