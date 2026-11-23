@@ -48,6 +48,32 @@ func run(m: Node) -> void:
 		await m4.perf()
 	elif "--m4load" in args:
 		await m4.combat_perf()
+	elif "--rv_cpx" in args:
+		await load("res://scripts/test/m4_review.gd").new(self).cp_extract()
+		if Game.get_meta("rv_reload_pending", false):
+			Game.set_meta("rv_reload_pending", false)
+			return
+	elif "--rv_traffic" in args:
+		await load("res://scripts/test/m4_review.gd").new(self).traffic()
+	elif "--rv_fixshots" in args:
+		await load("res://scripts/test/m4_review.gd").new(self).fixshots()
+	elif "--rv_blast" in args:
+		await load("res://scripts/test/m4_review.gd").new(self).blast()
+	elif "--rv_doors" in args or "--rv_sweep" in args or "--rv_edge" in args or "--rv_combat" in args or "--rv_reload" in args:
+		var rv = load("res://scripts/test/m4_review.gd").new(self)
+		if "--rv_doors" in args:
+			await rv.doors()
+		elif "--rv_sweep" in args:
+			await rv.sweep()
+		elif "--rv_edge" in args:
+			await rv.edge()
+		elif "--rv_combat" in args:
+			await rv.combat()
+		else:
+			await rv.reload()
+			if Game.get_meta("rv_reload_pending", false):
+				Game.set_meta("rv_reload_pending", false)
+				return   # scene is reloading; the next cycle continues in the new autopilot
 	elif "--bench" in OS.get_cmdline_user_args():
 		await _bench()
 	elif "--showcase" in OS.get_cmdline_user_args():
