@@ -241,11 +241,14 @@ func _align_rams() -> void:
 		var b := rod.global_position
 		if a.distance_squared_to(b) < 0.0001:
 			continue
-		var up: Vector3 = cyl.get_parent().global_transform.basis.x
-		if absf((b - a).normalized().dot(up.normalized())) > 0.97:
-			up = Vector3.UP
+		# Keep each half's local X on the joint hinge: up = hinge x direction.
+		var hinge: Vector3 = cyl.get_parent().global_transform.basis.x.normalized()
+		var dir := (b - a).normalized()
+		var up := hinge.cross(dir)
+		if up.length() < 0.01:
+			continue
 		cyl.look_at(b, up)
-		rod.look_at(a, up)
+		rod.look_at(a, hinge.cross(-dir))
 
 
 ## Zone hit -> spring impulse (direction in bot-local space).

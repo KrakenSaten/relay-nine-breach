@@ -113,7 +113,7 @@ func _ready() -> void:
 	# Shadow budget: only large exterior parts cast shadows.
 	for mi in model.find_children("*", "MeshInstance3D", true, false):
 		var sz: float = mi.get_aabb().size.length()
-		if String(mi.name).begins_with("internal_") or sz < 0.22 or String(mi.name).begins_with("led") or String(mi.name).begins_with("eye"):
+		if String(mi.name).begins_with("internal_") or sz < 0.22 or String(mi.name).begins_with("led") or String(mi.name).ends_with("_leds") or String(mi.name).begins_with("eye"):
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		if sz < 0.12:
 			mi.visibility_range_end = 22.0
