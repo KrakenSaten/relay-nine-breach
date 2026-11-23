@@ -57,7 +57,7 @@ Every run had 0 script errors.
 
 ## Remaining limitations (honest)
 
-* **No human playtest of M2 yet.** AI difficulty, the reload pacing and the new audio mix need your hands on it. The sounds were checked with measurement tools, not by ear.
+* **Human playtest (owner, 2026-11-23): "All tested OK".** That covers the suggested checks: reloads and hands, shoot-off armour, robots hunting and entering rooms, suppression, the reload push, and night vision. No issues were reported. No detailed difficulty or audio-mix tuning notes have been given yet.
 * The overwatch/pusher squad plan is implemented but was not observed in the automated tests. It needs ≥ 2 engaged units with the player hidden for 1.5 s.
 * Arms are rigid segments (no skinned elbow), and the gloves are somewhat soft. A small overlap shows on the magazine grab.
 * The robot is rigid-part animated: knee rams drift at large bends, and hip armour can clip on extreme strides.
