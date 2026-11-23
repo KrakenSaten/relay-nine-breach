@@ -20,3 +20,4 @@ captures/*
 !captures/m2_video/
 !captures/m2_core/
 !captures/m2_ai/
+*.log
