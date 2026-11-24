@@ -844,12 +844,14 @@ func _lights() -> void:
 	light_spot(Vector3(6.6, 5.7, 11.5), cool, 8.0, 10.0, 60, false, "dock")   # clear of the lift rig
 	light_spot(Vector3(12, 5.7, 10), sodium, 11.0, 10.0, 60, true, "dock")
 	light_omni(Vector3(8, 2.5, 7), Color(0.75, 0.82, 1.0), 0.8, 12.0, false, "dock", false)
-	light_spot(Vector3(8, 5.6, 3.0), warm, 2.5, 9.0, 70, false, "dock", Vector3(0, -0.75, -1).normalized(), "")
+	light_spot(Vector3(8, 5.6, 3.0), warm, 2.5, 9.0, 70, true, "dock", Vector3(0, -0.75, -1).normalized(), "")
 	beacon = light_omni(Vector3(0.9, 3.0, 9.7), Color(1.0, 0.25, 0.1), 0.0, 8.0, false, "", false)
 	# CORRIDOR
 	for i in 5:
 		var z := -3.0 - i * 6.0
-		var l := light_omni(Vector3(7.5, 3.3, z), warm, 2.2, 6.5, i % 2 == 0, "corridor")
+		var l := light_omni(Vector3(7.5, 3.3, z), warm, 2.2, 6.5, true, "corridor")
+		if i % 2 == 1:   # shadowed in M4.3 only to stop leaks: the cheaper 2-pass mode
+			l.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
 		if i == 3:
 			l.set_meta("flicker", true)
 	# OFFICE
@@ -862,7 +864,7 @@ func _lights() -> void:
 	# HALL: high bays with volumetric shafts, plus cold light through upper slits
 	var hb := [Vector3(12, 8.4, -5), Vector3(19, 8.4, -4), Vector3(27, 8.4, -9), Vector3(12, 8.4, -17), Vector3(23, 8.4, -19), Vector3(29, 8.4, -23)]
 	for i in hb.size():
-		var l := light_spot(hb[i], sodium, 19.0, 15.0, 44, i % 2 == 0, "hall")
+		var l := light_spot(hb[i], sodium, 19.0, 15.0, 44, i % 2 == 0 or i == 3, "hall")
 		if i == 4:
 			l.set_meta("flicker", true)
 	light_spot(Vector3(31.6, 8.0, -12.0), moon, 9.0, 26.0, 18, true, "", Vector3(-1.0, -0.75, 0.15).normalized(), "")
@@ -885,7 +887,7 @@ func _lights() -> void:
 	# Workstation glow from the operator screens
 	light_omni(Vector3(27.0, 1.3, -33.6), Color(0.45, 0.75, 0.85), 0.7, 3.5, false, "control", false)
 	_reflection_probes()
-	light_omni(Vector3(32.5, 3.8, -27.0), Color(1.0, 0.15, 0.08), 1.2, 6.0, false, "control", false)
+	light_omni(Vector3(32.5, 3.8, -27.0), Color(1.0, 0.15, 0.08), 1.2, 6.0, true, "control", false).omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID   # shadowed: lit the hall through the wall
 
 
 func _signage() -> void:

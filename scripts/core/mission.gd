@@ -47,9 +47,13 @@ func setup(m: Node, lvl: LevelBuilder) -> void:
 	ex = lvl.expansion
 	_define_encounters()
 	# Red beacons for the M1-M3 rooms (the expansion places its own).
-	for p in [Vector3(8.0, 5.2, 0.45), Vector3(7.5, 3.25, -10.0), Vector3(7.5, 3.25, -24.0), Vector3(0.0, 3.3, -3.45),
-			Vector3(9.5, 6.0, -10.0), Vector3(31.5, 6.0, -20.0), Vector3(20.0, 7.0, -25.6), Vector3(15.0, 3.3, -26.5), Vector3(27.0, 4.1, -26.5)]:
-		ex.emergency(p)
+	# Wall beacons light their own room only (spots aimed off the wall); the two
+	# corridor ceiling beacons keep omni light but cast shadows.
+	# [position, facing, distance to the wall face behind]
+	for p in [[Vector3(8.0, 5.2, 0.45), Vector3.BACK, 0.3], [Vector3(7.5, 3.25, -10.0), Vector3.ZERO, 0.0], [Vector3(7.5, 3.25, -24.0), Vector3.ZERO, 0.0],
+			[Vector3(0.0, 3.3, -3.45), Vector3.FORWARD, 0.3], [Vector3(9.5, 6.0, -10.0), Vector3.RIGHT, 0.35], [Vector3(31.5, 6.0, -20.0), Vector3.LEFT, 0.0],
+			[Vector3(20.0, 7.0, -25.6), Vector3.BACK, 0.25], [Vector3(15.0, 3.3, -26.5), Vector3.FORWARD, 0.35], [Vector3(27.0, 4.1, -26.5), Vector3.FORWARD, 0.35]]:
+		ex.emergency(p[0], p[1], p[1] == Vector3.ZERO, p[2])
 	# Doors sealed by the lockdown (the console room is reachable only once released).
 	for id in ["D5", "D6", "D11"]:
 		level.doors[id].set_locked(true, "SEALED - CONTROL-WING LOCKDOWN")
@@ -321,7 +325,7 @@ func _seal_d3(instant: bool) -> void:
 func _emergency_lighting(on: bool) -> void:
 	Game.emergency = on
 	for e in ex.emergency_lights:
-		var l: OmniLight3D = e[0]
+		var l: Light3D = e[0]
 		l.visible = on
 		l.light_energy = 2.4 if on else 0.0
 		(e[1] as MeshInstance3D).material_override = MatLib.flat(Color(1.0, 0.2, 0.1), 0.0, 0.4, Color(1.0, 0.1, 0.04), 6.0) if on else MatLib.flat(Color(0.35, 0.05, 0.03), 0.0, 0.4)
@@ -503,7 +507,7 @@ func _process(delta: float) -> void:
 		# Beacons pulse (rotating-beacon rhythm, offset per light).
 		var tt := Time.get_ticks_msec() / 1000.0
 		for k in ex.emergency_lights.size():
-			var l: OmniLight3D = ex.emergency_lights[k][0]
+			var l: Light3D = ex.emergency_lights[k][0]
 			l.light_energy = 2.4 + 1.8 * sin(tt * 3.4 + k * 0.9)
 	if not Game.is_active() or Game.player == null:
 		return

@@ -285,17 +285,32 @@ func _brace(a: Vector3, c: Vector3, w: float, mat: Material) -> void:
 
 
 ## Red emergency beacon: dark until Mission switches emergency lighting on.
-func emergency(pos: Vector3) -> void:
-	var l := OmniLight3D.new()
+## `mount`: distance from the beacon to the wall face behind it; a steel
+## shelf bracket carries the beacon there (they used to hover off the walls).
+func emergency(pos: Vector3, facing := Vector3.ZERO, shadow := false, mount := 0.0) -> void:
+	var l: Light3D
+	if facing != Vector3.ZERO:
+		var sl := SpotLight3D.new()
+		sl.spot_range = 9.0
+		sl.spot_angle = 82.0
+		sl.spot_attenuation = 1.2
+		sl.spot_angle_attenuation = 0.6
+		l = sl
+	else:
+		var ol := OmniLight3D.new()
+		ol.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
+		ol.omni_range = 9.0
+		ol.omni_attenuation = 1.2
+		l = ol
 	l.light_color = Color(1.0, 0.1, 0.04)
 	l.light_energy = 0.0
-	l.omni_range = 9.0
-	l.omni_attenuation = 1.2
-	l.shadow_enabled = false
+	l.shadow_enabled = shadow
 	l.light_volumetric_fog_energy = 1.5
 	l.visible = false
 	b.add_child(l)
 	l.position = pos
+	if facing != Vector3.ZERO:
+		l.look_at(pos + facing, Vector3.UP)
 	var mi := MeshInstance3D.new()
 	var cm := CylinderMesh.new()
 	cm.top_radius = 0.07
@@ -306,6 +321,13 @@ func emergency(pos: Vector3) -> void:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	b.add_child(mi)
 	mi.position = pos + Vector3(0, 0.1, 0)
+	if facing != Vector3.ZERO and mount > 0.05:
+		var steel := MatLib.flat(Color(0.13, 0.135, 0.14), 0.8, 0.45)
+		var t := Vector3(-facing.z, 0, facing.x)
+		var wall := pos - facing * mount
+		b.box(wall - t * 0.06 + Vector3(0, -0.01, 0), pos + facing * 0.09 + t * 0.06 + Vector3(0, 0.02, 0), steel, "metal", false, null, false)
+		b.box(wall - t * 0.07 + Vector3(0, -0.14, 0), wall + t * 0.07 + facing * 0.02 + Vector3(0, 0.02, 0), steel, "metal", false, null, false)
+		b.box(wall + Vector3(0, -0.13, 0) - t * 0.008, pos + facing * 0.02 + Vector3(0, -0.01, 0) + t * 0.008, steel, "metal", false, null, false)
 	emergency_lights.append([l, mi])
 
 
@@ -462,20 +484,25 @@ func _pump_station() -> void:
 	steam_valve.volume = fv
 	steam_valve.done.connect(_on_steam)
 	# Lighting: sodium high bays, gallery lamps, cold bounce off the water.
-	light_room("pump", [Vector3(-19, 8.4, -8), Vector3(-11, 8.4, -8), Vector3(-19, 8.4, -16), Vector3(-11, 8.4, -16), Vector3(-19, 8.4, -23), Vector3(-11, 8.4, -23)], Color(1.0, 0.8, 0.6), 17.0, 14.0, 54)
-	for p in [Vector3(-23.5, 3.2, -8.0), Vector3(-23.5, 3.2, -16.8), Vector3(-6.5, 3.2, -11.0), Vector3(-6.5, 3.2, -24.5)]:
-		b.light_omni(p, Color(1.0, 0.84, 0.62), 1.3, 7.5, false, "pump")
+	light_room("pump", [Vector3(-19, 8.4, -8), Vector3(-11, 8.4, -8), Vector3(-19, 8.4, -16), Vector3(-11, 8.4, -16), Vector3(-19, 8.4, -23), Vector3(-11, 8.4, -23)], Color(1.0, 0.8, 0.6), 17.0, 14.0, 54, 0.45, [1])
+	b.light_omni(Vector3(-23.5, 3.2, -8.0), Color(1.0, 0.84, 0.62), 1.3, 7.5, false, "pump")   # on the wall rib at z -7.85
+	wall_lamp(Vector3(-23.85, 3.2, -16.8), Vector3.RIGHT, Color(1.0, 0.84, 0.62), 1.3, 7.5, "pump")
+	# East wall: the first lamp moves away from the office's party wall (at z -11
+	# it lit the office through it) to z -16.8, opposite the west-wall lamp; no
+	# shadow casting needed.
+	for p in [Vector3(-6.15, 3.2, -16.8), Vector3(-6.15, 3.2, -24.5)]:
+		wall_lamp(p, Vector3.LEFT, Color(1.0, 0.84, 0.62), 1.3, 7.5, "pump")
 	for x in [-20.0, -14.0, -8.0]:
-		b.light_omni(Vector3(x, GALLERY_Y + 2.4, -29.4), Color(1.0, 0.86, 0.7), 1.6, 6.0, false, "pump")
+		wall_lamp(Vector3(x, GALLERY_Y + 2.4, -29.85), Vector3.BACK, Color(1.0, 0.86, 0.7), 1.6, 6.0, "pump")
 	b.light_omni(Vector3(-15.0, 0.8, -8.0), Color(0.4, 0.6, 0.75), 0.7, 8.0, false, "pump", false)
-	emergency(Vector3(-6.5, 2.6, -26.5))
-	emergency(Vector3(-23.5, 2.6, -14.0))
-	emergency(Vector3(-15.0, GALLERY_Y + 2.6, -29.6))
+	emergency(Vector3(-6.5, 2.6, -26.5), Vector3.LEFT, false, 0.35)
+	emergency(Vector3(-23.5, 2.6, -14.0), Vector3.RIGHT, false, 0.35)
+	emergency(Vector3(-15.0, GALLERY_Y + 2.6, -29.6), Vector3.BACK, false, 0.25)
 	b.breaker("pump", Vector3(-23.75, 1.5, -15.5), 90)
-	b.place_sign("PUMP STATION 2 - COOLING WATER", Vector3(-15.0, 7.2, -29.83), 0, 90, Color(0.82, 0.8, 0.74), 0.006)
+	b.place_sign("PUMP STATION 2 - COOLING WATER", Vector3(-15.0, 8.0, -29.83), 0, 90, Color(0.82, 0.8, 0.74), 0.006)   # above the pipe rack
 	b.place_sign("CAUTION: SCALDING STEAM", Vector3(-6.17, 2.5, -18.5), -90, 30, Color(0.9, 0.75, 0.2))
 	b.place_sign("SECURITY", Vector3(-6.17, 2.6, -9.6), -90, 36)
-	b.terminal(Vector3(-21.0, GALLERY_Y + 1.3, -29.78), 180, "PUMP LOG", PackedStringArray([
+	b.terminal(Vector3(-21.0, GALLERY_Y + 1.3, -29.81), 180, "PUMP LOG", PackedStringArray([
 		"PUMP 2-B: flow loss since the relay sync fault.",
 		"Night shift sealed the office and left through the crawlway.",
 		"If units come in, purge steam from the valve by the east door."]))
@@ -498,7 +525,7 @@ func _tunnel_and_crawl() -> void:
 	b.make_door("D9", Vector3(6, 0, -29.21), false)
 	for x in [-3.0, 2.5]:
 		b.light_omni(Vector3(x, 2.95, -28.5), Color(1.0, 0.86, 0.7), 1.4, 5.0, false, "tunnel")
-	emergency(Vector3(0.0, 2.7, -27.3))
+	emergency(Vector3(0.0, 2.7, -27.3), Vector3.FORWARD, false, 0.15)
 	b.place_sign("SERVICE TUNNEL S-2 / PUMP STN", Vector3(6.17, 2.75, -28.5), 90, 32)
 	b.prop("crate", Vector3(-1.5, 0, -29.3), 0, true)
 	# Crawlway: dock west wall -> pump station. 1.25 m clear: crouch only, and
@@ -539,7 +566,10 @@ func _tunnel_and_crawl() -> void:
 		b.box(Vector3(-8.7, 0, -2.85), Vector3(-8.5, 1.6, 0.5), cav, "concrete", false)
 		b.box(Vector3(-11.5, 1.5, -2.85), Vector3(-8.5, 1.7, 0.8), cav, "concrete", false)
 	for p in [Vector3(-4.0, 1.0, 2.0), Vector3(-10.0, 1.0, 2.0), Vector3(-10.0, 1.0, -1.5)]:
-		b.light_omni(p, Color(1.0, 0.8, 0.55), 0.2, 2.8, false, "crawl", false)
+		var cl := b.light_omni(p, Color(1.0, 0.8, 0.55), 0.04, 2.8, false, "crawl", false)   # 0.2 blew out the slatted duct walls (dock spill lights the mouth)
+		cl.light_specular = 0.12   # the slat edges flared white under auto-exposure
+		cl.omni_attenuation = 0.7   # flatter falloff: less hot-spot next to each lamp
+		cl.omni_range = 3.4
 	b.place_sign("MAINTENANCE CRAWLWAY - PUMP STN", Vector3(0.17, 1.62, 2.0), 90, 30, Color(0.9, 0.75, 0.2), 0.0035)
 
 
@@ -592,13 +622,13 @@ func _switchgear() -> void:
 	breakers.append(_breaker_station(Vector3(41.0, 0.0, -2.15), 180.0, "A"))
 	breakers.append(_breaker_station(Vector3(49.85, GALLERY_Y, -20.0), -90.0, "B"))
 	# Lights: cool high bays, amber beacons over the transformers.
-	light_room("switchgear", [Vector3(37, 9.4, -8), Vector3(44, 9.4, -8), Vector3(37, 9.4, -19), Vector3(44, 9.4, -19)], Color(0.85, 0.9, 1.0), 15.0, 14.0, 46)
+	light_room("switchgear", [Vector3(37, 9.4, -8), Vector3(44, 9.4, -8), Vector3(37, 9.4, -19), Vector3(44, 9.4, -19)], Color(0.85, 0.9, 1.0), 15.0, 14.0, 46, 0.45)
 	for x in [39.6, 44.2]:
 		b.light_omni(Vector3(x, 5.0, -25.6), Color(1.0, 0.55, 0.15), 0.9, 4.0, false, "switchgear", false)
 	b.light_omni(Vector3(49.0, GALLERY_Y + 2.5, -16.0), Color(1.0, 0.86, 0.7), 1.2, 6.0, false, "switchgear")
-	emergency(Vector3(32.6, 2.8, -16.0))
-	emergency(Vector3(49.6, 2.8, -5.0))
-	emergency(Vector3(40.5, 3.0, -12.5))
+	emergency(Vector3(32.6, 2.8, -16.0), Vector3.RIGHT, false, 0.19)   # on the wall rib at z -15.85
+	emergency(Vector3(49.6, 2.8, -5.0), Vector3.LEFT, false, 0.25)
+	emergency(Vector3(40.5, 2.34, -15.0))   # on top of the south line-up (it hung in mid-air over the aisle)
 	b.breaker("switchgear", Vector3(32.25, 1.5, -21.5), 90)
 	b.place_sign("SWITCHGEAR HALL 9-B / 132 kV", Vector3(41.0, 7.5, -2.17), 180, 96, Color(0.82, 0.8, 0.74), 0.006)
 	b.place_sign("DANGER - HIGH VOLTAGE", Vector3(42.0, 5.6, -29.83), 0, 60, Color(0.95, 0.8, 0.2), 0.005)
@@ -770,9 +800,9 @@ func _core() -> void:
 	b.add_child(core_glow)
 	core_glow.global_position = c + Vector3(0, 5.0, 0)
 	b.light_omni(Vector3(17.0, 3.4, -40.0), Color(1.0, 0.86, 0.7), 1.0, 6.0, false, "antechamber")
-	emergency(Vector3(17.0, 3.4, -41.6))
-	emergency(Vector3(12.4, 3.2, -52.0))
-	emergency(Vector3(31.6, 3.2, -52.0))
+	emergency(Vector3(17.0, 3.4, -41.6), Vector3.BACK, true, 0.25)   # shadowed: faces the servers wall
+	emergency(Vector3(12.4, 3.2, -52.0), Vector3.RIGHT, false, 0.25)
+	emergency(Vector3(31.6, 3.2, -52.0), Vector3.LEFT, false, 0.25)
 	b.place_sign("RELAY NINE", Vector3(22.0, 9.5, -61.83), 0, 160, Color(0.75, 0.74, 0.7), 0.008)
 
 
