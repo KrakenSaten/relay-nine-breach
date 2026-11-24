@@ -55,6 +55,18 @@ func run(m: Node) -> void:
 			return
 	elif "--rv_traffic" in args:
 		await load("res://scripts/test/m4_review.gd").new(self).traffic()
+	elif "--rv_gunaudio" in args:
+		await load("res://scripts/test/m43_tests.gd").new(self).gunaudio()
+	elif "--rv_geo" in args:
+		await load("res://scripts/test/m43_tests.gd").new(self).geo()
+	elif "--rv_crawl" in args:
+		await load("res://scripts/test/m43_tests.gd").new(self).crawl()
+	elif "--rv_wallgap" in args:
+		await load("res://scripts/test/m43_tests.gd").new(self).wallgap()
+	elif "--rv_look" in args:
+		await load("res://scripts/test/m43_tests.gd").new(self).look()
+	elif "--rv_tour" in args:
+		await load("res://scripts/test/m43_tests.gd").new(self).tour()
 	elif "--rv_ammo" in args:
 		await load("res://scripts/test/m4_ammo_tests.gd").new(self).ammo()
 	elif "--rv_ammocp" in args:
