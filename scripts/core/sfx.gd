@@ -5,6 +5,8 @@ extends Node
 const DIR := "res://assets/audio/"
 const POOL_3D := 40
 const POOL_2D := 12
+const POOL_WEAPON := 40     # the player's gunfire layers (close, mechanics, room response)
+const POOL_SLAP := 12       # positional early reflections from nearby walls
 
 var _cache := {}
 var _variants := {}
@@ -12,6 +14,10 @@ var _pool3d: Array[AudioStreamPlayer3D] = []
 var _pool2d: Array[AudioStreamPlayer] = []
 var _i3 := 0
 var _i2 := 0
+var _poolw: Array[AudioStreamPlayer] = []
+var _pools: Array[AudioStreamPlayer3D] = []
+var _iw := 0
+var _is := 0
 
 
 func _ready() -> void:
@@ -32,6 +38,23 @@ func _ready() -> void:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
 		_pool2d.append(p)
+	# Gunfire bypasses the generic room-reverb zones: the room response is an
+	# authored layer chosen by room size (no doubled reverb).
+	for i in POOL_WEAPON:
+		var p := AudioStreamPlayer.new()
+		p.bus = "Weapons"
+		add_child(p)
+		_poolw.append(p)
+	for i in POOL_SLAP:
+		var p := AudioStreamPlayer3D.new()
+		p.bus = "Weapons"
+		p.area_mask = 0
+		p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_DISABLED
+		p.max_distance = 0.0
+		p.panning_strength = 1.0
+		p.attenuation_filter_db = 0.0
+		add_child(p)
+		_pools.append(p)
 
 
 func stream(name: String) -> AudioStream:
@@ -78,6 +101,33 @@ func play(name: String, volume_db := 0.0, pitch_var := 0.04) -> void:
 	p.stream = s
 	p.volume_db = volume_db
 	p.pitch_scale = 1.0 + randf_range(-pitch_var, pitch_var)
+	p.play()
+
+
+## One layer of the player's own gunfire (2D, Weapons bus).
+func weapon_layer(name: String, volume_db := 0.0, pitch_var := 0.03) -> void:
+	var s := stream(name)
+	if s == null:
+		return
+	var p := _poolw[_iw]
+	_iw = (_iw + 1) % POOL_WEAPON
+	p.stream = s
+	p.volume_db = volume_db
+	p.pitch_scale = 1.0 + randf_range(-pitch_var, pitch_var)
+	p.play()
+
+
+## A positional early reflection (heard from the wall's direction).
+func weapon_slap(name: String, pos: Vector3, volume_db: float) -> void:
+	var s := stream(name)
+	if s == null:
+		return
+	var p := _pools[_is]
+	_is = (_is + 1) % POOL_SLAP
+	p.stream = s
+	p.global_position = pos
+	p.volume_db = volume_db
+	p.pitch_scale = 1.0 + randf_range(-0.03, 0.03)
 	p.play()
 
 
@@ -129,6 +179,11 @@ const REVERBS := {
 
 
 func _setup_buses() -> void:
+	if AudioServer.get_bus_index("Weapons") == -1:
+		AudioServer.add_bus()
+		var wi := AudioServer.bus_count - 1
+		AudioServer.set_bus_name(wi, "Weapons")
+		AudioServer.set_bus_send(wi, "Master")
 	for name in REVERBS:
 		if AudioServer.get_bus_index(name) != -1:
 			continue

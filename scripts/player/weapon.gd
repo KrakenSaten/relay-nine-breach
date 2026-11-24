@@ -803,9 +803,83 @@ func _rl_event(key: String, at: float, snd: String, fallback: String, vol: float
 		_play_first([snd, fallback], vol)
 
 
-## Gunshot = dry shot (+ bolt-carrier mechanics for the rifle) + an indoor
-## reflection tail chosen by the room the player is in.
+## Room size class -> authored room response (shot_room_<class>).
+const ROOM_CLASS := {"office": "small", "tunnel": "small", "antechamber": "small", "passage": "small", "crawl": "duct",
+	"corridor": "medium", "servers": "medium", "control": "medium",
+	"hall": "large", "dock": "large", "pump": "large", "switchgear": "large", "core": "huge"}
+## Layer levels (dB). Close layers are mastered to -1 dBFS peak.
+const LV_CLOSE := -3.0
+const LV_SUPP := -3.0
+const LV_PISTOL := -4.0
+const LV_MECH_OPEN := -9.0
+const LV_MECH_SUPP := -7.0
+const LV_MECH_PISTOL := -10.0
+const LV_ROOM := -1.0
+const LV_SLAP := -4.0
+var _last_shot_t := -10.0
+var _burst_n := 0
+
+
+## Gunshot (M4.3): close signature + mechanical action + the authored response
+## of the room size the player is in, plus delayed early reflections from
+## nearby walls, positioned at the walls.
 func _shot_audio(supp: bool) -> void:
+	if not _has_snd("rifle_close"):
+		_shot_audio_m3(supp)
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	_burst_n = _burst_n + 1 if now - _last_shot_t < 0.2 else 0
+	_last_shot_t = now
+	var rifle := id == "rifle"
+	var room := Game.room_at(player.global_position + Vector3.UP)
+	var cls: String = ROOM_CLASS.get(room, "medium")
+	if rifle:
+		Sfx.weapon_layer("rifle_supp_close" if supp else "rifle_close", LV_SUPP if supp else LV_CLOSE, 0.025)
+		Sfx.weapon_layer("rifle_mech", LV_MECH_SUPP if supp else LV_MECH_OPEN, 0.04)
+	else:
+		Sfx.weapon_layer("pistol_close", LV_PISTOL, 0.025)
+		Sfx.weapon_layer("pistol_mech", LV_MECH_PISTOL, 0.04)
+	# Sustained fire: the room keeps ringing, so each new tail is a little lower.
+	var tail_db := LV_ROOM - minf(6.0, _burst_n * 0.8)
+	Sfx.weapon_layer("shot_room_%s%s" % ["supp_" if supp else "", cls], tail_db, 0.02)
+	_wall_slaps(supp, cls)
+
+
+## Early reflections from walls within 14 m (left, right, behind, ahead,
+## ceiling): delayed by the real path length and played from the wall.
+func _wall_slaps(supp: bool, cls: String) -> void:
+	if cls in ["large", "huge"] and _burst_n > 0:
+		return   # the hall layers carry their own slapback during bursts
+	var cam: Camera3D = player.camera
+	var o := cam.global_position
+	var b := cam.global_transform.basis
+	var space: PhysicsDirectSpaceState3D = player.get_world_3d().direct_space_state
+	var dirs := [b.x, -b.x, b.z, -b.z, Vector3.UP]
+	var n := 0
+	for d in dirs:
+		var dd: Vector3 = d
+		dd.y = 0.0 if d != Vector3.UP else 1.0
+		dd = dd.normalized()
+		var q := PhysicsRayQueryParameters3D.create(o, o + dd * 14.0, 1)
+		q.exclude = [player.get_rid()]
+		var h: Dictionary = space.intersect_ray(q)
+		if h.is_empty():
+			continue
+		var dist: float = o.distance_to(h.position)
+		if dist < 0.6:
+			continue
+		var delay := 2.0 * dist / 343.0
+		var vol := LV_SLAP - 20.0 * log(maxf(dist, 1.0) * 2.0) / log(10.0) + 6.0
+		var pos: Vector3 = h.position
+		var snd := "shot_slap_supp" if supp else "shot_slap"
+		get_tree().create_timer(delay, false).timeout.connect(func(): Sfx.weapon_slap(snd, pos, vol))
+		n += 1
+		if n >= 4:
+			break
+
+
+## M3 layering, kept as a fallback when the M4.3 layers are absent.
+func _shot_audio_m3(supp: bool) -> void:
 	var base: String = def.shot_sound_supp if supp else def.shot_sound
 	if not supp and _has_snd(base.replace("_shot", "_shot_dry")):
 		Sfx.play_local(base.replace("_shot", "_shot_dry"), -1.0, 0.05)
