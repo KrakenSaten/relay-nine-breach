@@ -212,7 +212,7 @@ func _world_aabb(n: Node3D) -> AABB:
 func wall_x(z: float, x0: float, x1: float, h: float, openings := [], upper: Material = null, lower: Material = null) -> void:
 	var segs := _split(x0, x1, openings)
 	for s in segs:
-		_wall_piece(Vector3(s[0], 0, z - T / 2), Vector3(s[1], h, z + T / 2), true, upper, lower)
+		_wall_piece(Vector3(s[0], 0, z - T / 2), Vector3(s[1], h, z + T / 2), true, upper, lower, _trim_inset(s[0], openings, 1), _trim_inset(s[1], openings, 0))
 	for o in openings:
 		_wall_piece(Vector3(o[0], o[2], z - T / 2), Vector3(o[1], h, z + T / 2), true, upper, null)
 		if o.size() < 4 or o[3]:
@@ -222,11 +222,22 @@ func wall_x(z: float, x0: float, x1: float, h: float, openings := [], upper: Mat
 func wall_z(x: float, z0: float, z1: float, h: float, openings := [], upper: Material = null, lower: Material = null) -> void:
 	var segs := _split(z0, z1, openings)
 	for s in segs:
-		_wall_piece(Vector3(x - T / 2, 0, s[0]), Vector3(x + T / 2, h, s[1]), false, upper, lower)
+		_wall_piece(Vector3(x - T / 2, 0, s[0]), Vector3(x + T / 2, h, s[1]), false, upper, lower, _trim_inset(s[0], openings, 1), _trim_inset(s[1], openings, 0))
 	for o in openings:
 		_wall_piece(Vector3(x - T / 2, o[2], o[0]), Vector3(x + T / 2, h, o[1]), false, upper, null)
 		if o.size() < 4 or o[3]:
 			_frame(Vector3(x, 0, o[0]), Vector3(x, o[2], o[1]), false)
+
+
+## The M2 kit door frame has 0.1 m face trims either side of a 2.2 m door
+## opening: the wainscot beside such an opening ends at the trim.
+func _trim_inset(edge: float, openings: Array, side: int) -> float:
+	if not ResourceLoader.exists("res://assets/models/env_kit.glb"):
+		return 0.0
+	for o in openings:
+		if absf(o[2] - 2.2) < 0.01 and absf(o[side] - edge) < 0.001:
+			return 0.098
+	return 0.0
 
 
 func _split(a: float, b: float, openings: Array) -> Array:
@@ -243,13 +254,14 @@ func _split(a: float, b: float, openings: Array) -> Array:
 	return segs
 
 
-func _wall_piece(a: Vector3, b: Vector3, along_x: bool, upper: Material, lower: Material) -> void:
+func _wall_piece(a: Vector3, b: Vector3, along_x: bool, upper: Material, lower: Material, inset_lo := 0.0, inset_hi := 0.0) -> void:
 	box(a, b, upper if upper else MatLib.wall_concrete())
 	if b.y - a.y > 1.4 and a.y < 0.1:
 		# Industrial wainscot band + cap rail, both faces.
 		var pad := 0.025
-		var lo := Vector3(a.x - (0 if along_x else pad), 0, a.z - (pad if along_x else 0))
-		var hi := Vector3(b.x + (0 if along_x else pad), 1.15, b.z + (pad if along_x else 0))
+		var ext := 0.002   # ends sit 2 mm proud of the wall ends: no coplanar faces at the jambs
+		var lo := Vector3(a.x - (ext - inset_lo if along_x else pad), 0, a.z - (pad if along_x else ext - inset_lo))
+		var hi := Vector3(b.x + (ext - inset_hi if along_x else pad), 1.15, b.z + (pad if along_x else ext - inset_hi))
 		box(lo, hi, lower if lower else MatLib.wall_lower(), "metal", false)
 		box(Vector3(lo.x - (0 if along_x else 0.02), 1.15, lo.z - (0.02 if along_x else 0)), Vector3(hi.x + (0 if along_x else 0.02), 1.21, hi.z + (0.02 if along_x else 0)), MatLib.flat(Color(0.08, 0.085, 0.09), 0.8, 0.4), "metal", false)
 
@@ -268,21 +280,60 @@ func _frame(a: Vector3, b: Vector3, along_x: bool) -> void:
 			_floor_stripe(Vector3(a.x + 0.75, 0.005, a.z), Vector3(a.x + 0.9, 0.012, b.z))
 		return
 	if along_x:
-		box(Vector3(a.x - 0.08, 0, a.z - d), Vector3(a.x, b.y + 0.08, a.z + d), m, "metal")
-		box(Vector3(b.x, 0, a.z - d), Vector3(b.x + 0.08, b.y + 0.08, a.z + d), m, "metal")
-		box(Vector3(a.x - 0.08, b.y, a.z - d), Vector3(b.x + 0.08, b.y + 0.1, a.z + d), m, "metal", false)
+		box(Vector3(a.x - 0.08, 0, a.z - d), Vector3(a.x + 0.004, b.y + 0.08, a.z + d), m, "metal")
+		box(Vector3(b.x - 0.004, 0, a.z - d), Vector3(b.x + 0.08, b.y + 0.08, a.z + d), m, "metal")
+		box(Vector3(a.x - 0.08, b.y - 0.004, a.z - d), Vector3(b.x + 0.08, b.y + 0.1, a.z + d), m, "metal", false)
 		_floor_stripe(Vector3(a.x, 0.005, a.z - 0.9), Vector3(b.x, 0.012, a.z - 0.75))
 		_floor_stripe(Vector3(a.x, 0.005, a.z + 0.75), Vector3(b.x, 0.012, a.z + 0.9))
 	else:
-		box(Vector3(a.x - d, 0, a.z - 0.08), Vector3(a.x + d, b.y + 0.08, a.z), m, "metal")
-		box(Vector3(a.x - d, 0, b.z), Vector3(a.x + d, b.y + 0.08, b.z + 0.08), m, "metal")
-		box(Vector3(a.x - d, b.y, a.z - 0.08), Vector3(a.x + d, b.y + 0.1, b.z + 0.08), m, "metal", false)
+		box(Vector3(a.x - d, 0, a.z - 0.08), Vector3(a.x + d, b.y + 0.08, a.z + 0.004), m, "metal")
+		box(Vector3(a.x - d, 0, b.z - 0.004), Vector3(a.x + d, b.y + 0.08, b.z + 0.08), m, "metal")
+		box(Vector3(a.x - d, b.y - 0.004, a.z - 0.08), Vector3(a.x + d, b.y + 0.1, b.z + 0.08), m, "metal", false)
 		_floor_stripe(Vector3(a.x - 0.9, 0.005, a.z), Vector3(a.x - 0.75, 0.012, b.z))
 		_floor_stripe(Vector3(a.x + 0.75, 0.005, a.z), Vector3(a.x + 0.9, 0.012, b.z))
 
 
 func _floor_stripe(a: Vector3, b: Vector3) -> void:
-	box(a, b, MatLib.hazard(), "concrete", false, null, false)
+	box(a, Vector3(b.x, b.y + 0.0015, b.z), MatLib.hazard(), "concrete", false, null, false)
+
+
+## Threaded drop rods that carry a cable tray's own 0.6 m kit hangers on up to
+## the soffit (trays hung lower than their kit rods reach no longer float).
+func drop_rods(tray: Vector3, yaw_deg: float, len_scale: float, soffit_y: float, along := 1.0, across := 0.27) -> void:
+	var y0 := tray.y + 0.58
+	var h := soffit_y - y0
+	if h < 0.05:
+		return
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.011     # M12 drop rod + coupling: reads at hall distances
+	cm.bottom_radius = 0.011
+	cm.height = h
+	cm.radial_segments = 6
+	cm.rings = 1
+	var mat := MatLib.flat(Color(0.6, 0.61, 0.62), 0.5, 0.5)   # galvanized, catches the high-bay light
+	var bs := Basis(Vector3.UP, deg_to_rad(yaw_deg))
+	for lx in [-along, along]:
+		for lz in [-across, across]:
+			var mi := MeshInstance3D.new()
+			mi.mesh = cm
+			mi.material_override = mat
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(mi)
+			mi.position = tray + bs * Vector3(lx * len_scale, 0, lz) + Vector3(0, 0.58 + h * 0.5, 0)
+
+
+## Clerestory window high in the turbine hall's east wall (light from the
+## switchgear hall behind it): framed wired glass instead of a bare glowing slab.
+func _clerestory(z: float, glow: Color) -> void:
+	var steel := MatLib.flat(Color(0.09, 0.095, 0.1), 0.8, 0.45)
+	box(Vector3(31.83, 7.4, z - 1.2), Vector3(31.845, 8.6, z + 1.2), MatLib.flat(glow * 0.3, 0.0, 0.12, glow, 1.15), "concrete", false, null, false)
+	for r in [[Vector3(31.79, 7.32, z - 1.28), Vector3(31.85, 7.4, z + 1.28)],     # sill
+			[Vector3(31.79, 8.6, z - 1.28), Vector3(31.85, 8.68, z + 1.28)],        # head
+			[Vector3(31.79, 7.4, z - 1.28), Vector3(31.85, 8.6, z - 1.2)],          # jambs
+			[Vector3(31.79, 7.4, z + 1.2), Vector3(31.85, 8.6, z + 1.28)],
+			[Vector3(31.8, 7.4, z - 0.035), Vector3(31.85, 8.6, z + 0.035)],        # mullion
+			[Vector3(31.805, 7.97, z - 1.2), Vector3(31.85, 8.03, z + 1.2)]]:       # transom
+		box(r[0], r[1], steel, "metal", false, null, false)
 
 
 func ceiling(x0: float, z0: float, x1: float, z1: float, y: float, mat: Material = null) -> void:
@@ -446,6 +497,23 @@ func terminal(pos: Vector3, yaw_deg: float, title: String, lines: PackedStringAr
 	scr.material_override = MatLib.flat(Color(0.02, 0.05, 0.05), 0.0, 0.2, Color(0.3, 0.75, 0.6), 1.8)
 	scr.position = Vector3(0, 0.2, 0)
 	t.add_child(scr)
+	var housing := MatLib.flat(Color(0.05, 0.052, 0.055), 0.3, 0.5)
+	var bez := MeshInstance3D.new()
+	var bzm := BoxMesh.new()
+	bzm.size = Vector3(0.62, 0.42, 0.085)
+	bez.mesh = bzm
+	bez.material_override = housing
+	bez.position = Vector3(0, 0.2, 0.0175)
+	t.add_child(bez)
+	if pos.y < 1.1:   # desk terminal: neck and foot down to the desk top (0.755 m)
+		for part in [[Vector3(0.05, 0.3, 0.04), Vector3(0, -0.11, 0.045)], [Vector3(0.24, 0.012, 0.17), Vector3(0, -0.189, 0.045)]]:
+			var st := MeshInstance3D.new()
+			var stm := BoxMesh.new()
+			stm.size = part[0]
+			st.mesh = stm
+			st.material_override = housing
+			st.position = part[1]
+			t.add_child(st)
 	var lbl := Label3D.new()
 	lbl.text = title + "\n> _"
 	lbl.font_size = 18
@@ -587,7 +655,7 @@ func _dock() -> void:
 	if not m3:
 		prop("pipe", Vector3(3.0, 5.2, 0.5), 90, false, "metal", false)
 		prop("pipe", Vector3(10.0, 5.2, 0.5), 90, false, "metal", false)
-	terminal(Vector3(15.7, 1.3, 3.4), 90, "SHIFT LOG 2207", PackedStringArray([
+	terminal(Vector3(15.785, 1.3, 3.4), 90, "SHIFT LOG 2207", PackedStringArray([
 		"SHIFT LOG 22:07 - Relay Nine sync fault. Security units",
 		"rejected manual override and sealed the control wing.",
 		"Two techs missing. Do NOT approach the Tesla units."]))
@@ -699,7 +767,7 @@ func _hall() -> void:
 	for x in [9.6, 31.4]:
 		for z in [-13.7]:
 			box(Vector3(x - 0.35, 0, z - 0.35), Vector3(x + 0.35, 9.0, z + 0.35), MatLib.wall_concrete(), "concrete")
-	breaker("hall", Vector3(9.3, 1.5, -20.0), 90)
+	breaker("hall", Vector3(9.25, 1.5, -20.0), 90)
 	place_sign("TURBINE HALL - SUBSTATION 9-B", Vector3(20.5, 7.0, -2.17), 180, 96, Color(0.82, 0.8, 0.74), 0.006)
 	place_sign("RELAY CONTROL", Vector3(28.0, 3.0, -25.83), 180, 48, Color(0.9, 0.3, 0.2))
 	place_sign("DATA CENTRE", Vector3(14.0, 3.0, -25.83), 180, 48)
@@ -751,11 +819,11 @@ func _control() -> void:
 	# Desks and monitors
 	prop("desk", Vector3(23.5, 0, -32.0), 90, true)
 	prop("desk", Vector3(30.5, 0, -32.0), -90, true)
-	prop("server_rack", Vector3(32.5, 0, -38.5), -90, false)
-	prop("server_rack", Vector3(32.5, 0, -37.8), -90, false)
+	prop("server_rack", Vector3(32.33, 0, -38.5), -90, false)   # backs were 16 cm into the wall
+	prop("server_rack", Vector3(32.33, 0, -37.8), -90, false)
 	prop("barrier", Vector3(27.0, 0, -29.0), 0, true, "concrete")
 	# Wall screen
-	box(Vector3(24.0, 1.8, -39.84), Vector3(30.0, 3.8, -39.8), MatLib.flat(Color(0.02, 0.03, 0.04), 0.0, 0.15, Color(0.2, 0.45, 0.6), 0.22), "metal", false)
+	box(Vector3(24.0, 1.8, -39.84), Vector3(30.0, 3.8, -39.8), MatLib.flat(Color(0.02, 0.03, 0.04), 0.0, 0.55, Color(0.2, 0.45, 0.6), 0.22), "metal", false)
 	place_sign("RELAY NINE // SYNC FAULT", Vector3(27.0, 3.3, -39.78), 0, 64, Color(0.9, 0.35, 0.25))
 	place_sign("SECURITY OVERRIDE: AUTONOMOUS", Vector3(27.0, 2.6, -39.78), 0, 40, Color(0.6, 0.8, 0.9))
 	terminal(Vector3(23.5, 0.95, -32.0), -90, "RELAY 9", PackedStringArray([
@@ -798,9 +866,9 @@ func _lights() -> void:
 		if i == 4:
 			l.set_meta("flicker", true)
 	light_spot(Vector3(31.6, 8.0, -12.0), moon, 9.0, 26.0, 18, true, "", Vector3(-1.0, -0.75, 0.15).normalized(), "")
-	light_spot(Vector3(31.6, 8.0, -20.0), moon, 7.0, 26.0, 16, false, "", Vector3(-1.0, -0.8, -0.1).normalized(), "")
-	for z in [-12.0, -20.0]:
-		box(Vector3(31.82, 7.4, z - 1.2), Vector3(31.86, 8.6, z + 1.2), MatLib.flat(moon, 0.0, 0.3, moon, 3.0), "concrete", false, null, false)
+	light_spot(Vector3(31.6, 8.0, -21.85), moon, 7.0, 26.0, 16, false, "", Vector3(-1.0, -0.8, -0.1).normalized(), "")
+	for z in [-12.0, -21.85]:
+		_clerestory(z, moon)
 	light_omni(Vector3(15.0, 2.4, -8.0), Color(1.0, 0.55, 0.1), 0.9, 3.0, false, "hall", false)
 	light_omni(Vector3(15.0, 2.4, -15.0), Color(1.0, 0.55, 0.1), 0.9, 3.0, false, "hall", false)
 	# SERVERS: cold strips + rack glow
@@ -810,10 +878,10 @@ func _lights() -> void:
 	light_omni(Vector3(18.0, 1.0, -34.0), Color(0.3, 0.5, 1.0), 0.5, 4.0, false, "servers", false)
 	# CONTROL
 	var cfix := "" if ResourceLoader.exists("res://assets/models/dock_kit.glb") else "strip"
-	light_spot(Vector3(24.6, 4.25, -33.0), cool, 6.5, 7.0, 78, true, "control", Vector3.DOWN, cfix)
-	light_spot(Vector3(27.0, 4.25, -37.8), cool, 5.0, 6.0, 75, false, "control", Vector3.DOWN, cfix)
-	light_spot(Vector3(27.0, 4.25, -28.2), cool, 4.0, 6.0, 75, false, "control", Vector3.DOWN, cfix)
-	light_spot(Vector3(29.4, 4.25, -33.0), cool, 6.5, 7.0, 78, false, "control", Vector3.DOWN, cfix)
+	light_spot(Vector3(24.15, 4.25, -33.45), cool, 6.5, 7.0, 78, true, "control", Vector3.DOWN, cfix)
+	light_spot(Vector3(26.55, 4.25, -38.25), cool, 5.0, 6.0, 75, false, "control", Vector3.DOWN, cfix)
+	light_spot(Vector3(26.55, 4.25, -28.65), cool, 4.0, 6.0, 75, false, "control", Vector3.DOWN, cfix)
+	light_spot(Vector3(28.95, 4.25, -33.45), cool, 6.5, 7.0, 78, false, "control", Vector3.DOWN, cfix)
 	# Workstation glow from the operator screens
 	light_omni(Vector3(27.0, 1.3, -33.6), Color(0.45, 0.75, 0.85), 0.7, 3.5, false, "control", false)
 	_reflection_probes()

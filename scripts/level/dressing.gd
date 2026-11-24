@@ -192,8 +192,15 @@ func _services() -> void:
 	for x in range(11, 31, 4):
 		kitp("pipe_bundle_4", Vector3(x + 0.0, 5.0, -2.42), 180, Vector3.ONE, false, false)
 		kitp("pipe_bundle_4", Vector3(x + 0.0, 5.8, -25.58), 0, Vector3.ONE, false, false)
-		kitp("duct_4", Vector3(x + 0.6, 7.6, -20.0), 0, Vector3.ONE, false, false)
-		kitp("cable_tray_4", Vector3(x + 0.0, 6.6, -8.0), 0, Vector3.ONE, false, false)
+		kitp("duct_4", Vector3(x + 2.85, 7.6, -20.0), 0, Vector3.ONE, false, false)   # run ends at the east wall
+		if ok:
+			b.drop_rods(Vector3(x + 2.85, 7.6, -20.0), 0.0, 1.0, 9.0, 1.5, 0.36)
+		# clear of the T1 exhaust stack (z -8.45..-7.55); rods carried up to the roof
+		kitp("cable_tray_4", Vector3(x + 0.0, 6.6, -6.9), 0, Vector3.ONE, false, false)
+		if ok:
+			b.drop_rods(Vector3(x + 0.0, 6.6, -6.9), 0.0, 1.0, 9.0)
+	if ok and kit.get_node_or_null("duct_4") != null:   # the run turns up through the roof at its west end (it stopped in mid-air)
+		b.box(Vector3(11.83, 7.33, -20.37), Vector3(12.55, 9.0, -19.63), MatLib.flat(Color(0.55, 0.56, 0.57), 0.85, 0.42), "metal", false)
 	# Dock: ducts and pipes.
 	for x in [9.2, 13.2]:
 		kitp("duct_4", Vector3(x, 5.2, 12.0), 0, Vector3.ONE, false, false)
@@ -201,8 +208,8 @@ func _services() -> void:
 		kitp("pipe_bundle_4", Vector3(x, 3.4, 0.42), 0, Vector3.ONE, false, false)
 	# Servers: overhead cable trays above each rack row, duct along the wall.
 	for row in [-29.5, -32.5, -35.5]:
-		for x in [12.0, 16.0, 19.0]:
-			kitp("cable_tray_4", Vector3(x, 2.55, row), 0, Vector3(0.75, 1, 1), false, false)
+		for x in [13.35, 16.35, 19.35]:
+			kitp("cable_tray_4", Vector3(x, 3.0, row), 0, Vector3(0.75, 1, 1), false, false)   # kit rods reach the 3.6 m soffit
 	for x in [11.0]:
 		kitp("duct_4", Vector3(x, 3.05, -37.45), 0, Vector3.ONE, false, false)
 	# Control: duct + tray.
@@ -235,7 +242,35 @@ func _doors() -> void:
 		for side in [1.0, -1.0]:
 			var face = center + n * side * 0.16
 			kitp("keypad", face + t * 0.98 + Vector3(0, 1.3, 0), yaw_for(n * side), Vector3.ONE, false, false)
-			kitp("emergency_light", face + Vector3(0, 2.45, 0), yaw_for(n * side), Vector3.ONE, false, false)
+			kitp("emergency_light", _beside_sign(face + Vector3(0, 2.45, 0), n * side, t, 1.0 if id == "D7" else -1.0), yaw_for(n * side), Vector3.ONE, false, false)
+
+
+## Where a room sign already sits over a door, the door's emergency light goes
+## beside the sign (away from the keypad side; D7 the other way, as its far
+## side is the corridor end wall and camera) instead of on top of it.
+func _beside_sign(lamp: Vector3, nn: Vector3, t: Vector3, dir := -1.0) -> Vector3:
+	for c in b.get_children():
+		if not (c is Label3D):
+			continue
+		var l := c as Label3D
+		var d: Vector3 = l.position - lamp
+		if absf(d.dot(nn)) > 0.3:
+			continue
+		# Label3D builds its mesh a frame later: size the text from its metrics.
+		var lines := l.text.split("\n")
+		var longest := 0
+		for ln in lines:
+			longest = maxi(longest, ln.length())
+		var em := l.font_size * l.pixel_size
+		var hw := longest * em * 0.3     # ~0.6 em per capital
+		var hh := lines.size() * em * 0.6
+		var off := d.dot(t)
+		if absf(off) > hw + 0.2:
+			continue
+		if l.position.y - hh > lamp.y + 0.19 or l.position.y + hh < lamp.y - 0.07:
+			continue
+		return lamp + t * (off + dir * (hw + 0.24))
+	return lamp
 
 
 ## CC0 Poly Haven props: equipment that makes the rooms read as a real site.
@@ -254,7 +289,7 @@ func _props() -> void:
 	ph("utility_box_01", Vector3(6.35, 0.9, -5.5), 90, false)
 	ph("fire_alarm", Vector3(6.17, 1.4, -10.0), 90, false)
 	ph("industrial_wall_lamp", Vector3(8.82, 2.2, -21.0), -90, false)
-	ph("security_camera_02", Vector3(8.5, 2.3, -29.75), 30, false)
+	ph("security_camera_02", Vector3(8.5, 2.3, -29.835), 30, false)
 	# Office
 	ph("metal_office_desk", Vector3(-1.0, 0, -12.1), 0, true, true)
 	ph("SchoolChair_01", Vector3(-1.2, 0, -11.2), 170)
@@ -262,23 +297,23 @@ func _props() -> void:
 	ph("cardboard_box_01", Vector3(4.8, 0, -3.8), 10)
 	ph("utility_box_02", Vector3(5.6, 0.7, -6.0), -90, false)
 	# Hall
-	ph("utility_box_02", Vector3(9.5, 0.6, -17.0), 90, false)
-	ph("utility_box_01", Vector3(9.5, 0.7, -18.0), 90, false)
-	ph("power_box_01", Vector3(26.0, 1.2, -2.4), 180, false)
+	ph("utility_box_02", Vector3(9.39, 0.6, -17.0), 90, false)   # backs on the wainscot (stood 11 cm off)
+	ph("utility_box_01", Vector3(9.39, 0.7, -18.0), 90, false)
+	ph("power_box_01", Vector3(26.0, 1.2, -2.23), 180, false)
 	ph("metal_tool_chest", Vector3(23.6, 0, -6.0), 180, true, true)
 	ph("modular_industrial_pipes_01", Vector3(31.6, 1.0, -22.0), -90, false)   # kit origin is mid-height
 	ph("modular_electric_cables", Vector3(31.75, 3.5, -21.5), -90, false)   # clear of D10
 	ph("hanging_industrial_lamp", Vector3(19.0, 7.6, -11.5), 0, false)
-	ph("security_camera_02", Vector3(31.5, 6.0, -2.5), -135, false)
+	ph("security_camera_02", Vector3(31.82, 6.0, -2.18), -135, false)   # mount in the corner (hung 33 cm off it)
 	# Servers
 	ph("utility_box_02", Vector3(20.6, 0.7, -36.0), -90, false)
 	ph("worn_metal_rack", Vector3(9.6, 0, -37.2), 90, true)
 	# Control
 	if not ResourceLoader.exists(DOCK_KIT):
 		ph("utility_box_02", Vector3(32.6, 0.7, -31.0), -90, false)
-	ph("power_box_01", Vector3(21.4, 1.3, -39.45), 90, false)
+	ph("power_box_01", Vector3(21.25, 1.3, -39.45), 90, false)
 	ph("SchoolChair_01", Vector3(24.2, 0, -31.0), -100)
-	ph("security_camera_02", Vector3(32.5, 3.2, -26.6), -135, false)
+	ph("security_camera_02", Vector3(32.82, 3.2, -26.18), -135, false)
 
 
 ## Story beats: a scorched breach in the hall, cut cables sparking, an
@@ -379,7 +414,7 @@ func _control_m3() -> void:
 		for mi in src.find_children("*", "MeshInstance3D", true, false) + ([src] if src is MeshInstance3D else []):
 			tile_mesh = (mi as MeshInstance3D).mesh
 			break
-	var lights := [Vector2(24.6, -33.0), Vector2(29.4, -33.0), Vector2(27.0, -37.8), Vector2(27.0, -28.2)]
+	var lights := [Vector2(24.15, -33.45), Vector2(28.95, -33.45), Vector2(26.55, -38.25), Vector2(26.55, -28.65)]   # on the tile grid
 	if tile_mesh:
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D

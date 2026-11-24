@@ -154,6 +154,8 @@ func _structure() -> void:
 			ek("ibeam_4", Vector3(x, 9.83, z), 0.0)
 	for x in [36.0, 40.0, 44.0]:
 		ek("cable_tray_4", Vector3(x, 6.4, -12.5), 0.0)
+		if env != null and env.get_node_or_null("cable_tray_4") != null:
+			b.drop_rods(Vector3(x, 6.4, -12.5), 0.0, 1.0, 10.0)
 		ek("pipe_bundle_4", Vector3(x, 7.2, -2.42), 180.0)   # stands off the ribs
 	# Relay core
 	_ribs(12.15, -61.85, 31.85, -42.15, 12.0, {
@@ -252,9 +254,34 @@ func railing(a: Vector3, c: Vector3, walk: Vector3) -> void:
 		kp("catwalk_rail_4", Vector3(p.x, GALLERY_Y, p.z), _yaw_of(walk), false, false, null, Vector3(length / (4.0 * n), 1.0, 1.0))
 
 
-func light_room(room: String, pts: Array, color: Color, energy: float, rng: float, angle: float) -> void:
+func light_room(room: String, pts: Array, color: Color, energy: float, rng: float, angle: float, fog := 1.4, also_shadowed := []) -> void:
 	for i in pts.size():
-		b.light_spot(pts[i], color, energy, rng, angle, i % 2 == 0, room, Vector3.DOWN, "highbay")
+		var l := b.light_spot(pts[i], color, energy, rng, angle, i % 2 == 0 or i in also_shadowed, room, Vector3.DOWN, "highbay")
+		l.light_volumetric_fog_energy = fog
+
+
+## Bulkhead lamp on a wall bracket: the lamp hangs from a short steel arm and
+## plate instead of floating in front of the wall. `n` points into the room.
+func wall_lamp(wall_pt: Vector3, n: Vector3, color: Color, energy: float, rng: float, room: String, shadow := false) -> void:
+	var pos := wall_pt + n * 0.24
+	var lo := b.light_omni(pos, color, energy, rng, shadow, room)
+	lo.omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
+	var steel := MatLib.flat(Color(0.13, 0.135, 0.14), 0.8, 0.45)
+	var t := Vector3(-n.z, 0, n.x)
+	var top := pos.y + 0.12
+	b.box(wall_pt + Vector3(0, top, 0) - Vector3(0, pos.y, 0) - t * 0.02, pos + Vector3(0, 0.16, 0) + n * 0.03 + t * 0.02, steel, "metal", false, null, false)
+	b.box(wall_pt + Vector3(0, top - pos.y - 0.08, 0) - t * 0.06, wall_pt + Vector3(0, top - pos.y + 0.1, 0) + t * 0.06 + n * 0.02, steel, "metal", false, null, false)
+
+
+## A straight brace between two points (visual only).
+func _brace(a: Vector3, c: Vector3, w: float, mat: Material) -> void:
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(w, w, a.distance_to(c))
+	mi.mesh = bm
+	mi.material_override = mat
+	b.add_child(mi)
+	mi.transform = Transform3D(Basis.looking_at((c - a).normalized(), Vector3.UP), (a + c) * 0.5)
 
 
 ## Red emergency beacon: dark until Mission switches emergency lighting on.
@@ -369,6 +396,26 @@ func _pump_station() -> void:
 			b.cover_props.append(AABB(Vector3(x - 0.7, 0, -19.3), Vector3(1.4, 2.0, 4.6)))
 	# Header pipe along the south side: drops into the floor (half cover).
 	kp("pipe_manifold_8", Vector3(-16.0, 1.6, -5.0), 0.0, true, true)
+	# Its hanger rods end in beam clamps at 2.87 m: carry them on two
+	# cantilever channels with knee braces from the south wall.
+	if has_kit("pipe_manifold_8"):
+		for ex in [-20.006, -11.994]:
+			var cap := MeshInstance3D.new()
+			var capm := CylinderMesh.new()
+			capm.top_radius = 0.355
+			capm.bottom_radius = 0.355
+			capm.height = 0.012
+			capm.radial_segments = 32
+			cap.mesh = capm
+			cap.material_override = MatLib.flat(Color(0.52, 0.54, 0.55), 0.45, 0.5)
+			b.add_child(cap)
+			cap.position = Vector3(ex, 1.6, -5.0)
+			cap.rotation = Vector3(0, 0, PI / 2)
+		var chan := MatLib.flat(Color(0.16, 0.17, 0.18), 0.75, 0.5)
+		for hx in [-17.25, -14.75]:
+			b.box(Vector3(hx - 0.05, 2.87, -5.42), Vector3(hx + 0.05, 2.99, -3.15), chan, "metal", false, null, false)
+			b.box(Vector3(hx - 0.09, 2.2, -3.17), Vector3(hx + 0.09, 3.06, -3.15), chan, "metal", false, null, false)
+			_brace(Vector3(hx, 2.3, -3.17), Vector3(hx, 2.88, -4.3), 0.06, chan)
 	# Covered water channel (walkable grating over the trench)
 	for x in [-21.0, -17.0, -13.0, -9.0]:
 		kp("water_channel_4", Vector3(x, 0.0, -8.0), 0.0)
@@ -518,6 +565,8 @@ func _switchgear() -> void:
 	# Switchgear line-ups: two facing rows form an aisle (cover both ways).
 	for x in [36.5, 40.5]:
 		for row in [[-15.0, 0.0], [-10.0, 180.0]]:
+			if has_kit("switchgear_lineup_4"):
+				_lineup_rear(x, row[0] + (-0.6 if row[1] == 0.0 else 0.6), -1.0 if row[1] == 0.0 else 1.0, "AB"[0 if x < 38.0 else 1] + ("1" if row[1] == 0.0 else "2"))
 			if kp("switchgear_lineup_4", Vector3(x, 0, row[0]), row[1], true, true) == null:
 				b.box(Vector3(x - 2.0, 0, row[0] - 0.6), Vector3(x + 2.0, 2.3, row[0] + 0.6), MatLib.machinery(), "metal")
 				b.cover_props.append(AABB(Vector3(x - 2.0, 0, row[0] - 0.6), Vector3(4.0, 2.3, 1.2)))
@@ -553,10 +602,27 @@ func _switchgear() -> void:
 	b.breaker("switchgear", Vector3(32.25, 1.5, -21.5), 90)
 	b.place_sign("SWITCHGEAR HALL 9-B / 132 kV", Vector3(41.0, 7.5, -2.17), 180, 96, Color(0.82, 0.8, 0.74), 0.006)
 	b.place_sign("DANGER - HIGH VOLTAGE", Vector3(42.0, 5.6, -29.83), 0, 60, Color(0.95, 0.8, 0.2), 0.005)
-	b.terminal(Vector3(32.3, 1.3, -7.0), -90, "GRID LOG", PackedStringArray([
+	b.terminal(Vector3(32.19, 1.3, -7.0), -90, "GRID LOG", PackedStringArray([
 		"Relay Nine opened both main breakers at 22:09.",
 		"Relay control is on battery: no power, no uplink.",
 		"Breaker A by the south wall, B up on the east gallery."]))
+
+
+## Rear face of a 4 m switchgear line-up (the kit back is a plain louvred
+## sheet that read as a blockout): cubicle doors, handles, plinth, IDs, warnings.
+func _lineup_rear(x: float, zb: float, s: float, id: String) -> void:
+	var dark := MatLib.flat(Color(0.05, 0.055, 0.06), 0.5, 0.5)
+	var plate := MatLib.flat(Color(0.85, 0.66, 0.08), 0.1, 0.55)
+	var z0 := zb + s * 0.001
+	b.box(Vector3(x - 2.0, 0.0, z0), Vector3(x + 2.0, 0.1, zb + s * 0.012), dark, "metal", false, null, false)
+	for k in 5:
+		var cx := x - 1.6 + k * 0.8
+		if k > 0:
+			b.box(Vector3(cx - 0.41, 0.1, z0), Vector3(cx - 0.39, 2.25, zb + s * 0.009), dark, "metal", false, null, false)
+		b.box(Vector3(cx + 0.27, 1.05, z0), Vector3(cx + 0.3, 1.25, zb + s * 0.03), dark, "metal", false, null, false)
+		b.box(Vector3(cx - 0.08, 1.52, z0), Vector3(cx + 0.08, 1.66, zb + s * 0.004), plate, "metal", false, null, false)
+		var w := b.place_sign("DANGER\n11 kV", Vector3(cx, 1.59, zb + s * 0.006), 0.0 if s > 0 else 180.0, 14, Color(0.08, 0.06, 0.02), 0.0028)
+		b.place_sign("SG-%s-%d  REAR" % [id, k + 1], Vector3(cx, 2.08, zb + s * 0.006), 0.0 if s > 0 else 180.0, 16, Color(0.75, 0.76, 0.74), 0.0028)
 
 
 func _breaker_station(pos: Vector3, yaw: float, label: String) -> M4Objects.BreakerLever:
