@@ -59,6 +59,8 @@ func run(m: Node) -> void:
 		await load("res://scripts/test/m43_tests.gd").new(self).gunaudio()
 	elif "--rv_geo" in args:
 		await load("res://scripts/test/m43_tests.gd").new(self).geo()
+	elif "--rv_ambaudio" in args:
+		await load("res://scripts/test/m43_tests.gd").new(self).ambaudio()
 	elif "--rv_crawl" in args:
 		await load("res://scripts/test/m43_tests.gd").new(self).crawl()
 	elif "--rv_wallgap" in args:

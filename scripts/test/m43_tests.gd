@@ -108,6 +108,74 @@ func gunaudio() -> void:
 	_segment("END")
 
 
+## Ambience capture: still listening and a slow 360-degree turn in each room.
+## --amb_mute=rev,bed,room mutes the reverb buses / the global 2D bed / the room emitters.
+func ambaudio() -> void:
+	L("AMBIENCE capture: robots removed; times are movie seconds (60 fps)")
+	for b in main.director.bots.duplicate():
+		main.director.bots.erase(b)
+		b.queue_free()
+	m.bots.clear()
+	m.ex.blast_door.open_now(true)
+	var mute := ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--amb_mute="):
+			mute = a.get_slice("=", 1)
+	var bed: AudioStreamPlayer = null
+	for c in Sfx.get_children():
+		if c is AudioStreamPlayer and not (c in Sfx._pool2d) and not (c in Sfx._poolw):
+			bed = c
+	var rooms: Array[AudioStreamPlayer3D] = []
+	for c in lv.get_children():
+		if c is Node3D and c.get_child_count() == 1 and c.get_child(0) is AudioStreamPlayer3D:
+			rooms.append(c.get_child(0))
+	L("global bed: %s  room emitters: %d  mute: '%s'" % [bed != null, rooms.size(), mute])
+	if "rev" in mute:
+		for n in Sfx.REVERBS:
+			AudioServer.set_bus_mute(AudioServer.get_bus_index(n), true)
+	if "bed" in mute and bed:
+		bed.stop()
+	if "room" in mute:
+		for r in rooms:
+			r.stop()
+	await W(3.0)
+	for r in rooms:
+		if bed and r.global_position.distance_to(Vector3(7.5, 2.5, -15)) < 0.1:
+			L("corridor emitter vs global bed playback offset: %.4f s" % (r.get_playback_position() - bed.get_playback_position()))
+	var spots := [
+		["dock", Vector3(8.0, 0.05, 9.0), Vector3(8.0, 1.5, 0.0)],
+		["corridor", Vector3(7.5, 0.05, -18.0), Vector3(7.5, 1.5, -28.0)],
+		["office", Vector3(-2.0, 0.05, -8.0), Vector3(3.0, 1.2, -8.0)],
+		["hall", Vector3(16.0, 0.05, -18.0), Vector3(28.0, 2.0, -10.0)],
+		["servers", Vector3(12.0, 0.05, -34.0), Vector3(20.0, 1.5, -30.0)],
+		["control", Vector3(24.0, 0.05, -30.0), Vector3(30.0, 1.5, -36.0)],
+		["pump", Vector3(-10.0, 0.05, -10.0), Vector3(-20.0, 2.0, -22.0)],
+		["switchgear", Vector3(36.0, 0.05, -10.0), Vector3(46.0, 2.0, -22.0)],
+		["core", Vector3(16.0, 0.05, -46.0), Vector3(28.0, 3.0, -58.0)],
+		["tunnel", Vector3(0.0, 0.05, -28.5), Vector3(-6.0, 1.2, -28.5)],
+	]
+	for s in spots:
+		ap.teleport(s[1], s[2])
+		var heard := []
+		for r in rooms:
+			var d: float = r.global_position.distance_to(player.camera.global_position)
+			if d < r.max_distance:
+				heard.append("%s@%.1fm" % [r.stream.resource_name if r.stream.resource_name != "" else str(r.global_position), d])
+		L("in range at %s: %s" % [s[0], ", ".join(heard)])
+		await W(2.0)
+		_segment("%s | still" % s[0])
+		await W(5.0)
+		_segment("%s | turn" % s[0])
+		var y0: float = player.rotation.y
+		var t := 0.0
+		while t < 6.0:
+			await ap.get_tree().process_frame
+			t += 1.0 / 60.0
+			player.rotation.y = y0 + TAU * t / 6.0
+		await W(0.3)
+	_segment("END")
+
+
 func tour() -> void:
 	main.hud.visible = false
 	for b in main.director.bots.duplicate():

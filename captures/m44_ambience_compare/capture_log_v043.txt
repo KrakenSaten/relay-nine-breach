@@ -1,0 +1,59 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+Movie Maker mode enabled, recording movie in 1920×1080 @ 60 FPS...
+[  15.88] AMBIENCE capture: robots removed; times are movie seconds (60 fps)
+[  15.88] global bed: true  room emitters: 9  mute: ''
+[  38.34] corridor emitter vs global bed playback offset: 0.0000 s
+[  38.34] TELEPORT player -> (8.0, 0.05, 9.0)
+[  38.34] in range at dock: (8.0, 3.0, 7.0)@2.4m, (7.5, 2.5, -15.0)@24.0m
+[  53.55] SEGMENT 5.07 dock | still
+[  90.66] SEGMENT 10.08 dock | turn
+[ 136.11] TELEPORT player -> (7.5, 0.05, -18.0)
+[ 136.11] in range at corridor: (7.5, 2.5, -15.0)@3.1m, (20.0, 4.0, -14.0)@13.3m, (-15.0, 3.0, -16.0)@22.6m
+[ 149.57] SEGMENT 18.42 corridor | still
+[ 195.54] SEGMENT 23.43 corridor | turn
+[ 242.69] TELEPORT player -> (-2.0, 0.05, -8.0)
+[ 242.69] in range at office: (7.5, 2.5, -15.0)@11.8m, (0.5, 3.2, -8.0)@2.9m, (-15.0, 3.0, -16.0)@15.3m
+[ 255.80] SEGMENT 31.77 office | still
+[ 287.67] SEGMENT 36.78 office | turn
+[ 326.65] TELEPORT player -> (16.0, 0.05, -18.0)
+[ 326.65] in range at hall: (7.5, 2.5, -15.0)@9.1m, (20.0, 4.0, -14.0)@6.1m, (41.0, 4.0, -16.0)@25.2m
+[ 339.07] SEGMENT 45.12 hall | still
+[ 370.25] SEGMENT 50.13 hall | turn
+[ 409.51] TELEPORT player -> (12.0, 0.05, -34.0)
+[ 409.51] in range at servers: (7.5, 2.5, -15.0)@19.5m, (15.0, 1.5, -32.0)@3.6m
+[ 424.16] SEGMENT 58.47 servers | still
+[ 462.68] SEGMENT 63.48 servers | turn
+[ 505.31] TELEPORT player -> (24.0, 0.05, -30.0)
+[ 505.31] in range at control: (7.5, 2.5, -15.0)@22.3m, (20.0, 4.0, -14.0)@16.7m, (15.0, 1.5, -32.0)@9.2m, (27.0, 3.0, -33.0)@4.4m, (41.0, 4.0, -16.0)@22.1m
+[ 519.47] SEGMENT 71.82 control | still
+[ 550.76] SEGMENT 76.83 control | turn
+[ 595.34] TELEPORT player -> (-10.0, 0.05, -10.0)
+[ 595.34] in range at pump: (7.5, 2.5, -15.0)@18.2m, (0.5, 3.2, -8.0)@10.8m, (-15.0, 3.0, -16.0)@7.9m
+[ 609.66] SEGMENT 85.17 pump | still
+[ 645.25] SEGMENT 90.18 pump | turn
+[ 692.06] TELEPORT player -> (36.0, 0.05, -10.0)
+[ 692.06] in range at switchgear: (20.0, 4.0, -14.0)@16.7m, (41.0, 4.0, -16.0)@8.2m
+[ 704.75] SEGMENT 98.52 switchgear | still
+[ 723.20] SEGMENT 103.53 switchgear | turn
+[ 750.28] TELEPORT player -> (16.0, 0.05, -46.0)
+[ 750.28] in range at core: (22.0, 5.0, -52.0)@9.1m
+[ 757.53] SEGMENT 111.87 core | still
+[ 774.33] SEGMENT 116.88 core | turn
+[ 801.96] TELEPORT player -> (0.0, 0.05, -28.5)
+[ 801.96] in range at tunnel: (7.5, 2.5, -15.0)@15.5m, (-15.0, 3.0, -16.0)@19.6m
+[ 809.58] SEGMENT 125.22 tunnel | still
+[ 826.93] SEGMENT 130.23 tunnel | turn
+[ 850.08] SEGMENT 136.55 END
+--------------------------------------------------------------------------------
+Done recording movie at path: C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/amb/full/amb.avi
+8194 frames at 60 FPS (movie length: 00:02:16:34), recorded in 00:14:10 (16% of real-time speed).
+CPU render time: 15.08 seconds (average: 1.84 ms/frame)
+GPU render time: 314.79 seconds (average: 38.42 ms/frame)
+Encoding time: 130.07 seconds (average: 15.87 ms/frame)
+--------------------------------------------------------------------------------
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)
+WARNING: 20 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

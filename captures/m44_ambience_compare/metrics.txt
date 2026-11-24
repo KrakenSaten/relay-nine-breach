@@ -1,0 +1,130 @@
+# v0.4.3 (before) - all ambience layers
+== full
+room/kind          rms     31    63   125   250   500  1000  2000  4000  8000  | coh    20-60   60-120  120-250  250-500 500-1000 1000-2000 2000-4000 4000-8000 8000-16000 | comb ms/z
+dock       still -43.3   -11   -12   -11    -3    -2    -2    -5   -10   -19  |         0.41     0.03    -0.00     0.05     0.03     0.01     0.02     0.00     0.00 |  35.0/19.5
+dock       turn  -44.2  L-R level swing  -3.1 ..  +4.2 dB (range  7.2)
+corridor   still -44.9   -11   -11   -10    -3    -4    -8   -13   -16   -25  |         0.24     0.06     0.02     0.03     0.02    -0.02     0.02     0.01     0.01 |  12.0/ 6.0
+corridor   turn  -45.1  L-R level swing  -1.5 ..  +1.6 dB (range  3.0)
+office     still -45.3   -13   -12   -11    -3    -4    -6   -10   -15   -26  |         0.21    -0.09     0.02    -0.04     0.01    -0.01    -0.01    -0.00     0.00 |   4.1/ 4.3
+office     turn  -45.3  L-R level swing  -1.7 ..  +1.7 dB (range  3.3)
+hall       still -45.0    -7   -12    -9    -3    -5    -9   -14   -18   -26  |         0.54     0.01    -0.05     0.01     0.04    -0.00    -0.01    -0.01    -0.01 |   3.1/ 3.8
+hall       turn  -45.1  L-R level swing  -1.7 ..  +3.9 dB (range  5.6)
+servers    still -45.6   -11   -13   -12    -4    -6   -10   -10   -11   -16  |         0.30     0.03     0.00    -0.00    -0.01     0.01     0.00     0.01     0.01 |  10.0/22.6
+servers    turn  -45.4  L-R level swing  -1.6 ..  +4.6 dB (range  6.1)
+control    still -45.4    -9   -12   -10    -3    -5    -9   -11   -14   -25  |         0.41     0.06    -0.00     0.00     0.03     0.00    -0.00    -0.01    -0.00 |  10.0/10.1
+control    turn  -45.0  L-R level swing  -1.5 ..  +4.3 dB (range  5.8)
+pump       still -43.7   -13   -12   -11    -3    -3    -3    -7   -11   -26  |         0.05    -0.13     0.02    -0.03     0.04     0.02     0.00     0.01     0.01 |   6.9/ 4.5
+pump       turn  -44.0  L-R level swing  -1.8 ..  +2.4 dB (range  4.2)
+switchgear still -45.0   -10   -12   -10    -2    -5   -11   -14   -20   -27  |         0.31    -0.04     0.14    -0.04    -0.06    -0.00     0.00    -0.01     0.01 |   3.1/ 3.6
+switchgear turn  -45.2  L-R level swing  -1.1 ..  +3.7 dB (range  4.8)
+core       still -45.0    -9   -10   -11    -3    -6   -11   -12   -16   -26  |         0.07     0.13     0.01     0.04     0.00     0.05    -0.00    -0.03     0.01 |   2.6/ 4.1
+core       turn  -45.5  L-R level swing  -1.7 ..  +3.4 dB (range  5.0)
+tunnel     still -46.0   -12   -12   -11    -4    -5    -9   -15   -18   -26  |         0.31    -0.00     0.03     0.05     0.04    -0.00     0.01     0.00    -0.00 |   2.6/ 3.4
+tunnel     turn  -46.3  L-R level swing  -1.7 ..  +1.7 dB (range  3.5)
+
+# v0.4.3 with the reverb buses muted (room beds vanish: they had no dry signal)
+== rev
+room/kind          rms     31    63   125   250   500  1000  2000  4000  8000  | coh    20-60   60-120  120-250  250-500 500-1000 1000-2000 2000-4000 4000-8000 8000-16000 | comb ms/z
+dock       still -46.7   -11   -12   -11    -4    -6   -13   -19   -18   -26  |         0.42     0.07     0.01     0.03     0.02    -0.03     0.01    -0.00    -0.00 |   2.7/ 4.0
+dock       turn  -47.1  L-R level swing  -2.0 ..  +1.9 dB (range  3.9)
+corridor   still -46.6   -12   -12   -11    -3    -6   -13   -18   -19   -26  |         0.32     0.12     0.02     0.02     0.02    -0.04    -0.00     0.01     0.01 |   2.7/ 4.4
+corridor   turn  -47.1  L-R level swing  -2.0 ..  +1.5 dB (range  3.5)
+office     still -46.8   -11   -12   -11    -3    -6   -14   -16   -17   -26  |         0.34     0.10     0.03    -0.02     0.04    -0.06     0.00     0.00     0.00 |   2.8/ 3.8
+office     turn  -47.0  L-R level swing  -1.7 ..  +2.1 dB (range  3.8)
+hall       still -46.9   -11   -13   -11    -5    -7   -15   -19   -19   -27  |         0.33     0.02    -0.04    -0.01     0.06    -0.02    -0.00    -0.01    -0.00 |   2.8/ 4.4
+hall       turn  -46.8  L-R level swing  -1.9 ..  +4.8 dB (range  6.8)
+servers    still -47.2   -11   -13   -12    -4    -7   -15   -20   -21   -27  |         0.30     0.02    -0.01    -0.01    -0.02     0.02    -0.01    -0.00     0.00 |   2.8/ 4.1
+servers    turn  -46.8  L-R level swing  -1.9 ..  +5.9 dB (range  7.8)
+control    still -47.2   -11   -12   -12    -4    -7   -14   -19   -16   -26  |         0.31     0.08    -0.01    -0.00    -0.03    -0.00    -0.01    -0.00    -0.00 |   2.3/ 4.0
+control    turn  -46.9  L-R level swing  -1.6 ..  +5.3 dB (range  6.9)
+pump       still -47.1   -11   -12   -11    -4    -7   -15   -19   -16   -26  |         0.31     0.15     0.02     0.01     0.00    -0.02    -0.00     0.01     0.01 |   2.3/ 4.0
+
+# v0.4.3 with the room beds muted (global 2D bed only)
+== room
+room/kind          rms     31    63   125   250   500  1000  2000  4000  8000  | coh    20-60   60-120  120-250  250-500 500-1000 1000-2000 2000-4000 4000-8000 8000-16000 | comb ms/z
+dock       still -47.0   -11   -12   -11    -5    -6   -13   -20   -19   -26  |         0.42     0.07     0.01     0.03     0.02    -0.03     0.01    -0.00    -0.00 |   2.7/ 4.0
+dock       turn  -47.4  L-R level swing  -2.0 ..  +1.9 dB (range  3.9)
+corridor   still -46.9   -12   -12   -11    -4    -6   -13   -18   -19   -26  |         0.32     0.12     0.02     0.02     0.02    -0.04    -0.00     0.01     0.01 |   2.7/ 4.3
+corridor   turn  -47.4  L-R level swing  -2.0 ..  +1.5 dB (range  3.5)
+office     still -47.1   -12   -12   -11    -4    -7   -14   -16   -17   -26  |         0.34     0.10     0.03    -0.02     0.04    -0.06     0.00     0.00     0.00 |   2.8/ 3.7
+office     turn  -47.3  L-R level swing  -1.7 ..  +2.1 dB (range  3.8)
+hall       still -47.2   -11   -13   -11    -5    -7   -15   -19   -19   -27  |         0.33     0.02    -0.04    -0.01     0.06    -0.02    -0.00    -0.01    -0.01 |   2.8/ 4.3
+hall       turn  -47.0  L-R level swing  -1.9 ..  +4.8 dB (range  6.8)
+servers    still -47.5   -11   -13   -12    -5    -7   -15   -20   -21   -27  |         0.30     0.02    -0.01    -0.01    -0.02     0.02    -0.01    -0.00     0.00 |   2.8/ 4.2
+servers    turn  -47.0  L-R level swing  -1.9 ..  +5.9 dB (range  7.8)
+control    still -47.3   -11   -13   -12    -4    -7   -14   -15   -16   -26  |         0.31     0.08    -0.01    -0.00    -0.03     0.02    -0.01    -0.01    -0.00 |   3.1/ 3.9
+control    turn  -47.1  L-R level swing  -1.6 ..  +5.3 dB (range  6.9)
+pump       still -47.4   -11   -13   -11    -4    -7   -15   -20   -16   -27  |         0.31     0.15     0.02     0.01     0.00    -0.02    -0.00     0.01     0.01 |   2.3/ 4.0
+pump       turn  -47.1  L-R level swing  -2.1 ..  +4.8 dB (range  6.8)
+switchgear still -47.3   -11   -12   -11    -5    -8   -15   -20   -21   -27  |         0.30     0.10     0.05    -0.03    -0.02     0.00     0.01    -0.01     0.01 |   2.8/ 4.6
+switchgear turn  -47.2  L-R level swing  -1.5 ..  +5.8 dB (range  7.3)
+core       still -46.5   -11   -12   -11    -4    -6   -12    -9   -13   -25  |         0.39     0.05    -0.01     0.06     0.02     0.03    -0.03    -0.02     0.01 |   2.6/ 4.5
+core       turn  -46.2  L-R level swing  -1.9 ..  +4.9 dB (range  6.8)
+tunnel     still -46.9   -11   -12   -11    -5    -6   -14   -20   -19   -26  |         0.42     0.07     0.01     0.02     0.02    -0.03     0.01     0.00    -0.00 |   2.7/ 4.3
+tunnel     turn  -47.4  L-R level swing  -1.9 ..  +1.7 dB (range  3.5)
+
+# v0.4.4 (after)
+== new2
+room/kind          rms     31    63   125   250   500  1000  2000  4000  8000  | coh    20-60   60-120  120-250  250-500 500-1000 1000-2000 2000-4000 4000-8000 8000-16000 | comb ms/z
+dock       still -39.2    -5    -4    -4     3     2    -5    -8    -9   -20  |         1.00     0.99     0.92     0.79     0.33    -0.01     0.00    -0.02    -0.00 |   2.5/ 4.0
+dock       turn  -40.1  L-R level swing  -2.1 ..  +2.4 dB (range  4.4)
+corridor   still -41.7    -5    -6    -6     2    -2   -11   -16   -14   -26  |         1.00     0.99     0.93     0.79     0.35     0.00    -0.01     0.01     0.01 |   4.6/ 4.0
+corridor   turn  -42.0  L-R level swing  -0.9 ..  +1.8 dB (range  2.6)
+office     still -42.5    -7    -8    -2     1    -3   -12   -15   -16   -26  |         1.00     1.00     0.95     0.85     0.66     0.17     0.18     0.25     0.01 |  10.0/ 8.1
+office     turn  -42.3  L-R level swing  -1.0 ..  +1.4 dB (range  2.4)
+hall       still -40.5    -2    -1    -3    -1    -4   -13   -17   -18   -27  |         0.99     0.99     0.93     0.79     0.36     0.02    -0.00    -0.00    -0.00 |   2.8/ 4.7
+hall       turn  -41.0  L-R level swing  -1.2 ..  +1.7 dB (range  2.9)
+servers    still -43.2    -9   -11    -5    -0    -4    -9   -10   -11   -19  |         1.00     0.98     0.94     0.80     0.30    -0.00    -0.01     0.01    -0.01 |   4.9/ 3.3
+servers    turn  -42.8  L-R level swing  -0.8 ..  +1.8 dB (range  2.6)
+control    still -41.9   -10    -6     1    -0    -5   -13   -16   -16   -26  |         1.00     1.00     0.93     0.79     0.31     0.00     0.02     0.00    -0.00 |  10.0/ 4.0
+control    turn  -41.3  L-R level swing  -1.3 ..  +2.1 dB (range  3.4)
+pump       still -39.8     2    -0    -3    -1    -1    -8   -11   -13   -24  |         1.00     0.98     0.92     0.73     0.27     0.02    -0.01     0.01     0.00 |   2.6/ 4.5
+pump       turn  -40.1  L-R level swing  -1.2 ..  +1.5 dB (range  2.6)
+switchgear still -41.8   -10    -7     1     0    -5   -14   -19   -21   -28  |         1.00     1.00     0.95     0.82     0.38     0.01     0.01    -0.02     0.01 |  19.8/ 3.4
+switchgear turn  -42.1  L-R level swing  -1.0 ..  +1.2 dB (range  2.2)
+core       still -42.0    -1    -4    -7    -2    -4   -11    -6   -11   -24  |         1.00     0.99     0.93     0.80     0.32     0.10     0.01    -0.02     0.00 |   2.4/ 4.0
+core       turn  -42.4  L-R level swing  -1.0 ..  +1.2 dB (range  2.2)
+tunnel     still -44.8    -8    -9    -9    -2    -4   -13   -20   -19   -26  |         1.00     0.99     0.93     0.79     0.35    -0.01     0.01     0.00    -0.00 |   2.4/ 4.0
+tunnel     turn  -45.2  L-R level swing  -0.8 ..  +1.8 dB (range  2.5)
+
+# K-weighted loudness per room (LUFS-style, still segments)
+room             full      new2   last-first (LU)
+dock            -37.5     -36.4    +1.2
+corridor        -39.7     -39.4    +0.3
+office          -39.8     -40.4    -0.6
+hall            -40.1     -39.7    +0.3
+servers         -39.6     -39.3    +0.3
+control         -40.1     -39.8    +0.3
+pump            -37.8     -38.7    -0.8
+switchgear      -40.0     -39.8    +0.2
+core            -39.2     -39.3    -0.1
+tunnel          -40.9     -42.4    -1.5
+
+# Gun audio: v0.4.3 final capture (a) vs v0.4.4 (b)
+segment                                              peak a/b      rms400 a/b      body a/b
+office (small room) | rifle | open | 3 single         -3.5/ -3.1    -19.4/ -18.9    +0.3/ +1.7
+office (small room) | rifle | open | burst            -1.9/ -1.9    -13.6/ -14.3    +1.9/ +2.0
+office (small room) | rifle | suppressed | 3 single   -8.0/ -8.9    -25.8/ -26.2    +1.1/ +1.2
+office (small room) | rifle | suppressed | burst      -5.4/ -4.5    -19.6/ -19.6    +2.2/ +3.6
+office (small room) | pistol | 3 single               -4.5/ -5.3    -21.2/ -21.5    +2.6/ +2.1
+corridor (medium) | rifle | open | 3 single           -3.7/ -5.0    -18.7/ -19.4    +3.2/ +2.7
+corridor (medium) | rifle | open | burst              -1.9/ -1.9    -14.3/ -13.8    +1.3/ +0.7
+corridor (medium) | rifle | suppressed | 3 single     -7.9/ -9.0    -25.1/ -25.7    +2.4/ +2.6
+corridor (medium) | rifle | suppressed | burst        -5.4/ -4.9    -19.4/ -19.6    +1.3/ +1.5
+corridor (medium) | pistol | 3 single                 -5.0/ -5.2    -20.3/ -20.6    +2.0/ +2.5
+turbine hall (large) | rifle | open | 3 single        -4.5/ -4.6    -18.5/ -19.2    +2.7/ +2.3
+turbine hall (large) | rifle | open | burst           -1.9/ -1.9    -13.8/ -13.7    +2.7/ +2.1
+turbine hall (large) | rifle | suppressed | 3 single  -6.5/ -7.9    -24.7/ -24.8    +1.4/ +0.7
+turbine hall (large) | rifle | suppressed | burst     -4.8/ -3.3    -18.5/ -19.4    +1.2/ +0.7
+turbine hall (large) | pistol | 3 single              -5.0/ -5.6    -20.1/ -20.8    +1.7/ +2.0
+relay core (huge) | rifle | open | 3 single           -2.6/ -4.3    -18.5/ -19.6    +2.1/ +1.8
+relay core (huge) | rifle | open | burst              -1.9/ -1.9    -13.7/ -14.4    +1.8/ +2.2
+relay core (huge) | rifle | suppressed | 3 single     -8.9/ -8.2    -25.2/ -25.2    +1.6/ +0.8
+relay core (huge) | rifle | suppressed | burst        -5.2/ -5.5    -19.5/ -19.4    +1.6/ +2.1
+relay core (huge) | pistol | 3 single                 -4.9/ -5.6    -20.4/ -20.3    +4.4/ +4.4
+crawlway (metal duct) | rifle | open | 3 single       -4.1/ -2.6    -19.6/ -19.0    +0.6/ -0.7
+crawlway (metal duct) | rifle | open | burst          -1.9/ -1.9    -13.3/ -14.3    +0.8/ +1.4
+crawlway (metal duct) | rifle | suppressed | 3 single  -8.9/ -8.2    -25.7/ -25.8    +0.8/ -0.5
+crawlway (metal duct) | rifle | suppressed | burst    -4.8/ -5.2    -19.1/ -19.3    +2.1/ +2.2
+crawlway (metal duct) | pistol | 3 single             -5.0/ -4.7    -21.1/ -21.4    -1.5/ -1.0
+largest rms400 difference: 1.09 dB over 25 segments
