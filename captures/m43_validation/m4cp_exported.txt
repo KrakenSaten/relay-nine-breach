@@ -1,0 +1,118 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+[   7.89] CHECKPOINT TEST phase A: reach the relay-core checkpoint, then die
+[   8.99] SHORTCUT: objectives completed by emitting the station signals (interaction itself is covered by --m4mission)
+[mission] queued cp_objectives at 9.00 (+1.0 s)
+[mission] event cp_objectives fired at 10.00
+[  10.50]   checkpoint after objectives: objectives
+[mission] queued  at 10.51 (+1.0 s)
+[mission] queued  at 10.51 (+12.0 s)
+[mission] queued  at 10.51 (+22.0 s)
+[mission] event 1.0s fired at 11.50
+[  11.51] SHORTCUT: console progress forced to 0.98
+[mission] queued probe at 14.16 (+0.1 s)
+[mission] queued probe at 14.16 (+0.2 s)
+[mission] queued probe at 14.16 (+0.4 s)
+[mission] queued probe at 14.16 (+0.5 s)
+[mission] queued probe at 14.16 (+0.6 s)
+[mission] queued probe at 14.16 (+0.7 s)
+[mission] queued probe at 14.16 (+0.8 s)
+[mission] queued probe at 14.16 (+1.0 s)
+[mission] queued probe at 14.16 (+1.1 s)
+[mission] queued probe at 14.16 (+1.2 s)
+[mission] queued probe at 14.16 (+1.3 s)
+[mission] queued probe at 14.16 (+1.4 s)
+[mission] queued probe at 14.16 (+1.6 s)
+[mission] queued  at 14.17 (+0.9 s)
+[mission] queued  at 14.17 (+2.0 s)
+[mission] queued  at 14.17 (+3.6 s)
+[mission] queued  at 14.17 (+5.5 s)
+[mission] queued cp_core at 14.17 (+7.0 s)
+[mission] event probe fired at 14.27
+[mission] event probe fired at 14.39
+[mission] event probe fired at 14.50
+[mission] event probe fired at 14.63
+[mission] event probe fired at 14.75
+[mission] event probe fired at 14.88
+[mission] event probe fired at 14.99
+[mission] event 0.9s fired at 15.05
+[mission] event probe fired at 15.12
+[mission] event probe fired at 15.23
+[mission] event probe fired at 15.35
+[mission] event probe fired at 15.47
+[mission] event probe fired at 15.58
+[mission] event probe fired at 15.71
+[mission] event 2.0s fired at 16.16
+[mission] event 3.6s fired at 17.75
+[mission] event 5.5s fired at 19.66
+[mission] event cp_core fired at 21.16
+[  21.20]   checkpoint now: relay core stage=core caps=[true, false, false]
+[  21.20]   expected after restore: { "stage": "core", "alive": ["d1", "d2", "g1", "g2", "g3", "h2", "h3", "h4", "k1", "k2", "k3", "k4", "o1", "o2", "p1", "p2", "s1", "s2", "u1"], "kills": 2, "respawn": (25.0, 0.05, -29.0) }
+[mission] event 12.0s fired at 22.51
+[  24.21]   player alive=false state=FAILED
+[  24.98] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/cp/m4_cp_failed_screen.png
+[  24.98] restarting from checkpoint (scene reload)
+[mission] queued probe at 27.83 (+0.1 s)
+[mission] queued probe at 27.83 (+0.2 s)
+[mission] queued probe at 27.83 (+0.4 s)
+[mission] queued probe at 27.83 (+0.5 s)
+[mission] queued probe at 27.83 (+0.6 s)
+[mission] queued probe at 27.83 (+0.7 s)
+[mission] queued probe at 27.83 (+0.8 s)
+[mission] queued probe at 27.83 (+1.0 s)
+[mission] queued probe at 27.83 (+1.1 s)
+[mission] queued probe at 27.83 (+1.2 s)
+[mission] queued probe at 27.83 (+1.3 s)
+[mission] queued probe at 27.83 (+1.4 s)
+[mission] queued probe at 27.83 (+1.6 s)
+[mission] queued probe at 28.43 (+0.1 s)
+[mission] queued probe at 28.43 (+0.2 s)
+[mission] queued probe at 28.43 (+0.4 s)
+[mission] queued probe at 28.43 (+0.5 s)
+[mission] queued probe at 28.43 (+0.6 s)
+[mission] queued probe at 28.43 (+0.7 s)
+[mission] queued probe at 28.43 (+0.8 s)
+[mission] queued probe at 28.43 (+1.0 s)
+[mission] queued probe at 28.43 (+1.1 s)
+[mission] queued probe at 28.43 (+1.2 s)
+[mission] queued probe at 28.43 (+1.3 s)
+[mission] queued probe at 28.43 (+1.4 s)
+[mission] queued probe at 28.43 (+1.6 s)
+[  28.44] CHECKPOINT TEST phase B: scene reloaded from checkpoint 'relay core'
+[mission] event probe fired at 28.44
+[mission] event probe fired at 28.51
+[mission] event probe fired at 28.53
+[mission] event probe fired at 28.60
+[mission] event probe fired at 28.66
+[mission] event probe fired at 28.72
+[mission] event probe fired at 28.77
+[mission] event probe fired at 28.84
+[mission] event probe fired at 28.90
+[mission] event probe fired at 28.97
+[mission] event probe fired at 29.02
+[mission] event probe fired at 29.09
+[mission] event probe fired at 29.14
+[mission] event probe fired at 29.20
+[mission] event probe fired at 29.25
+[mission] event probe fired at 29.32
+[mission] event probe fired at 29.37
+[mission] event probe fired at 29.45
+[mission] event probe fired at 29.51
+[mission] event probe fired at 29.57
+[mission] event probe fired at 29.61
+[mission] event probe fired at 29.69
+[mission] event probe fired at 29.73
+[mission] event probe fired at 29.81
+[mission] event probe fired at 29.86
+[mission] event probe fired at 29.93
+[  30.31]   stage=core (expect core) state=CORE
+[  30.31]   D3 locked=true blast door open=true emergency=true D5 locked=false console done=true
+[  30.31]   capacitors dead=[true, false, false] flags=[true, false, false]
+[  30.31]   units alive=["d1", "d2", "g1", "g2", "g3", "h2", "h3", "h4", "k1", "k2", "k3", "k4", "o1", "o2", "p1", "p2", "s1", "s2", "u1"] match=true
+[  30.31]   dormant left=0  kills=2 (expect 2)  player at (25.0, 0.0, -29.0) (respawn (25.0, 0.05, -29.0)) alive=true
+[  30.31]   nav servers->core after restore: gap=0.40 OK
+[  30.87] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/cp/m4_cp_restored.png
+[  30.87] CHECKPOINT RESTORE PASS
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)

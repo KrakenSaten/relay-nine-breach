@@ -1,0 +1,26 @@
+SEGMENT 5.57 office (small room) | rifle | open | 3 single
+SEGMENT 8.02 office (small room) | rifle | open | burst
+SEGMENT 11.73 office (small room) | rifle | suppressed | 3 single
+SEGMENT 14.18 office (small room) | rifle | suppressed | burst
+SEGMENT 18.72 office (small room) | pistol | 3 single
+SEGMENT 25.00 corridor (medium) | rifle | open | 3 single
+SEGMENT 27.45 corridor (medium) | rifle | open | burst
+SEGMENT 31.17 corridor (medium) | rifle | suppressed | 3 single
+SEGMENT 33.62 corridor (medium) | rifle | suppressed | burst
+SEGMENT 38.15 corridor (medium) | pistol | 3 single
+SEGMENT 44.43 turbine hall (large) | rifle | open | 3 single
+SEGMENT 46.88 turbine hall (large) | rifle | open | burst
+SEGMENT 50.60 turbine hall (large) | rifle | suppressed | 3 single
+SEGMENT 53.05 turbine hall (large) | rifle | suppressed | burst
+SEGMENT 57.58 turbine hall (large) | pistol | 3 single
+SEGMENT 63.87 relay core (huge) | rifle | open | 3 single
+SEGMENT 66.32 relay core (huge) | rifle | open | burst
+SEGMENT 70.03 relay core (huge) | rifle | suppressed | 3 single
+SEGMENT 72.48 relay core (huge) | rifle | suppressed | burst
+SEGMENT 77.02 relay core (huge) | pistol | 3 single
+SEGMENT 83.30 crawlway (metal duct) | rifle | open | 3 single
+SEGMENT 85.75 crawlway (metal duct) | rifle | open | burst
+SEGMENT 89.47 crawlway (metal duct) | rifle | suppressed | 3 single
+SEGMENT 91.92 crawlway (metal duct) | rifle | suppressed | burst
+SEGMENT 96.45 crawlway (metal duct) | pistol | 3 single
+SEGMENT 100.02 END

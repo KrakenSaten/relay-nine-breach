@@ -1,0 +1,46 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+[   8.52] REVIEW doors: each door at +100 and -100 degrees; leaf (minus 0.25 m at the hinge) vs colliders and visual props
+[   8.61]   D1 +100: clear
+[   8.61]   D1 -85: colliders [] | visual ["forklift@(5.8, 1.1, 2.15)"]
+[   8.62]   D2 +100: clear
+[   8.62]   D2 -100: clear
+[   8.63]   D3 +100: clear
+[   8.64]   D3 -100: clear
+[   8.66]   D4 +100: clear
+[   8.68]   D4 -100: clear
+[   8.70]   D5 +100: clear
+[   8.71]   D5 -100: clear
+[   8.73]   D6 +100: clear
+[   8.74]   D6 -100: clear
+[   8.76]   D7 +100: clear
+[   8.78]   D7 -90: clear
+[   8.79]   D9b +100: clear
+[   8.81]   D9b -100: clear
+[   8.83]   D8 +100: clear
+[   8.84]   D8 -100: clear
+[   8.86]   D9 +100: clear
+[   8.87]   D9 -100: clear
+[   8.89]   D10 +100: clear
+[   8.91]   D10 -100: clear
+[   8.93]   D11 +100: clear
+[   8.94]   D11 -100: clear
+[   8.94] DOORS with contacts: 1 (of 24 door/side cases)
+[   8.94]   OBJ lockdown_panel aabb (3.15, 0.98, -12.85)..(4.05, 1.73, -12.73)  visual []  colliders []
+[   8.94]   OBJ breaker_A      aabb (40.53, 0.7, -2.63)..(41.3, 1.9, -2.15)  visual []  colliders []
+[   8.94]   OBJ breaker_B      aabb (49.37, 4.9, -20.3)..(49.85, 6.1, -19.53)  visual []  colliders []
+[   8.94]   OBJ lift_panel     aabb (0.19, -0.1, 8.17)..(0.71, 1.94, 9.03)  visual []  colliders []
+[   8.94]   OBJ steam_valve    aabb (-7.17, 1.08, -19.66)..(-6.1, 1.82, -17.34)  visual []  colliders []
+[   8.94]   OBJ capacitor_0    aabb (14.25, -0.12, -49.17)..(16.58, 2.92, -46.41)  visual []  colliders []
+[   8.94]   OBJ capacitor_1    aabb (27.25, -0.12, -49.17)..(29.58, 2.92, -46.41)  visual []  colliders []
+[   8.94]   OBJ capacitor_2    aabb (20.75, -0.12, -61.17)..(23.08, 2.92, -58.41)  visual []  colliders []
+[   8.94]   OBJ security_ammo_cache aabb (1.1, 0.0, -12.81)..(2.3, 0.97, -11.97)  visual []  colliders []
+[   8.95]   OBJ switchgear_ammo_cache aabb (35.6, 0.0, -3.03)..(36.8, 0.97, -2.19)  visual []  colliders []
+[   8.95]   OBJ control_ammo_cache aabb (22.6, 0.0, -27.03)..(23.8, 0.97, -26.19)  visual []  colliders []
+[   9.14]   OBJ capacitor_0 destroyed variant: visual []
+[   9.14]   OBJ capacitor_1 destroyed variant: visual []
+[   9.15]   OBJ capacitor_2 destroyed variant: visual []
+[   9.15]   OBJ blast door parked: aabb (14.23, 0.0, -38.02)..(16.7, 3.2, -37.44) visual []
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)

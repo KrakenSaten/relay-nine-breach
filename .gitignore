@@ -34,3 +34,9 @@ captures/*
 !captures/m4_final_bench_route/
 !captures/m4_review/
 !captures/m4_ammo/
+
+!captures/m43_compare/
+!captures/m43_audio_compare/
+!captures/m43_audit/
+!captures/m43_bench/
+!captures/m43_validation/

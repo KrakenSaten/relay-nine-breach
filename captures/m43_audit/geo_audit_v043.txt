@@ -1,0 +1,329 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+[   8.97] GEO AUDIT (mesh vertices vs structure, floating, holes, light leaks, coplanar faces)
+[   8.98]   structural boxes: 202
+[   8.98]   items: 585
+[  12.11] A. PENETRATION candidates: 56
+[  12.11]   PEN ~highbay_body                @(12.0, 6.0, 10.0)  38% of 1728 verts inside, max depth 0.15 m in box@(8.0, 6.15, 7.0) size (16.0, 0.3, 14.0)
+[  12.11]   PEN ~highbay_body                @(6.6, 6.0, 11.5)  38% of 1728 verts inside, max depth 0.15 m in box@(8.0, 6.15, 7.0) size (16.0, 0.3, 14.0)
+[  12.11]   PEN ~highbay_body                @(12.0, 6.0, 4.0)  38% of 1728 verts inside, max depth 0.15 m in box@(8.0, 6.15, 7.0) size (16.0, 0.3, 14.0)
+[  12.11]   PEN ~highbay_body                @(4.0, 6.0, 4.0)  38% of 1728 verts inside, max depth 0.15 m in box@(8.0, 6.15, 7.0) size (16.0, 0.3, 14.0)
+[  12.11]   PEN ~ibeam_4_body                @(34.0, 9.85, -23.0)  36% of 978 verts inside, max depth 0.15 m in box@(32.0, 9.8, -14.05) size (0.3, 1.0, 24.15)
+[  12.11]   PEN ~ibeam_4_body                @(34.0, 9.85, -15.5)  36% of 978 verts inside, max depth 0.15 m in box@(32.0, 9.8, -14.05) size (0.3, 1.0, 24.15)
+[  12.11]   PEN ~ibeam_4_body                @(34.0, 9.85, -11.0)  36% of 978 verts inside, max depth 0.15 m in box@(32.0, 9.8, -14.05) size (0.3, 1.0, 24.15)
+[  12.11]   PEN ~ibeam_4_body                @(34.0, 9.85, -4.5)  36% of 978 verts inside, max depth 0.15 m in box@(32.0, 9.8, -14.05) size (0.3, 1.0, 24.15)
+[  12.11]   PEN ~ibeam_4_body                @(2.0, 5.85, 3.5)  36% of 978 verts inside, max depth 0.15 m in box@(0.0, 3.15, 8.5) size (0.3, 6.3, 11.05)
+[  12.11]   PEN ~ibeam_4_body                @(14.0, 11.85, -48.5)  36% of 978 verts inside, max depth 0.15 m in box@(12.0, 6.15, -52.0) size (0.3, 12.3, 20.0)
+[  12.11]   PEN ~ibeam_4_body                @(14.0, 11.85, -55.5)  36% of 978 verts inside, max depth 0.15 m in box@(12.0, 6.15, -52.0) size (0.3, 12.3, 20.0)
+[  12.11]   PEN ~ibeam_4_body                @(11.0, 8.85, -6.0)  36% of 978 verts inside, max depth 0.15 m in box@(9.0, 4.65, -6.1) size (0.3, 9.3, 8.25)
+[  12.11]   PEN ~ibeam_4_body                @(11.0, 8.85, -10.0)  36% of 978 verts inside, max depth 0.15 m in box@(9.0, 4.65, -6.1) size (0.3, 9.3, 8.25)
+[  12.11]   PEN ~ibeam_4_body                @(11.0, 8.85, -18.0)  36% of 978 verts inside, max depth 0.15 m in box@(9.0, 4.65, -18.85) size (0.3, 9.3, 14.25)
+[  12.11]   PEN ~ibeam_4_body                @(11.0, 8.85, -22.0)  36% of 978 verts inside, max depth 0.15 m in box@(9.0, 4.65, -18.85) size (0.3, 9.3, 14.25)
+[  12.11]   PEN ~ibeam_4_body                @(30.0, 11.85, -55.5)  33% of 978 verts inside, max depth 0.15 m in box@(32.0, 6.15, -52.0) size (0.3, 12.3, 20.0)
+[  12.11]   PEN ~ibeam_4_body                @(30.0, 11.85, -48.5)  33% of 978 verts inside, max depth 0.15 m in box@(32.0, 6.15, -52.0) size (0.3, 12.3, 20.0)
+[  12.11]   PEN ~ibeam_4_body                @(14.0, 5.85, 3.5)  33% of 978 verts inside, max depth 0.15 m in box@(16.0, 3.15, 7.0) size (0.3, 6.3, 14.0)
+[  12.11]   PEN ~ibeam_4_body                @(14.0, 5.85, 10.5)  33% of 978 verts inside, max depth 0.15 m in box@(16.0, 3.15, 7.0) size (0.3, 6.3, 14.0)
+[  12.11]   PEN ~catwalk_4_body              @(48.9, 4.1, -6.15)  33% of 850 verts inside, max depth 0.15 m in box@(50.0, 5.15, -16.0) size (0.3, 10.3, 28.0)
+[  12.11]   PEN ~catwalk_4_body              @(48.9, 4.1, -10.45)  33% of 850 verts inside, max depth 0.15 m in box@(50.0, 5.15, -16.0) size (0.3, 10.3, 28.0)
+[  12.11]   PEN ~catwalk_4_body              @(48.9, 4.1, -14.75)  33% of 850 verts inside, max depth 0.15 m in box@(50.0, 5.15, -16.0) size (0.3, 10.3, 28.0)
+[  12.11]   PEN ~catwalk_4_body              @(48.9, 4.1, -19.1)  33% of 850 verts inside, max depth 0.15 m in box@(50.0, 5.15, -16.0) size (0.3, 10.3, 28.0)
+[  12.11]   PEN ~catwalk_4_body              @(48.9, 4.1, -23.4)  33% of 850 verts inside, max depth 0.15 m in box@(50.0, 5.15, -16.0) size (0.3, 10.3, 28.0)
+[  12.11]   PEN ~catwalk_4_body              @(48.9, 4.1, -27.7)  33% of 850 verts inside, max depth 0.15 m in box@(50.0, 5.15, -16.0) size (0.3, 10.3, 28.0)
+[  12.11]   PEN ~pipe_bundle_4_body          @(-8.0, 6.95, -29.75)  26% of 1949 verts inside, max depth 0.15 m in box@(-6.0, 4.65, -29.6) size (0.3, 9.3, 0.75)
+[  12.11]   PEN ~pipe_bundle_4_body          @(14.0, 3.75, 0.55)  26% of 1949 verts inside, max depth 0.15 m in box@(16.0, 3.15, 7.0) size (0.3, 6.3, 14.0)
+[  12.11]   PEN ~pipe_bundle_4_body          @(11.0, 5.35, -2.55)  26% of 1949 verts inside, max depth 0.15 m in box@(9.0, 4.65, -6.1) size (0.3, 9.3, 8.25)
+[  12.11]   PEN ~pipe_bundle_4_body          @(2.0, 3.75, 0.55)  26% of 1949 verts inside, max depth 0.15 m in box@(0.0, 3.15, 0.5) size (0.3, 6.3, 1.05)
+[  12.11]   PEN ~pipe_bundle_4_body          @(8.45, 3.0, -28.0)  26% of 1949 verts inside, max depth 0.15 m in box@(7.5, 1.95, -30.0) size (3.0, 3.9, 0.3)
+[  12.11]   PEN ~pipe_bundle_4_body          @(11.0, 6.15, -25.45)  26% of 1949 verts inside, max depth 0.15 m in box@(9.0, 4.65, -18.85) size (0.3, 9.3, 14.25)
+[  12.12]   PEN ~crawl_duct_2_body           @(-10.0, 0.6, -1.95)  32% of 1627 verts inside, max depth 0.10 m in box@(-16.0, -0.2, -1.65) size (18.0, 0.4, 11.3)
+[  12.12]   PEN crawl_duct_2                 @(-1.0, 0.6, 2.0)  32% of 1627 verts inside, max depth 0.10 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+[  12.12]   PEN ~cable_tray_4_body           @(11.0, 6.85, -6.9)  18% of 1424 verts inside, max depth 0.15 m in box@(9.0, 4.65, -6.1) size (0.3, 9.3, 8.25)
+[  12.12]   PEN ~cable_tray_4_body           @(6.75, 3.3, -28.0)  15% of 1424 verts inside, max depth 0.15 m in box@(7.5, 1.95, -30.0) size (3.0, 3.9, 0.3)
+[  12.12]   PEN ~duct_4_body                 @(11.0, 3.2, -37.45)  13% of 1321 verts inside, max depth 0.15 m in box@(9.0, 2.0, -34.0) size (0.3, 4.0, 8.0)
+[  12.12]   PEN ~ibeam_4_body                @(34.0, 9.85, -27.5)  11% of 978 verts inside, max depth 0.15 m in box@(33.0, 7.55, -28.0) size (0.3, 5.5, 4.0)
+[  12.12]   PEN ~duct_4_body                 @(23.0, 4.05, -27.0)  10% of 1321 verts inside, max depth 0.15 m in box@(21.0, 2.4, -28.6) size (0.3, 4.8, 5.25)
+[  12.12]   PEN ~duct_4_body                 @(31.0, 4.05, -27.0)  9% of 1321 verts inside, max depth 0.15 m in box@(33.0, 2.4, -26.6) size (0.3, 4.8, 1.25)
+[  12.12]   PEN ~vent_grille_body            @(0.1, 4.5, 4.0)  10% of 719 verts inside, max depth 0.10 m in box@(0.0, 3.15, 8.5) size (0.3, 6.3, 11.05)
+[  12.12]   PEN vent_grille                  @(3.0, 2.6, -12.9)  10% of 719 verts inside, max depth 0.10 m in box@(0.0, 1.95, -13.0) size (12.0, 3.9, 0.3)
+[  12.12]   PEN ~vent_grille_body            @(-5.9, 2.6, -5.4)  10% of 719 verts inside, max depth 0.10 m in box@(-6.0, 1.95, -4.6) size (0.3, 3.9, 3.25)
+[  12.12]   PEN ~vent_grille_body            @(20.9, 2.7, -29.0)  10% of 719 verts inside, max depth 0.10 m in box@(21.0, 2.4, -28.6) size (0.3, 4.8, 5.25)
+[  12.12]   PEN ~vent_grille_body            @(15.9, 4.5, 2.0)  10% of 719 verts inside, max depth 0.10 m in box@(16.0, 3.15, 7.0) size (0.3, 6.3, 14.0)
+[  12.12]   PEN ~vent_grille_body            @(8.900001, 2.4, -20.0)  10% of 719 verts inside, max depth 0.10 m in box@(9.0, 4.65, -18.85) size (0.3, 9.3, 14.25)
+[  12.12]   PEN ~vent_grille_body            @(6.1, 2.4, -17.0)  10% of 719 verts inside, max depth 0.10 m in box@(6.0, 1.95, -18.5) size (0.3, 3.9, 18.5)
+[  12.12]   PEN dock_leveler                 @(11.5, -0.05, 12.6)  7% of 2058 verts inside, max depth 0.11 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+[  12.12]   PEN blast_door_frame             @(16.75, 1.85, -38.0)  5% of 2929 verts inside, max depth 0.15 m in box@(14.0, 2.15, -40.0) size (0.3, 4.3, 4.0)
+[  12.12]   PEN wall_cable_run_4             @(2.0, 2.3, 0.6)  4% of 1159 verts inside, max depth 0.15 m in box@(0.0, 3.15, 0.5) size (0.3, 6.3, 1.05)
+[  12.12]   PEN ~crawl_duct_2_body           @(-10.0, 0.6, 0.05)  6% of 1627 verts inside, max depth 0.10 m in box@(-9.6, 1.4, 2.0) size (3.2, 0.3, 2.4)
+[  12.12]   PEN ~crawl_duct_2_body           @(-5.0, 0.6, 2.0)  4% of 1627 verts inside, max depth 0.10 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+[  12.12]   PEN ~crawl_duct_2_body           @(-3.0, 0.6, 2.0)  4% of 1627 verts inside, max depth 0.10 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+[  12.12]   PEN ~floor_drain_body            @(12.0, -0.1, -11.5)  1% of 860 verts inside, max depth 0.17 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+[  12.12]   PEN ~floor_drain_body            @(24.5, -0.1, -11.5)  1% of 860 verts inside, max depth 0.17 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+[  12.12]   PEN ~floor_drain_body            @(7.5, -0.1, -18.0)  1% of 860 verts inside, max depth 0.17 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+[  12.12]   PEN floor_drain                  @(4.0, -0.1, 8.0)  1% of 860 verts inside, max depth 0.17 m in box@(13.5, -0.2, -13.0) size (41.0, 0.4, 56.0)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+ERROR: AABB size is negative, this is not supported. Use AABB.abs() to get an AABB with a positive size.
+   at: intersects (./core/math/aabb.h:157)
+   GDScript backtrace (most recent call first):
+       [0] geo (res://scripts/test/m43_tests.gd:340)
+       [1] W (res://scripts/test/m43_tests.gd:27)
+       [2] _wait (res://scripts/test/autopilot.gd:148)
+[  12.14] B. FLOATING candidates: 9
+[  12.15]   FLOAT vent_grille                  @(3.0, 2.6, -12.9) bottom 2.40, surface below 0.00 (gap 2.40)
+[  12.15]   FLOAT ~vent_grille_body            @(-5.9, 2.6, -5.4) bottom 2.40, surface below 0.00 (gap 2.40)
+[  12.15]   FLOAT ~vent_grille_body            @(20.9, 2.7, -29.0) bottom 2.50, surface below 0.00 (gap 2.50)
+[  12.15]   FLOAT ~vent_grille_body            @(8.900001, 2.4, -20.0) bottom 2.20, surface below 0.00 (gap 2.20)
+[  12.15]   FLOAT ~vent_grille_body            @(6.1, 2.4, -17.0) bottom 2.20, surface below 0.00 (gap 2.20)
+[  12.15]   FLOAT wall_cable_run_4             @(2.0, 2.3, 0.6) bottom 2.07, surface below 0.88 (gap 1.19)
+[  12.15]   FLOAT ~wall_cable_run_4_body       @(10.0, 2.3, 0.6) bottom 2.07, surface below 1.00 (gap 1.07)
+[  12.15]   FLOAT valve_wheel_station          @(-23.35, 1.45, -12.0) bottom 1.08, surface below 0.00 (gap 1.08)
+[  12.15]   FLOAT ~valve_wheel_station_body    @(-6.65, 1.45, -18.5) bottom 1.08, surface below 0.00 (gap 1.08)
+[  12.15]   HOLE corridor     from (7.5, 4.0, -15.0): 24/96 rays escape, e.g. dir (0.14, 0.99, 0.0)
+[  12.15]   HOLE office       from (0.0, 4.0, -8.0): 32/96 rays escape, e.g. dir (0.14, 0.99, 0.0)
+[  12.15]   HOLE passage      from (13.2, 4.0, -1.0): 10/96 rays escape, e.g. dir (0.14, 0.99, 0.0)
+[  12.15]   HOLE servers      from (15.0, 4.0, -32.0): 31/96 rays escape, e.g. dir (0.14, 0.99, 0.0)
+[  12.15]   HOLE tunnel       from (0.0, 3.4, -28.5): 33/96 rays escape, e.g. dir (0.14, 0.99, 0.0)
+[  12.15]   HOLE crawl        from (-5.6, 1.6, 0.1): 28/96 rays escape, e.g. dir (0.14, 0.99, 0.0)
+[  12.16]   HOLE crawl        from (-5.6, 1.4, 0.1): 25/96 rays escape, e.g. dir (0.14, 0.99, 0.0)
+[  12.16] C. ESCAPING rays total: 183
+[  12.16] D. LIGHT LEAK candidates: 7
+[  12.16]   LEAK OmniLight3D    light@(-6.4, 3.2, -24.5) (energy 1.3, range 7.5, room pump) reaches tunnel through a wall at 2.8 m, est 0.52
+[  12.16]   LEAK OmniLight3D    light@(13.25, 2.8, -0.4) (energy 1.5, range 4.0, room passage) reaches hall through a wall at 1.8 m, est 0.45
+[  12.16]   LEAK OmniLight3D    light@(17.0, 3.4, -40.0) (energy 1.0, range 6.0, room antechamber) reaches servers through a wall at 2.2 m, est 0.40
+[  12.16]   LEAK OmniLight3D    light@(-6.4, 3.2, -16.8) (energy 1.3, range 7.5, room pump) reaches office through a wall at 4.0 m, est 0.28
+[  12.16]   LEAK OmniLight3D    light@(-8.0, 6.6, -29.6) (energy 1.6, range 6.0, room pump) reaches tunnel through a wall at 3.6 m, est 0.25
+[  12.16]   LEAK OmniLight3D    light@(-3.0, 2.95, -28.5) (energy 1.4, range 5.0, room tunnel) reaches pump through a wall at 3.2 m, est 0.18
+[  12.16]   LEAK OmniLight3D    light@(8.0, 2.5, 7.0) (energy 0.8, range 12.0, room dock) reaches corridor through a wall at 7.2 m, est 0.13
+[  12.17] E. COPLANAR different-material faces: 87
+[  12.17]   ZFIGHT face 1:-1:450 area 0.22 m2 between box@(14.75, 1.1, -15.0) and box@(14.5, 1.5, -15.0)
+[  12.17]   ZFIGHT face 1:-1:450 area 0.22 m2 between box@(14.75, 1.1, -8.0) and box@(14.5, 1.5, -8.0)
+[  12.17]   ZFIGHT face 2:-1:-30000 area 0.09 m2 between box@(33.0, 7.55, -28.0) and box@(41.0, 10.15, -16.0)
+[  12.17]   ZFIGHT face 0:-1:9000 area 0.05 m2 between box@(11.6, 2.0, -38.0) and box@(15.0, 3.75, -32.0)
+[  12.17]   ZFIGHT face 0:-1:21000 area 0.05 m2 between box@(27.0, 2.4, -40.0) and box@(27.0, 4.65, -33.0)
+[  12.17]   ZFIGHT face 2:-1:-40000 area 0.05 m2 between box@(33.0, 2.4, -34.35) and box@(27.0, 4.65, -33.0)
+[  12.17]   ZFIGHT face 0:1:21000 area 0.05 m2 between box@(18.9, 2.0, -38.0) and box@(15.0, 3.75, -32.0)
+[  12.17]   ZFIGHT face 2:1:-26000 area 0.05 m2 between box@(33.0, 2.4, -26.6) and box@(27.0, 4.65, -33.0)
+[  12.17]   ZFIGHT face 0:1:33000 area 0.05 m2 between box@(27.0, 2.4, -40.0) and box@(27.0, 4.65, -33.0)
+[  12.17]   ZFIGHT face 2:-1:-30000 area 0.05 m2 between box@(50.0, 5.15, -16.0) and box@(41.0, 10.15, -16.0)
+[  12.17]   ZFIGHT face 0:-1:12000 area 0.05 m2 between box@(22.0, 6.15, -62.0) and box@(22.0, 12.15, -52.0)
+[  12.17]   ZFIGHT face 0:-1:12000 area 0.05 m2 between box@(13.05, 6.15, -42.0) and box@(22.0, 12.15, -52.0)
+[  12.17]   ZFIGHT face 2:-1:-26000 area 0.05 m2 between box@(32.0, 4.65, -22.35) and box@(20.5, 9.150001, -14.0)
+[  12.17]   ZFIGHT face 2:1:-2000 area 0.05 m2 between box@(32.0, 4.65, -9.6) and box@(20.5, 9.150001, -14.0)
+[  12.17]   ZFIGHT face 2:1:-2000 area 0.05 m2 between box@(50.0, 5.15, -16.0) and box@(41.0, 10.15, -16.0)
+[  12.17]   ZFIGHT face 2:-1:-62000 area 0.05 m2 between box@(32.0, 6.15, -52.0) and box@(22.0, 12.15, -52.0)
+[  12.17]   ZFIGHT face 2:1:-2000 area 0.05 m2 between box@(32.0, 9.8, -14.05) and box@(41.0, 10.15, -16.0)
+[  12.17]   ZFIGHT face 2:1:-42000 area 0.05 m2 between box@(32.0, 6.15, -52.0) and box@(22.0, 12.15, -52.0)
+[  12.17]   ZFIGHT face 0:1:32000 area 0.05 m2 between box@(22.0, 6.15, -62.0) and box@(22.0, 12.15, -52.0)
+[  12.17]   ZFIGHT face 0:1:32000 area 0.05 m2 between box@(25.9, 6.15, -42.0) and box@(22.0, 12.15, -52.0)
+[  12.17]   ZFIGHT face 2:-1:-13000 area 0.05 m2 between box@(-6.0, 1.95, -10.35) and box@(0.0, 3.75, -8.0)
+[  12.17]   ZFIGHT face 2:1:0 area 0.05 m2 between box@(6.0, 1.95, -3.85) and box@(7.5, 3.75, -15.0)
+[  12.17]   ZFIGHT face 2:1:-3000 area 0.05 m2 between box@(-6.0, 1.95, -4.6) and box@(0.0, 3.75, -8.0)
+[  12.18]   ZFIGHT face 0:-1:-6000 area 0.05 m2 between box@(0.0, 1.95, -3.0) and box@(0.0, 3.75, -8.0)
+[  12.18]   ZFIGHT face 0:1:6000 area 0.05 m2 between box@(0.0, 1.95, -3.0) and box@(0.0, 3.75, -8.0)
+[  12.18]   ZFIGHT face 2:-1:-30000 area 0.05 m2 between box@(-6.0, 4.65, -29.6) and box@(0.0, 3.45, -28.5)
+[  12.18]   ZFIGHT face 2:-1:-30000 area 0.05 m2 between box@(6.0, 1.95, -29.6) and box@(0.0, 3.45, -28.5)
+[  12.18]   ZFIGHT face 2:-1:-30000 area 0.05 m2 between box@(6.0, 1.95, -29.6) and box@(7.5, 3.75, -15.0)
+[  12.18]   ZFIGHT face 0:1:14500 area 0.05 m2 between box@(13.25, 3.15, -1.0) and box@(13.25, 6.15, -2.0)
+[  12.18]   ZFIGHT face 0:-1:12000 area 0.05 m2 between box@(13.25, 3.15, -1.0) and box@(13.25, 6.15, -2.0)
+[  12.18]   ZFIGHT face 0:-1:0 area 0.05 m2 between box@(3.35, 3.15, 0.0) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 0:1:16000 area 0.05 m2 between box@(15.25, 3.15, 0.0) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 2:-1:0 area 0.05 m2 between box@(0.0, 3.15, 0.5) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 2:1:14000 area 0.05 m2 between box@(0.0, 3.15, 8.5) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 0:-1:12000 area 0.05 m2 between box@(13.25, 4.65, 0.0) and box@(13.25, 3.15, -1.0)
+[  12.18]   ZFIGHT face 0:1:14500 area 0.05 m2 between box@(13.25, 4.65, 0.0) and box@(13.25, 3.15, -1.0)
+[  12.18]   ZFIGHT face 2:1:-38000 area 0.04 m2 between box@(20.0, 2.15, -40.0) and box@(17.0, 4.15, -40.0)
+[  12.18]   ZFIGHT face 0:1:6000 area 0.04 m2 between box@(0.0, 1.8, -30.0) and box@(0.0, 3.45, -28.5)
+[  12.18]   ZFIGHT face 0:-1:-24000 area 0.04 m2 between box@(-17.5, 4.65, -3.0) and box@(-15.0, 9.150001, -16.5)
+[  12.18]   ZFIGHT face 0:1:6000 area 0.04 m2 between box@(0.0, 1.8, -27.0) and box@(0.0, 3.45, -28.5)
+[  12.18]   ZFIGHT face 0:-1:9000 area 0.04 m2 between box@(10.5, 4.65, -2.0) and box@(20.5, 9.150001, -14.0)
+[  12.18]   ZFIGHT face 0:-1:9000 area 0.04 m2 between box@(11.1, 4.65, -26.0) and box@(15.0, 3.75, -32.0)
+[  12.18]   ZFIGHT face 2:1:-38000 area 0.04 m2 between box@(14.0, 2.15, -40.0) and box@(17.0, 4.15, -40.0)
+[  12.18]   ZFIGHT face 0:1:-6000 area 0.04 m2 between box@(-7.5, 4.65, -3.0) and box@(-15.0, 9.150001, -16.5)
+[  12.18]   ZFIGHT face 2:-1:-42000 area 0.04 m2 between box@(20.0, 2.15, -40.0) and box@(17.0, 4.15, -40.0)
+[  12.18]   ZFIGHT face 0:1:32000 area 0.04 m2 between box@(23.25, 4.65, -2.0) and box@(20.5, 9.150001, -14.0)
+[  12.18]   ZFIGHT face 2:-1:-42000 area 0.04 m2 between box@(14.0, 2.15, -40.0) and box@(17.0, 4.15, -40.0)
+[  12.18]   ZFIGHT face 2:-1:-40000 area 0.04 m2 between box@(21.0, 2.4, -36.35) and box@(27.0, 4.65, -33.0)
+[  12.18]   ZFIGHT face 0:1:50000 area 0.04 m2 between box@(41.0, 5.15, -2.0) and box@(41.0, 10.15, -16.0)
+[  12.18]   ZFIGHT face 2:-1:-38000 area 0.04 m2 between box@(9.0, 2.0, -34.0) and box@(15.0, 3.75, -32.0)
+[  12.18]   ZFIGHT face 0:1:33000 area 0.04 m2 between box@(30.85, 4.65, -26.0) and box@(27.0, 4.65, -33.0)
+[  12.18]   ZFIGHT face 0:-1:32000 area 0.04 m2 between box@(41.0, 5.15, -2.0) and box@(41.0, 10.15, -16.0)
+[  12.18]   ZFIGHT face 0:-1:0 area 0.04 m2 between box@(8.0, 3.15, 14.0) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 0:1:16000 area 0.04 m2 between box@(8.0, 3.15, 14.0) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 2:-1:0 area 0.04 m2 between box@(16.0, 3.15, 7.0) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 2:1:14000 area 0.04 m2 between box@(16.0, 3.15, 7.0) and box@(8.0, 6.15, 7.0)
+[  12.18]   ZFIGHT face 2:-1:-30000 area 0.04 m2 between box@(9.0, 2.0, -29.85) and box@(7.5, 3.75, -15.0)
+[  12.18]   ZFIGHT face 2:-1:-30000 area 0.04 m2 between box@(-6.0, 4.65, -29.6) and box@(-15.0, 9.150001, -16.5)
+[  12.18]   ZFIGHT face 2:1:0 area 0.04 m2 between box@(9.0, 3.15, -1.0) and box@(7.5, 3.75, -15.0)
+[  12.18]   ZFIGHT face 2:1:-26000 area 0.04 m2 between box@(9.0, 2.0, -27.1) and box@(15.0, 3.75, -32.0)
+[  12.18]   ZFIGHT face 2:1:-26000 area 0.04 m2 between box@(21.0, 2.4, -28.6) and box@(15.0, 3.75, -32.0)
+[  12.18]   ZFIGHT face 2:1:-26000 area 0.04 m2 between box@(21.0, 2.4, -28.6) and box@(27.0, 4.65, -33.0)
+[  12.18]   ZFIGHT face 0:1:6000 area 0.04 m2 between box@(0.0, 1.95, -13.0) and box@(0.0, 3.75, -8.0)
+[  12.19]   ZFIGHT face 0:-1:-6000 area 0.04 m2 between box@(0.0, 1.8, -27.0) and box@(0.0, 3.45, -28.5)
+[  12.19]   ZFIGHT face 0:-1:-6000 area 0.04 m2 between box@(0.0, 1.8, -30.0) and box@(0.0, 3.45, -28.5)
+[  12.19]   ZFIGHT face 0:-1:-6000 area 0.04 m2 between box@(0.0, 1.95, -13.0) and box@(0.0, 3.75, -8.0)
+[  12.19]   ZFIGHT face 0:-1:6000 area 0.04 m2 between box@(7.5, 1.95, -30.0) and box@(7.5, 3.75, -15.0)
+[  12.19]   ZFIGHT face 0:1:9000 area 0.04 m2 between box@(7.5, 1.95, -30.0) and box@(7.5, 3.75, -15.0)
+[  12.19]   ZFIGHT face 2:1:-3000 area 0.04 m2 between box@(-6.0, 6.6, -8.0) and box@(-15.0, 9.150001, -16.5)
+[  12.19]   ZFIGHT face 2:-1:-2000 area 0.04 m2 between box@(12.0, 1.65, -1.0) and box@(13.25, 3.15, -1.0)
+[  12.19]   ZFIGHT face 2:-1:-2000 area 0.04 m2 between box@(14.5, 1.65, -1.0) and box@(13.25, 3.15, -1.0)
+[  12.19]   ZFIGHT face 2:1:0 area 0.04 m2 between box@(14.5, 1.65, -1.0) and box@(13.25, 3.15, -1.0)
+[  12.19]   ZFIGHT face 2:1:0 area 0.04 m2 between box@(12.0, 1.65, -1.0) and box@(13.25, 3.15, -1.0)
+[  12.19]   ZFIGHT face 0:-1:-24000 area 0.04 m2 between box@(-15.0, 4.65, -30.0) and box@(-15.0, 9.150001, -16.5)
+[  12.19]   ZFIGHT face 2:-1:-30000 area 0.04 m2 between box@(-24.0, 4.65, -16.5) and box@(-15.0, 9.150001, -16.5)
+[  12.19]   ZFIGHT face 0:1:-6000 area 0.04 m2 between box@(-15.0, 4.65, -30.0) and box@(-15.0, 9.150001, -16.5)
+[  12.19]   ZFIGHT face 0:-1:9000 area 0.04 m2 between box@(11.1, 4.65, -26.0) and box@(20.5, 9.150001, -14.0)
+[  12.19]   ZFIGHT face 0:1:50000 area 0.04 m2 between box@(41.5, 5.15, -30.0) and box@(41.0, 10.15, -16.0)
+[  12.19]   ZFIGHT face 2:-1:-62000 area 0.04 m2 between box@(12.0, 6.15, -52.0) and box@(22.0, 12.15, -52.0)
+[  12.19]   ZFIGHT face 2:1:-3000 area 0.04 m2 between box@(-24.0, 4.65, -16.5) and box@(-15.0, 9.150001, -16.5)
+[  12.19]   ZFIGHT face 2:1:-42000 area 0.04 m2 between box@(12.0, 6.15, -52.0) and box@(22.0, 12.15, -52.0)
+[  12.19]   ZFIGHT face 2:-1:-26000 area 0.04 m2 between box@(9.0, 4.65, -18.85) and box@(20.5, 9.150001, -14.0)
+[  12.19]   ZFIGHT face 2:1:-2000 area 0.04 m2 between box@(9.0, 4.65, -6.1) and box@(20.5, 9.150001, -14.0)
+[  12.19]   ZFIGHT face 1:-1:1150 area 0.04 m2 between box@(14.5, 1.2, -1.0) and box@(13.25, 2.1, -1.0)
+[  12.19]   ZFIGHT face 1:-1:1150 area 0.04 m2 between box@(12.0, 1.2, -1.0) and box@(13.25, 2.1, -1.0)
+[  12.19]   ZFIGHT face 0:1:14500 area 0.01 m2 between box@(13.25, 2.1, -1.0) and box@(13.25, 1.15, -1.0)
+[  12.19]   ZFIGHT face 0:-1:12000 area 0.01 m2 between box@(13.25, 2.1, -1.0) and box@(13.25, 1.15, -1.0)
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)

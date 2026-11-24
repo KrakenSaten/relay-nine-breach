@@ -1,0 +1,152 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+[   8.23] M4 MISSION TEST: scripted run with real interactions, god mode. Teleports between objectives are logged.
+[  10.25] start: stage=infiltrate D5=true D6=true D11=true bots=17 (dormant 2)
+[  10.25] console prompt before power: 'CONSOLE UNPOWERED - CLOSE BOTH MAIN BREAKERS (SWITCHGEAR HALL)'
+[  10.25] nav dock->console while sealed: gap=6.9 (blocked as intended)
+[  15.27] TELEPORT player -> (3.6, 0.05, -11.75)
+[  18.87] LOCKDOWN: flag=true D5=false D6=false D11=false objective='LOCKDOWN RELEASED   |   MAIN POWER 0/2: SWITCHGEAR HALL'
+[  19.48]   navmesh rebake finished (waited 0.0 s)
+[  19.48] nav dock->console after release: len=56.4 gap=0.40 OK
+[  20.12] capture C:/AAA/Breach/captures/m43_val/mission/m4_01_lockdown_released.png
+[  20.12] TELEPORT player -> (41.0, 0.05, -3.35)
+[  20.16]   HITCH 676 ms
+[  20.26]   HITCH 85 ms
+[  22.58] BREAKER A: power=1 thrown=true
+[  23.19] capture C:/AAA/Breach/captures/m43_val/mission/m4_02_breaker_a.png
+[  23.19] TELEPORT player -> (48.75, 4.25, -20.0)
+[  23.20]   HITCH 628 ms
+[  23.30]   HITCH 75 ms
+[mission] queued cp_objectives at 24.80 (+1.0 s)
+[  25.64] BREAKER B: power=2 stage=upload console powered=true objective='CONNECT THE OVERRIDE AT RELAY CONTROL'
+[mission] event cp_objectives fired at 25.79
+[  27.14] checkpoint: objectives
+[  27.15] TELEPORT player -> (27.0, 0.05, -35.6)
+[mission] queued  at 29.51 (+1.0 s)
+[mission] queued  at 29.51 (+12.0 s)
+[mission] queued  at 29.51 (+22.0 s)
+[  30.16] UPLOAD: uploading=true state=HACK
+[mission] event 1.0s fired at 30.50
+[  34.79] capture C:/AAA/Breach/captures/m43_val/mission/m4_03_upload_defend.png
+[  34.80] TIME SKIP: console progress forced to 0.98 to reach the complication
+[  34.81]   HITCH 650 ms
+[mission] queued probe at 35.54 (+0.1 s)
+[mission] queued probe at 35.54 (+0.2 s)
+[mission] queued probe at 35.54 (+0.4 s)
+[mission] queued probe at 35.54 (+0.5 s)
+[mission] queued probe at 35.54 (+0.6 s)
+[mission] queued probe at 35.54 (+0.7 s)
+[mission] queued probe at 35.54 (+0.8 s)
+[mission] queued probe at 35.54 (+1.0 s)
+[mission] queued probe at 35.54 (+1.1 s)
+[mission] queued probe at 35.54 (+1.2 s)
+[mission] queued probe at 35.54 (+1.3 s)
+[mission] queued probe at 35.54 (+1.4 s)
+[mission] queued probe at 35.54 (+1.6 s)
+[mission] queued  at 35.56 (+0.9 s)
+[mission] queued  at 35.56 (+2.0 s)
+[mission] queued  at 35.56 (+3.6 s)
+[mission] queued  at 35.56 (+5.5 s)
+[mission] queued cp_core at 35.56 (+7.0 s)
+[mission] event probe fired at 35.64
+[mission] event probe fired at 35.76
+[  35.76] COMPLICATION: stage=core state=CORE emergency=true alarms=6
+[  36.40] capture C:/AAA/Breach/captures/m43_val/mission/m4_04_complication_control.png
+[  36.41]   HITCH 657 ms
+[mission] event probe fired at 36.46
+[mission] event probe fired at 36.57
+[mission] event probe fired at 36.69
+[mission] event probe fired at 36.81
+[mission] event probe fired at 36.93
+[mission] event 0.9s fired at 36.99
+[mission] event probe fired at 37.05
+[mission] event probe fired at 37.17
+[  37.26]   D3 locked=true reason='SEALED - RELAY COUNTERMEASURE'  d1 dormant=true d2 dormant=true  core defenders=[true, true, true]
+[mission] event probe fired at 37.29
+[mission] event probe fired at 37.41
+[mission] event probe fired at 37.52
+[mission] event probe fired at 37.65
+[  37.87]   navmesh rebake finished (waited 0.0 s)
+[  37.87] TELEPORT player -> (15.5, 0.05, -33.2)
+[mission] event 2.0s fired at 38.09
+[mission] event 3.6s fired at 39.69
+[  40.08]   blast door opened=true
+[  40.63] capture C:/AAA/Breach/captures/m43_val/mission/m4_05_blast_door_open.png
+[  40.63] nav servers->core: len=17.1 gap=0.40 OK
+[  40.63] nav corridor->hall with D3 sealed: len=40.3 (detour expected, direct ~13 m)
+[  40.65]   HITCH 567 ms
+[mission] event 5.5s fired at 42.08
+[  43.08] checkpoint: objectives
+[  43.08] TELEPORT player -> (16.3, 0.05, -41.2)
+[mission] event 12.0s fired at 43.13
+[  43.44]   HITCH 56 ms
+[  43.52]   HITCH 66 ms
+[mission] event cp_core fired at 43.59
+[  44.51]   capacitor 0 dead=true caps=[true, false, false]
+[  44.51] TELEPORT player -> (24.0, 0.05, -44.3)
+[  46.09]   capacitor 1 dead=true caps=[true, true, false]
+[  46.09] TELEPORT player -> (26.6, 0.05, -58.2)
+[mission] queued  at 50.20 (+0.0 s)
+[mission] queued  at 50.20 (+1.3 s)
+[mission] queued  at 50.20 (+2.9 s)
+[mission] queued  at 50.20 (+4.3 s)
+[mission] queued  at 50.20 (+5.0 s)
+[mission] event 0.0s fired at 50.20
+[  50.23]   capacitor 2 dead=true caps=[true, true, true]
+[  51.26] capture C:/AAA/Breach/captures/m43_val/mission/m4_06_core_overload.png
+[  51.29]   HITCH 661 ms
+[mission] event 1.3s fired at 52.04
+[mission] event 2.9s fired at 53.65
+[mission] event 22.0s fired at 53.69
+[mission] event 4.3s fired at 55.05
+[mission] event 5.0s fired at 55.75
+[mission] queued probe at 55.75 (+0.1 s)
+[mission] queued probe at 55.75 (+0.2 s)
+[mission] queued probe at 55.75 (+0.4 s)
+[mission] queued probe at 55.75 (+0.5 s)
+[mission] queued probe at 55.75 (+0.6 s)
+[mission] queued probe at 55.75 (+0.7 s)
+[mission] queued probe at 55.75 (+0.8 s)
+[mission] queued probe at 55.75 (+1.0 s)
+[mission] queued probe at 55.75 (+1.1 s)
+[mission] queued probe at 55.75 (+1.2 s)
+[mission] queued probe at 55.75 (+1.3 s)
+[mission] queued probe at 55.75 (+1.4 s)
+[mission] queued probe at 55.75 (+1.6 s)
+[mission] queued cp_extract at 55.76 (+9.0 s)
+[mission] event probe fired at 55.86
+[mission] event probe fired at 55.98
+[mission] event probe fired at 56.11
+[mission] event probe fired at 56.23
+[mission] event probe fired at 56.35
+[mission] event probe fired at 56.47
+[mission] event probe fired at 56.59
+[  56.64] CORE DOWN: stage=extract state=EXTRACT hall lit=false dock lit=true lift panel active=true objective='EXTRACT: CALL FREIGHT LIFT 2 (DOCK)'
+[  57.15] capture C:/AAA/Breach/captures/m43_val/mission/m4_07_core_dead.png
+[mission] event probe fired at 57.17
+[  57.17]   HITCH 536 ms
+[mission] event probe fired at 57.27
+[mission] event probe fired at 57.40
+[mission] event probe fired at 57.52
+[mission] event probe fired at 57.63
+[mission] event probe fired at 57.76
+[  60.64] checkpoint: relay core  alive units: ["c1", "d1", "d2", "g1", "g2", "g3", "h1", "h2", "h3", "h4", "k1", "k2", "k3", "k4", "o1", "o2", "p1", "p2", "s1", "s2", "u1", "x1", "x2", "x3"]
+[  60.64] TELEPORT player -> (1.25, 0.05, 8.6)
+[mission] queued  at 63.03 (+0.5 s)
+[mission] queued  at 63.03 (+6.5 s)
+[mission] event 0.5s fired at 63.49
+[  63.74] LIFT CALLED: stage=lift lift_t=24.2
+[mission] event cp_extract fired at 65.20
+[  69.15] capture C:/AAA/Breach/captures/m43_val/mission/m4_08_hold_the_dock.png
+[  69.15] TIME SKIP: lift countdown forced to 1 s
+[  69.17]   HITCH 421 ms
+[mission] event 6.5s fired at 69.83
+[  70.35] LIFT ARRIVED: stage=board objective='BOARD FREIGHT LIFT 2'
+[  70.35] TELEPORT player -> (3.0, 0.1, 11.8)
+[  73.37] BOARDED: state=COMPLETE stage=done checkpoint cleared=true
+[  73.98] capture C:/AAA/Breach/captures/m43_val/mission/m4_09_extracted.png
+[  73.98] M4 MISSION TEST done. stats { "shots": 44, "hits": 2, "kills": 0, "head_hits": 0, "core_hits": 0, "core_kills": 0, "damage_taken": 0, "time": 0.0, "god_absorbed": 1364.08210124328 }, elapsed 66 s (includes time skips)
+[  73.98]   HITCH 618 ms
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)

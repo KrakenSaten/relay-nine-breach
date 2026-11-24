@@ -1,0 +1,150 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+Vulkan 1.4.335 - Forward+ - Using Device #0: Intel - Intel(R) Arc(TM) B580 Graphics
+
+[   7.84] M4 MISSION TEST: scripted run with real interactions, god mode. Teleports between objectives are logged.
+[   9.97] start: stage=infiltrate D5=true D6=true D11=true bots=17 (dormant 2)
+[   9.97] console prompt before power: 'CONSOLE UNPOWERED - CLOSE BOTH MAIN BREAKERS (SWITCHGEAR HALL)'
+[   9.97] nav dock->console while sealed: gap=6.9 (blocked as intended)
+[  14.98] TELEPORT player -> (3.6, 0.05, -11.75)
+[  18.59] LOCKDOWN: flag=true D5=false D6=false D11=false objective='LOCKDOWN RELEASED   |   MAIN POWER 0/2: SWITCHGEAR HALL'
+[  19.20]   navmesh rebake finished (waited 0.0 s)
+[  19.20] nav dock->console after release: len=56.4 gap=0.40 OK
+[  19.77] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_01_lockdown_released.png
+[  19.77] TELEPORT player -> (41.0, 0.05, -3.35)
+[  19.78]   HITCH 587 ms
+[  19.85]   HITCH 50 ms
+[  22.23] BREAKER A: power=1 thrown=true
+[  22.82] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_02_breaker_a.png
+[  22.82] TELEPORT player -> (48.75, 4.25, -20.0)
+[  22.84]   HITCH 610 ms
+[  22.91]   HITCH 60 ms
+[mission] queued cp_objectives at 24.42 (+1.0 s)
+[  25.27] BREAKER B: power=2 stage=upload console powered=true objective='CONNECT THE OVERRIDE AT RELAY CONTROL'
+[mission] event cp_objectives fired at 25.42
+[  26.78] checkpoint: objectives
+[  26.78] TELEPORT player -> (27.0, 0.05, -35.6)
+[mission] queued  at 29.14 (+1.0 s)
+[mission] queued  at 29.14 (+12.0 s)
+[mission] queued  at 29.14 (+22.0 s)
+[  29.79] UPLOAD: uploading=true state=HACK
+[mission] event 1.0s fired at 30.14
+[  34.40] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_03_upload_defend.png
+[  34.40] TIME SKIP: console progress forced to 0.98 to reach the complication
+[  34.41]   HITCH 623 ms
+[mission] queued probe at 35.14 (+0.1 s)
+[mission] queued probe at 35.14 (+0.2 s)
+[mission] queued probe at 35.14 (+0.4 s)
+[mission] queued probe at 35.14 (+0.5 s)
+[mission] queued probe at 35.14 (+0.6 s)
+[mission] queued probe at 35.14 (+0.7 s)
+[mission] queued probe at 35.14 (+0.8 s)
+[mission] queued probe at 35.14 (+1.0 s)
+[mission] queued probe at 35.14 (+1.1 s)
+[mission] queued probe at 35.14 (+1.2 s)
+[mission] queued probe at 35.14 (+1.3 s)
+[mission] queued probe at 35.14 (+1.4 s)
+[mission] queued probe at 35.14 (+1.6 s)
+[mission] queued  at 35.15 (+0.9 s)
+[mission] queued  at 35.15 (+2.0 s)
+[mission] queued  at 35.15 (+3.6 s)
+[mission] queued  at 35.15 (+5.5 s)
+[mission] queued cp_core at 35.15 (+7.0 s)
+[mission] event probe fired at 35.25
+[mission] event probe fired at 35.38
+[  35.40] COMPLICATION: stage=core state=CORE emergency=true alarms=6
+[  36.02] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_04_complication_control.png
+[  36.03]   HITCH 636 ms
+[mission] event probe fired at 36.06
+[mission] event probe fired at 36.16
+[mission] event probe fired at 36.29
+[mission] event probe fired at 36.41
+[mission] event probe fired at 36.52
+[mission] event 0.9s fired at 36.60
+[mission] event probe fired at 36.65
+[mission] event probe fired at 36.78
+[mission] event probe fired at 36.89
+[  36.90]   D3 locked=true reason='SEALED - RELAY COUNTERMEASURE'  d1 dormant=true d2 dormant=true  core defenders=[true, true, true]
+[mission] event probe fired at 37.01
+[mission] event probe fired at 37.13
+[mission] event probe fired at 37.25
+[  37.50]   navmesh rebake finished (waited 0.0 s)
+[  37.50] TELEPORT player -> (15.5, 0.05, -33.2)
+[mission] event 2.0s fired at 37.69
+[mission] event 3.6s fired at 39.29
+[  39.71]   blast door opened=true
+[  40.24] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_05_blast_door_open.png
+[  40.24] nav servers->core: len=17.1 gap=0.40 OK
+[  40.24] nav corridor->hall with D3 sealed: len=40.3 (detour expected, direct ~13 m)
+[  40.25]   HITCH 542 ms
+[mission] event 5.5s fired at 41.65
+[mission] event 12.0s fired at 42.69
+[  42.71] checkpoint: objectives
+[  42.71] TELEPORT player -> (16.3, 0.05, -41.2)
+[mission] event cp_core fired at 43.15
+[  44.13]   capacitor 0 dead=true caps=[true, false, false]
+[  44.13] TELEPORT player -> (24.0, 0.05, -44.3)
+[  49.36]   capacitor 1 dead=true caps=[true, true, false]
+[  49.36] TELEPORT player -> (26.6, 0.05, -58.2)
+[mission] queued  at 50.76 (+0.0 s)
+[mission] queued  at 50.76 (+1.3 s)
+[mission] queued  at 50.76 (+2.9 s)
+[mission] queued  at 50.76 (+4.3 s)
+[mission] queued  at 50.76 (+5.0 s)
+[mission] event 0.0s fired at 50.76
+[  50.77]   capacitor 2 dead=true caps=[true, true, true]
+[  51.78] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_06_core_overload.png
+[  51.80]   HITCH 636 ms
+[mission] event 1.3s fired at 52.59
+[mission] event 22.0s fired at 53.24
+[mission] event 2.9s fired at 54.20
+[mission] event 4.3s fired at 55.59
+[mission] event 5.0s fired at 56.30
+[mission] queued probe at 56.30 (+0.1 s)
+[mission] queued probe at 56.30 (+0.2 s)
+[mission] queued probe at 56.30 (+0.4 s)
+[mission] queued probe at 56.30 (+0.5 s)
+[mission] queued probe at 56.30 (+0.6 s)
+[mission] queued probe at 56.30 (+0.7 s)
+[mission] queued probe at 56.30 (+0.8 s)
+[mission] queued probe at 56.30 (+1.0 s)
+[mission] queued probe at 56.30 (+1.1 s)
+[mission] queued probe at 56.30 (+1.2 s)
+[mission] queued probe at 56.30 (+1.3 s)
+[mission] queued probe at 56.30 (+1.4 s)
+[mission] queued probe at 56.30 (+1.6 s)
+[mission] queued cp_extract at 56.31 (+9.0 s)
+[mission] event probe fired at 56.41
+[mission] event probe fired at 56.54
+[mission] event probe fired at 56.66
+[mission] event probe fired at 56.78
+[mission] event probe fired at 56.90
+[mission] event probe fired at 57.01
+[mission] event probe fired at 57.13
+[  57.17] CORE DOWN: stage=extract state=EXTRACT hall lit=false dock lit=true lift panel active=true objective='EXTRACT: CALL FREIGHT LIFT 2 (DOCK)'
+[  57.68] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_07_core_dead.png
+[  57.70]   HITCH 530 ms
+[mission] event probe fired at 57.71
+[mission] event probe fired at 57.81
+[mission] event probe fired at 57.93
+[mission] event probe fired at 58.06
+[mission] event probe fired at 58.18
+[mission] event probe fired at 58.30
+[  61.18] checkpoint: relay core  alive units: ["c1", "d1", "d2", "g1", "g2", "g3", "h1", "h2", "h3", "h4", "k1", "k2", "k4", "o1", "o2", "p1", "p2", "s1", "s2", "u1", "x1", "x2", "x3"]
+[  61.18] TELEPORT player -> (1.25, 0.05, 8.6)
+[mission] queued  at 63.54 (+0.5 s)
+[mission] queued  at 63.54 (+6.5 s)
+[mission] event 0.5s fired at 64.03
+[  64.28] LIFT CALLED: stage=lift lift_t=24.2
+[mission] event cp_extract fired at 65.73
+[  69.86] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_08_hold_the_dock.png
+[  69.86] TIME SKIP: lift countdown forced to 1 s
+[  69.88]   HITCH 594 ms
+[mission] event 6.5s fired at 70.55
+[  70.88] LIFT ARRIVED: stage=board objective='BOARD FREIGHT LIFT 2'
+[  70.88] TELEPORT player -> (3.0, 0.1, 11.8)
+[  73.90] BOARDED: state=COMPLETE stage=done checkpoint cleared=true
+[  74.49] capture C:/Users/ANDRWG~1/AppData/Local/Temp/claude/b311ff6e8b6989af/db5045a3-b1be-4e92-b09f-074a6e848497/scratchpad/stab/val/mission3/m4_09_extracted.png
+[  74.49] M4 MISSION TEST done. stats { "shots": 56, "hits": 14, "kills": 1, "head_hits": 0, "core_hits": 0, "core_kills": 0, "damage_taken": 0, "time": 0.0, "god_absorbed": 1100.75748204775 }, elapsed 67 s (includes time skips)
+[  74.49]   HITCH 591 ms
+WARNING: 7 RIDs of type "Texture" were leaked.
+   at: finalize (servers/rendering/rendering_device.cpp:8900)

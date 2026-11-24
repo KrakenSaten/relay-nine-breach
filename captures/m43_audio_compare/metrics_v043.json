@@ -1,0 +1,427 @@
+[
+ {
+  "label": "office (small room) | rifle | open | 3 single",
+  "t": 5.59,
+  "peak_db": -3.5,
+  "rms400_db": -20.100000381469727,
+  "tail_rms_db": -23.100000381469727,
+  "crest_db": 16.600000381469727,
+  "decay_to_-30db_s": 0.4,
+  "tail_side_to_mid_db": -8.5,
+  "bands_rel_mid_db": {
+   "sub_40_100": -2.8,
+   "body_100_400": 0.1,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -1.3,
+   "air_6k_16k": -6.4
+  }
+ },
+ {
+  "label": "office (small room) | rifle | open | burst",
+  "t": 8.05,
+  "peak_db": -1.899999976158142,
+  "rms400_db": -13.899999618530273,
+  "tail_rms_db": -16.600000381469727,
+  "crest_db": 12.0,
+  "decay_to_-30db_s": 1.08,
+  "tail_side_to_mid_db": -8.800000190734863,
+  "bands_rel_mid_db": {
+   "sub_40_100": -4.7,
+   "body_100_400": 1.7,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -2.7,
+   "air_6k_16k": -8.8
+  }
+ },
+ {
+  "label": "office (small room) | rifle | suppressed | 3 single",
+  "t": 11.76,
+  "peak_db": -7.699999809265137,
+  "rms400_db": -26.100000381469727,
+  "tail_rms_db": -29.799999237060547,
+  "crest_db": 18.399999618530273,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -11.100000381469727,
+  "bands_rel_mid_db": {
+   "sub_40_100": -9.2,
+   "body_100_400": 1.0,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 1.7,
+   "air_6k_16k": 0.5
+  }
+ },
+ {
+  "label": "office (small room) | rifle | suppressed | burst",
+  "t": 14.21,
+  "peak_db": -4.699999809265137,
+  "rms400_db": -19.5,
+  "tail_rms_db": -22.0,
+  "crest_db": 14.800000190734863,
+  "decay_to_-30db_s": 1.48,
+  "tail_side_to_mid_db": -12.300000190734863,
+  "bands_rel_mid_db": {
+   "sub_40_100": -9.2,
+   "body_100_400": 1.7,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 0.1,
+   "air_6k_16k": -2.3
+  }
+ },
+ {
+  "label": "office (small room) | pistol | 3 single",
+  "t": 18.74,
+  "peak_db": -4.5,
+  "rms400_db": -22.200000762939453,
+  "tail_rms_db": -22.799999237060547,
+  "crest_db": 17.700000762939453,
+  "decay_to_-30db_s": 0.42,
+  "tail_side_to_mid_db": -6.300000190734863,
+  "bands_rel_mid_db": {
+   "sub_40_100": -4.1,
+   "body_100_400": 2.4,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -2.0,
+   "air_6k_16k": -6.4
+  }
+ },
+ {
+  "label": "corridor (medium) | rifle | open | 3 single",
+  "t": 25.03,
+  "peak_db": -2.0999999046325684,
+  "rms400_db": -19.399999618530273,
+  "tail_rms_db": -23.100000381469727,
+  "crest_db": 17.299999237060547,
+  "decay_to_-30db_s": 1.16,
+  "tail_side_to_mid_db": -6.5,
+  "bands_rel_mid_db": {
+   "sub_40_100": -6.1,
+   "body_100_400": 2.9,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -2.1,
+   "air_6k_16k": -7.4
+  }
+ },
+ {
+  "label": "corridor (medium) | rifle | open | burst",
+  "t": 27.47,
+  "peak_db": -1.899999976158142,
+  "rms400_db": -14.600000381469727,
+  "tail_rms_db": -16.700000762939453,
+  "crest_db": 12.600000381469727,
+  "decay_to_-30db_s": 1.28,
+  "tail_side_to_mid_db": -7.5,
+  "bands_rel_mid_db": {
+   "sub_40_100": -6.0,
+   "body_100_400": 2.1,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -2.8,
+   "air_6k_16k": -8.6
+  }
+ },
+ {
+  "label": "corridor (medium) | rifle | suppressed | 3 single",
+  "t": 31.19,
+  "peak_db": -7.900000095367432,
+  "rms400_db": -25.5,
+  "tail_rms_db": -29.299999237060547,
+  "crest_db": 17.600000381469727,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -8.699999809265137,
+  "bands_rel_mid_db": {
+   "sub_40_100": -8.5,
+   "body_100_400": 2.3,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 1.9,
+   "air_6k_16k": 1.0
+  }
+ },
+ {
+  "label": "corridor (medium) | rifle | suppressed | burst",
+  "t": 33.65,
+  "peak_db": -4.199999809265137,
+  "rms400_db": -19.399999618530273,
+  "tail_rms_db": -21.700000762939453,
+  "crest_db": 15.199999809265137,
+  "decay_to_-30db_s": 1.52,
+  "tail_side_to_mid_db": -10.399999618530273,
+  "bands_rel_mid_db": {
+   "sub_40_100": -9.0,
+   "body_100_400": 1.8,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 1.1,
+   "air_6k_16k": -2.8
+  }
+ },
+ {
+  "label": "corridor (medium) | pistol | 3 single",
+  "t": 38.18,
+  "peak_db": -4.800000190734863,
+  "rms400_db": -21.600000381469727,
+  "tail_rms_db": -22.299999237060547,
+  "crest_db": 16.799999237060547,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -4.5,
+  "bands_rel_mid_db": {
+   "sub_40_100": -7.3,
+   "body_100_400": 0.6,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -1.9,
+   "air_6k_16k": -7.1
+  }
+ },
+ {
+  "label": "turbine hall (large) | rifle | open | 3 single",
+  "t": 44.46,
+  "peak_db": -2.799999952316284,
+  "rms400_db": -19.100000381469727,
+  "tail_rms_db": -21.899999618530273,
+  "crest_db": 16.299999237060547,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -6.199999809265137,
+  "bands_rel_mid_db": {
+   "sub_40_100": -3.8,
+   "body_100_400": 2.4,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -1.6,
+   "air_6k_16k": -7.7
+  }
+ },
+ {
+  "label": "turbine hall (large) | rifle | open | burst",
+  "t": 46.9,
+  "peak_db": -1.899999976158142,
+  "rms400_db": -13.800000190734863,
+  "tail_rms_db": -15.699999809265137,
+  "crest_db": 11.899999618530273,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -6.300000190734863,
+  "bands_rel_mid_db": {
+   "sub_40_100": -7.2,
+   "body_100_400": 2.0,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -1.8,
+   "air_6k_16k": -5.5
+  }
+ },
+ {
+  "label": "turbine hall (large) | rifle | suppressed | 3 single",
+  "t": 50.63,
+  "peak_db": -5.800000190734863,
+  "rms400_db": -25.0,
+  "tail_rms_db": -27.799999237060547,
+  "crest_db": 19.200000762939453,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -7.099999904632568,
+  "bands_rel_mid_db": {
+   "sub_40_100": -9.2,
+   "body_100_400": 0.6,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 2.7,
+   "air_6k_16k": 0.5
+  }
+ },
+ {
+  "label": "turbine hall (large) | rifle | suppressed | burst",
+  "t": 53.07,
+  "peak_db": -1.899999976158142,
+  "rms400_db": -18.600000381469727,
+  "tail_rms_db": -20.5,
+  "crest_db": 16.700000762939453,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -8.699999809265137,
+  "bands_rel_mid_db": {
+   "sub_40_100": -9.9,
+   "body_100_400": 1.5,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 1.9,
+   "air_6k_16k": -0.1
+  }
+ },
+ {
+  "label": "turbine hall (large) | pistol | 3 single",
+  "t": 57.6,
+  "peak_db": -3.9000000953674316,
+  "rms400_db": -21.100000381469727,
+  "tail_rms_db": -21.799999237060547,
+  "crest_db": 17.100000381469727,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -4.0,
+  "bands_rel_mid_db": {
+   "sub_40_100": -7.5,
+   "body_100_400": 0.7,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -1.1,
+   "air_6k_16k": -6.8
+  }
+ },
+ {
+  "label": "relay core (huge) | rifle | open | 3 single",
+  "t": 63.9,
+  "peak_db": -2.5999999046325684,
+  "rms400_db": -19.0,
+  "tail_rms_db": -21.399999618530273,
+  "crest_db": 16.399999618530273,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -5.199999809265137,
+  "bands_rel_mid_db": {
+   "sub_40_100": -4.8,
+   "body_100_400": 1.1,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -2.3,
+   "air_6k_16k": -7.7
+  }
+ },
+ {
+  "label": "relay core (huge) | rifle | open | burst",
+  "t": 66.34,
+  "peak_db": -1.899999976158142,
+  "rms400_db": -13.699999809265137,
+  "tail_rms_db": -15.5,
+  "crest_db": 11.800000190734863,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -5.300000190734863,
+  "bands_rel_mid_db": {
+   "sub_40_100": -5.3,
+   "body_100_400": 1.5,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -2.5,
+   "air_6k_16k": -8.3
+  }
+ },
+ {
+  "label": "relay core (huge) | rifle | suppressed | 3 single",
+  "t": 70.06,
+  "peak_db": -8.199999809265137,
+  "rms400_db": -25.600000381469727,
+  "tail_rms_db": -28.799999237060547,
+  "crest_db": 17.399999618530273,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -7.599999904632568,
+  "bands_rel_mid_db": {
+   "sub_40_100": -8.7,
+   "body_100_400": 1.0,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 3.2,
+   "air_6k_16k": 0.9
+  }
+ },
+ {
+  "label": "relay core (huge) | rifle | suppressed | burst",
+  "t": 72.5,
+  "peak_db": -5.199999809265137,
+  "rms400_db": -19.5,
+  "tail_rms_db": -21.5,
+  "crest_db": 14.300000190734863,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -8.5,
+  "bands_rel_mid_db": {
+   "sub_40_100": -9.3,
+   "body_100_400": 1.1,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 0.0,
+   "air_6k_16k": -2.9
+  }
+ },
+ {
+  "label": "relay core (huge) | pistol | 3 single",
+  "t": 77.04,
+  "peak_db": -3.799999952316284,
+  "rms400_db": -21.200000762939453,
+  "tail_rms_db": -21.899999618530273,
+  "crest_db": 17.399999618530273,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -3.5,
+  "bands_rel_mid_db": {
+   "sub_40_100": -5.6,
+   "body_100_400": 2.2,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -0.7,
+   "air_6k_16k": -5.7
+  }
+ },
+ {
+  "label": "crawlway (metal duct) | rifle | open | 3 single",
+  "t": 83.32,
+  "peak_db": -3.0,
+  "rms400_db": -20.100000381469727,
+  "tail_rms_db": -23.600000381469727,
+  "crest_db": 17.100000381469727,
+  "decay_to_-30db_s": 0.34,
+  "tail_side_to_mid_db": -8.0,
+  "bands_rel_mid_db": {
+   "sub_40_100": -5.8,
+   "body_100_400": 1.2,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -1.4,
+   "air_6k_16k": -7.2
+  }
+ },
+ {
+  "label": "crawlway (metal duct) | rifle | open | burst",
+  "t": 85.77,
+  "peak_db": -1.899999976158142,
+  "rms400_db": -13.399999618530273,
+  "tail_rms_db": -15.899999618530273,
+  "crest_db": 11.5,
+  "decay_to_-30db_s": 1.06,
+  "tail_side_to_mid_db": -9.199999809265137,
+  "bands_rel_mid_db": {
+   "sub_40_100": -4.4,
+   "body_100_400": 1.2,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -3.0,
+   "air_6k_16k": -8.6
+  }
+ },
+ {
+  "label": "crawlway (metal duct) | rifle | suppressed | 3 single",
+  "t": 89.5,
+  "peak_db": -8.199999809265137,
+  "rms400_db": -26.0,
+  "tail_rms_db": -29.600000381469727,
+  "crest_db": 17.700000762939453,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -11.600000381469727,
+  "bands_rel_mid_db": {
+   "sub_40_100": -5.5,
+   "body_100_400": 1.2,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": 0.7,
+   "air_6k_16k": -0.1
+  }
+ },
+ {
+  "label": "crawlway (metal duct) | rifle | suppressed | burst",
+  "t": 91.94,
+  "peak_db": -4.800000190734863,
+  "rms400_db": -19.100000381469727,
+  "tail_rms_db": -21.799999237060547,
+  "crest_db": 14.300000190734863,
+  "decay_to_-30db_s": 1.6,
+  "tail_side_to_mid_db": -13.699999809265137,
+  "bands_rel_mid_db": {
+   "sub_40_100": -6.4,
+   "body_100_400": 1.9,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -0.2,
+   "air_6k_16k": -2.3
+  }
+ },
+ {
+  "label": "crawlway (metal duct) | pistol | 3 single",
+  "t": 96.47,
+  "peak_db": -3.0999999046325684,
+  "rms400_db": -22.0,
+  "tail_rms_db": -22.799999237060547,
+  "crest_db": 18.899999618530273,
+  "decay_to_-30db_s": 0.34,
+  "tail_side_to_mid_db": -7.800000190734863,
+  "bands_rel_mid_db": {
+   "sub_40_100": -6.7,
+   "body_100_400": -1.0,
+   "mid_400_2k": 0.0,
+   "pres_2k_6k": -3.7,
+   "air_6k_16k": -9.4
+  }
+ }
+]

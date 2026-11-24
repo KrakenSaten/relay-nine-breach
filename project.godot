@@ -4,10 +4,10 @@ config_version=5
 [application]
 
 config/name="Relay Nine: BREACH"
-config/description="Relay Nine: BREACH 0.4.2 (M4 + fixes + ammunition caches) - singleplayer tactical CQB"
+config/description="Relay Nine: BREACH 0.4.3 (M4 + ammunition caches + visual and audio quality pass) - singleplayer tactical CQB"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
-config/version="0.4.2"
+config/version="0.4.3"
 config/icon="res://icon.png"
 config/windows_native_icon="res://icon.ico"
 boot_splash/bg_color=Color(0, 0, 0, 1)

@@ -1,0 +1,4 @@
+RELEASE EXE v0.4.3 (run from a folder outside the project, no args)
+title='Relay Nine: BREACH' responding=True ws_MB=1561
+exit code 0
+log godot.log written 11/24/2026 10:43:00: errors=0 warnings=0
