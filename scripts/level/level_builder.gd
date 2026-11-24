@@ -951,21 +951,31 @@ func build_cover_points() -> Array:
 
 
 # ------------------------------------------------------------------ audio zones
+## Room bed volumes were rebalanced in M4.4 when the beds started playing dry
+## (same per-room loudness as v0.4.3, measured K-weighted at the listening spots).
 const ROOM_AUDIO := {
-	"dock": ["Rev_Dock", "ambience_dock", Vector3(8, 3, 7), -12.0],
-	"corridor": ["Rev_Small", "ambience_facility", Vector3(7.5, 2.5, -15), -18.0],
-	"office": ["Rev_Small", "electric_buzz_loop", Vector3(0.5, 3.2, -8), -22.0],
+	"dock": ["Rev_Dock", "ambience_dock", Vector3(8, 3, 7), -19.0],
+	"corridor": ["Rev_Small", "ambience_facility", Vector3(7.5, 2.5, -15), -20.0],
+	"office": ["Rev_Small", "electric_buzz_loop", Vector3(0.5, 3.2, -8), -20.5],
 	"passage": ["Rev_Small", "", Vector3.ZERO, 0.0],
-	"hall": ["Rev_Hall", "ambience_hall", Vector3(20, 4, -14), -10.0],
-	"servers": ["Rev_Servers", "ambience_servers", Vector3(15, 1.5, -32), -12.0],
-	"control": ["Rev_Small", "ambience_control", Vector3(27, 3.0, -33), -13.0],
-	"pump": ["Rev_Hall", "ambience_pump", Vector3(-15, 3.0, -16), -11.0],
+	"hall": ["Rev_Hall", "ambience_hall", Vector3(20, 4, -14), -11.0],
+	"servers": ["Rev_Servers", "ambience_servers", Vector3(15, 1.5, -32), -17.5],
+	"control": ["Rev_Small", "ambience_control", Vector3(27, 3.0, -33), -15.5],
+	"pump": ["Rev_Hall", "ambience_pump", Vector3(-15, 3.0, -16), -8.0],
 	"tunnel": ["Rev_Small", "", Vector3.ZERO, 0.0],
 	"crawl": ["Rev_Small", "", Vector3.ZERO, 0.0],
-	"switchgear": ["Rev_Hall", "ambience_switchgear", Vector3(41, 4.0, -16), -11.0],
+	"switchgear": ["Rev_Hall", "ambience_switchgear", Vector3(41, 4.0, -16), -9.5],
 	"antechamber": ["Rev_Small", "", Vector3.ZERO, 0.0],
-	"core": ["Rev_Hall", "ambience_core", Vector3(22, 5.0, -52), -9.0],
+	"core": ["Rev_Hall", "ambience_core", Vector3(22, 5.0, -52), -7.5],
 }
+
+
+const BED_PANNING := 0.35
+const BED_CUTOFF := 9000.0
+const BED_OUTSIDE_DB := -6.0        # a bed heard from another room
+const BED_OUTSIDE_CUTOFF := 500.0   # ... through a wall: the machinery thump, not the air
+const BED_XFADE := 0.6
+var _beds: Array = []               # [AudioStreamPlayer3D, room, base volume_db, outside 0..1 (-1 = unset)]
 
 
 func _audio_zones() -> void:
@@ -997,7 +1007,36 @@ func _audio_zones() -> void:
 			var p := Sfx.loop_3d(cfg[1], holder, cfg[3], 14.0)
 			if p:
 				p.max_distance = maxf(aabb.size.x, aabb.size.z) * 0.9
-				p.attenuation_filter_cutoff_hz = 9000.0
+				p.attenuation_filter_cutoff_hz = BED_CUTOFF
+				# A bed inside a reverb zone was heard only through the reverb bus (an Area3D
+				# reverb that does not override the bus sends no dry signal, and the reverb
+				# buses run dry = 0): a thin, comb-coloured tail without body - the hollow
+				# ambience. The beds carry their own room acoustics, so they skip the zones.
+				p.area_mask = 0
+				# A room bed surrounds the listener; it must not swing from ear to ear.
+				p.panning_strength = BED_PANNING
+				if cfg[1] == "ambience_facility":   # same loop as the global 2D bed: run half a loop apart
+					p.play(p.stream.get_length() * 0.5)
+				_beds.append([p, room, float(cfg[3]), -1.0])
+
+
+## Room beds of other rooms are heard through the walls: quieter and muffled.
+func _process(delta: float) -> void:
+	if _beds.is_empty():
+		return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var here := Game.room_at(cam.global_position)
+	for b in _beds:
+		var tgt := 0.0 if b[1] == here else 1.0
+		var k: float = tgt if b[3] < 0.0 else move_toward(b[3], tgt, delta / BED_XFADE)
+		if k == b[3]:
+			continue
+		b[3] = k
+		var p: AudioStreamPlayer3D = b[0]
+		p.volume_db = b[2] + BED_OUTSIDE_DB * k
+		p.attenuation_filter_cutoff_hz = BED_CUTOFF * pow(BED_OUTSIDE_CUTOFF / BED_CUTOFF, k)
 
 
 
