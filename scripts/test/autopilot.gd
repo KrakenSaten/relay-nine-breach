@@ -24,10 +24,12 @@ func run(m: Node) -> void:
 			out_dir = a.get_slice("=", 1)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	player.bot_input = {"god": true}
-	if not main.mission.restoring:
+	var ui_flow := "--ui_flow" in OS.get_cmdline_user_args()
+	if not main.mission.restoring and not ui_flow:
 		Game.begin_mission()
 		main.mission.begin()
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if not ui_flow:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	var args := OS.get_cmdline_user_args()
 	var m4 = load("res://scripts/test/m4_tests.gd").new(self)
 	if "--m4mission" in args:
@@ -59,6 +61,11 @@ func run(m: Node) -> void:
 		await load("res://scripts/test/m43_tests.gd").new(self).gunaudio()
 	elif "--rv_geo" in args:
 		await load("res://scripts/test/m43_tests.gd").new(self).geo()
+	elif "--rv_briefing" in args:
+		await load("res://scripts/test/m45_tests.gd").new(self).briefing()
+		if Game.get_meta("rv_reload_pending", false):
+			Game.set_meta("rv_reload_pending", false)
+			return
 	elif "--rv_ambaudio" in args:
 		await load("res://scripts/test/m43_tests.gd").new(self).ambaudio()
 	elif "--rv_crawl" in args:

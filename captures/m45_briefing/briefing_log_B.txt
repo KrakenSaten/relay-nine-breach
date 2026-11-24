@@ -1,0 +1,5 @@
+[  30.06] BRIEFING FLOW phase B
+[  32.92] PASS  checkpoint respawn skips the briefing  (screen=)
+[  32.92] PASS  checkpoint state restored
+[  33.58] capture C:/AAA/Breach/captures/m45_briefing/b11_checkpoint_respawn_no_briefing.png
+[  33.96] PASS  pause menu offers RESTART MISSION

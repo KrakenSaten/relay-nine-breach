@@ -1,0 +1,36 @@
+[   7.83] BRIEFING FLOW phase A
+[   7.83] PASS  briefing opens on a new mission  (screen=briefing)
+[   7.83] PASS  mission waits in BRIEFING while the briefing is up
+[   8.26] capture C:/AAA/Breach/captures/m45_briefing/b01_reveal_in_progress.png
+[  10.44] capture C:/AAA/Breach/captures/m45_briefing/b02_briefing_full.png
+[  10.44] plan from level collision: 109 walls, 80 machinery, 57 low cover, 3 gallery slabs
+[  10.44] markers: INS@D8, 01@C6, 02A@G7, 02B@H5, 03@F3, 04@C8, STM@B5, AM1@C6, AM2@G7, AM3@E4
+[  10.44] PASS  map built from level geometry  (109 walls)
+[  10.44] PASS  objective markers placed from mission objects
+[  10.44] PASS  threat estimate matches the start roster  (17 units)
+[  11.06] capture C:/AAA/Breach/captures/m45_briefing/b03_hover_task02_map_highlight.png
+[  11.06] PASS  hovering task 02 highlights the breakers on the map
+[  12.24] capture C:/AAA/Breach/captures/m45_briefing/b04_keyboard_focus_task03.png
+[  12.24] PASS  arrow keys move focus through the tasking  (focus=03 map=03)
+[  12.77] PASS  LOADOUT opens from the briefing
+[  13.17] capture C:/AAA/Breach/captures/m45_briefing/b05_loadout_from_briefing.png
+[  13.81] PASS  BACK returns to the briefing
+[  15.06] capture C:/AAA/Breach/captures/m45_briefing/b06_deploy_authorising.png
+[  15.06] PASS  DEPLOY does not start the mission before the cut
+[  16.14] capture C:/AAA/Breach/captures/m45_briefing/b07_title_card.png
+[  16.14] PASS  mission still waiting during the title card
+[  19.23] capture C:/AAA/Breach/captures/m45_briefing/b08_in_game_after_deploy.png
+[  19.23] PASS  gameplay starts after the transition  (state=1 stage=infiltrate)
+[  19.23] PASS  first objective set by the mission  (RELEASE LOCKDOWN: SECURITY OFFICE   |   MAIN POWER 0/2: SWITCHGEAR HALL)
+[  19.23] PASS  mouse captured for play
+[  20.01] PASS  ESC opens the pause menu
+[  20.01] PASS  pause menu offers MISSION BRIEFING
+[  21.07] PASS  briefing review opens from pause
+[  21.36] capture C:/AAA/Breach/captures/m45_briefing/b09_review_at_start.png
+[  22.08] PASS  ESC backs out to the game
+[  22.08] SCRIPTED: lockdown panel and breaker A `done` signals emitted (no walking)
+[  25.39] capture C:/AAA/Breach/captures/m45_briefing/b10_review_progress.png
+[  25.39] PASS  review shows live progress
+[  25.81] PASS  RETURN goes back to the pause menu
+[  26.26] PASS  checkpoint saved
+[  26.69] PASS  pause menu offers RESTART FROM CHECKPOINT

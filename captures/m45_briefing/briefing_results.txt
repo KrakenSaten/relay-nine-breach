@@ -1,0 +1,28 @@
+PASS  briefing opens on a new mission  (screen=briefing)
+PASS  mission waits in BRIEFING while the briefing is up
+PASS  map built from level geometry  (109 walls)
+PASS  objective markers placed from mission objects
+PASS  threat estimate matches the start roster  (17 units)
+PASS  hovering task 02 highlights the breakers on the map
+PASS  arrow keys move focus through the tasking  (focus=03 map=03)
+PASS  LOADOUT opens from the briefing
+PASS  BACK returns to the briefing
+PASS  DEPLOY does not start the mission before the cut
+PASS  mission still waiting during the title card
+PASS  gameplay starts after the transition  (state=1 stage=infiltrate)
+PASS  first objective set by the mission  (RELEASE LOCKDOWN: SECURITY OFFICE   |   MAIN POWER 0/2: SWITCHGEAR HALL)
+PASS  mouse captured for play
+PASS  ESC opens the pause menu
+PASS  pause menu offers MISSION BRIEFING
+PASS  briefing review opens from pause
+PASS  ESC backs out to the game
+PASS  review shows live progress
+PASS  RETURN goes back to the pause menu
+PASS  checkpoint saved
+PASS  pause menu offers RESTART FROM CHECKPOINT
+PASS  checkpoint respawn skips the briefing  (screen=)
+PASS  checkpoint state restored
+PASS  pause menu offers RESTART MISSION
+PASS  RESTART MISSION shows the briefing again
+PASS  ENTER deploys
+27 checks, 0 failed

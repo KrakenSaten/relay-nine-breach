@@ -1,0 +1,6 @@
+[  37.40] BRIEFING FLOW phase C
+[  37.40] PASS  RESTART MISSION shows the briefing again
+[  38.22] capture C:/AAA/Breach/captures/m45_briefing/b12_restart_mission_briefing.png
+[  42.18] PASS  ENTER deploys
+[  42.81] capture C:/AAA/Breach/captures/m45_briefing/b13_keyboard_deploy_in_game.png
+[  42.81] BRIEFING FLOW RESULT: 27 checks, 0 failed

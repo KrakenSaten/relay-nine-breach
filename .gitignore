@@ -39,5 +39,6 @@ captures/*
 !captures/m43_audio_compare/
 !captures/m43_audit/
 !captures/m44_ambience_compare/
+!captures/m45_briefing/
 !captures/m43_bench/
 !captures/m43_validation/
