@@ -84,8 +84,10 @@ func _ready() -> void:
 	player.weapons[1].visible = false
 	Game.state = Game.State.BRIEFING
 	# The test harness ships only in validation builds (excluded from release).
+	# --ui_flow runs it on top of the normal start (briefing or checkpoint resume).
 	var ap_path := "res://scripts/test/autopilot.gd"
-	if Game.autotest and ResourceLoader.exists(ap_path):
+	var ui_flow := Game.autotest and "--ui_flow" in OS.get_cmdline_user_args() and ResourceLoader.exists(ap_path)
+	if Game.autotest and not ui_flow and ResourceLoader.exists(ap_path):
 		var ap: Node = load(ap_path).new()
 		ap.name = "Autopilot"
 		add_child(ap)
@@ -93,11 +95,17 @@ func _ready() -> void:
 			mission.resume()
 		ap.run(self)
 	elif mission.restoring:
+		# Checkpoint respawn: straight back in, never through the briefing.
 		mission.resume()
 		menus.hide_all()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
 		menus.open("briefing")
+	if ui_flow:
+		var ap: Node = load(ap_path).new()
+		ap.name = "Autopilot"
+		add_child(ap)
+		ap.run(self)
 
 
 func _setup_env() -> void:

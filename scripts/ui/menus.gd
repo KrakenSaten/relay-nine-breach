@@ -1,5 +1,6 @@
 extends CanvasLayer
-## Briefing, pause, settings, loadout (attachments) and end-of-mission screens.
+## Pause, settings, loadout (attachments) and end-of-mission screens; hosts the
+## tactical briefing (Briefing) before deployment and for review from pause.
 
 signal deploy
 
@@ -9,6 +10,10 @@ var content: VBoxContainer
 var screen := ""
 var player: Player
 var _style: StyleBoxFlat
+var _dim: ColorRect
+var _center: CenterContainer
+var briefing: Briefing
+var ui_test := false   # validation runs that drive the real menus (--ui_flow)
 
 const ACCENT := Color(0.92, 0.72, 0.32)
 
@@ -16,6 +21,7 @@ const ACCENT := Color(0.92, 0.72, 0.32)
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 10
+	ui_test = "--ui_flow" in OS.get_cmdline_user_args()
 	var sf := SystemFont.new()
 	sf.font_names = PackedStringArray(["Bahnschrift", "Segoe UI", "Arial"])
 	font = sf
@@ -24,9 +30,11 @@ func _ready() -> void:
 	dim.color = Color(0.0, 0.0, 0.0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
+	_dim = dim
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
+	_center = center
 	panel = PanelContainer.new()
 	_style = StyleBoxFlat.new()
 	_style.bg_color = Color(0.06, 0.065, 0.07, 0.94)
@@ -46,24 +54,33 @@ func _ready() -> void:
 	content.custom_minimum_size = Vector2(760, 0)
 	panel.add_child(content)
 	Game.request_loadout.connect(func(): open("loadout"))
+	briefing = Briefing.new()
+	briefing.name = "Briefing"
+	add_child(briefing)
+	briefing.deploy_confirmed.connect(_deploy)
+	briefing.request.connect(_on_briefing_request)
 	hide_all()
 
 
 func hide_all() -> void:
 	screen = ""
 	visible = false
+	if briefing:
+		briefing.dismiss()
 	get_tree().paused = false
 	if Game.state not in [Game.State.COMPLETE, Game.State.FAILED, Game.State.BRIEFING]:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Game.autotest:
+	if Game.autotest and not ui_test:
 		return
 	if event.is_action_pressed("pause"):
 		if screen == "":
 			if Game.is_active():
 				open("pause")
+		elif screen == "briefing_review":
+			open("pause")
 		elif screen in ["pause", "settings", "loadout"] and Game.state != Game.State.BRIEFING:
 			if screen == "pause":
 				hide_all()
@@ -75,8 +92,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("loadout") and screen == "" and Game.is_active():
 		open("loadout")
 		get_viewport().set_input_as_handled()
-	elif screen == "briefing" and event is InputEventKey and event.pressed and event.physical_keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
-		_deploy()
 
 
 func open(s: String) -> void:
@@ -86,8 +101,14 @@ func open(s: String) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	for c in content.get_children():
 		c.queue_free()
+	var brief := s in ["briefing", "briefing_review"]
+	_dim.visible = not brief
+	_center.visible = not brief
+	if brief:
+		briefing.present("deploy" if s == "briefing" else "review", get_parent())
+	else:
+		briefing.dismiss()
 	match s:
-		"briefing": _briefing()
 		"pause": _pause()
 		"settings": _settings()
 		"loadout": _loadout()
@@ -147,24 +168,12 @@ func _spacer(h := 8) -> void:
 
 
 # ---------------------------------------------------------------- screens
-func _briefing() -> void:
-	_title("RELAY NINE", 18, ACCENT)
-	_title("BREACH", 54)
-	_text("SUBSTATION 9-B  //  02:40 LOCAL  //  SINGLE OPERATOR", 14, Color(0.6, 0.62, 0.6))
-	_spacer()
-	_text("Relay Nine has seized the substation's security network. Its Teslabot units have sealed the control wing and cut its power. Release the lockdown from the security office and close both main breakers in the switchgear hall, in either order. Then connect the override at RELAY CONTROL and defend the 40-second upload. Extract on Freight Lift 2.", 17)
-	_text("Routes: the service corridor, the crouch-only shutter into the turbine hall, or the maintenance crawlway from the dock to the pump station (units cannot follow you through it). The pump station's steam purge blinds units in that hall.", 15, Color(0.7, 0.72, 0.7))
-	_text("Teslabots telegraph every discharge with a blue charge glow. Strafe during the charge. Their rear capacitor stack overloads under fire; destroying a head optic blinds the unit. Breaker panels kill a room's lights and cut their sight range until they switch to infrared. Your night vision (N) runs on a battery.", 15, Color(0.7, 0.72, 0.7))
-	_spacer()
-	_text("WASD move   SHIFT sprint   CTRL/C crouch   Q/E lean   RMB aim   LMB fire   R reload   B fire mode\n1/2 weapons   F interact (hold at console)   V breach door   G deploy shield   N night vision   T loadout   ESC pause   F3 FPS", 14, Color(0.62, 0.64, 0.62))
-	_spacer()
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	content.add_child(row)
-	_button("DEPLOY  [ENTER]", _deploy, row, true)
-	_button("LOADOUT", func(): open("loadout"), row)
-	_button("SETTINGS", func(): open("settings"), row)
-	_button("QUIT", func(): get_tree().quit(), row)
+func _on_briefing_request(what: String) -> void:
+	match what:
+		"loadout": open("loadout")
+		"settings": open("settings")
+		"quit": get_tree().quit()
+		"return": open("pause")
 
 
 func _deploy() -> void:
@@ -178,6 +187,7 @@ func _pause() -> void:
 	_text("Objective: " + Game.objective_text, 15)
 	_spacer()
 	_button("RESUME", hide_all)
+	_button("MISSION BRIEFING", func(): open("briefing_review"))
 	_button("LOADOUT", func(): open("loadout"))
 	_button("SETTINGS", func(): open("settings"))
 	if _has_checkpoint():
