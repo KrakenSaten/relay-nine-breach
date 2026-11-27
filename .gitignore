@@ -42,3 +42,33 @@ captures/*
 !captures/m45_briefing/
 !captures/m43_bench/
 !captures/m43_validation/
+
+# --- Godot 4 / toolchain (added for GitHub setup) ---
+.import/
+*.translation
+export_credentials.cfg
+mono_crash.*.json
+.mono/
+data_*/
+# captures/ is .gdignore'd, so Godot .import sidecars there are stray
+captures/**/*.import
+# Python generator caches
+__pycache__/
+*.py[cod]
+# Editor / OS clutter
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+Desktop.ini
+.DS_Store
+# Local secrets, never commit
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+!captures/.gdignore
