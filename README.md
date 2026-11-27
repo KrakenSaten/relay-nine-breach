@@ -7,19 +7,11 @@ polish, Operation DEADBAND briefing).
 ## Requirements
 
 * Windows x64
-* Godot 4.7.2-stable (standard build, not .NET):
-  `winget install GodotEngine.GodotEngine --version 4.7.2`
+* Godot 4.7.2-stable, standard build (not .NET)
 * Git LFS (`git lfs install`) for the capture videos
 * Optional, for asset generators in `tools/`: Python 3.12+
 
 ## Setup
-
-`Play_BREACH.cmd` looks for Godot in `..\tools\godot\`, next to the project folder:
-
-```
-<parent>\Breach\                                   this repository
-<parent>\tools\godot\Godot_v4.7.2-stable_win64.exe
-```
 
 ```powershell
 git clone https://github.com/KrakenSaten/relay-nine-breach.git Breach
@@ -27,10 +19,37 @@ cd Breach
 git lfs pull
 ```
 
+Install Godot 4.7.2 in one of the places `Play_BREACH.cmd` searches. It takes the
+first copy that reports version 4.7.2, in this order:
+
+1. **Portable**: `Godot_v4.7.2-stable_win64.exe` in a `tools\godot\` folder next
+   to the project folder:
+
+   ```
+   <parent>\Breach\                                   this repository
+   <parent>\tools\godot\Godot_v4.7.2-stable_win64.exe
+   ```
+
+2. **PATH**: `Godot_v4.7.2-stable_win64.exe`, its `_console` variant, or `godot.exe`.
+3. **winget**: `winget install GodotEngine.GodotEngine --version 4.7.2`. This needs
+   no copying. winget installs Godot under
+   `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_*` and adds
+   that folder to PATH (open a new terminal afterwards).
+
+Check which Godot the launcher will use:
+
+```powershell
+.\Play_BREACH.cmd --find-godot
+```
+
+If no Godot 4.7.2 is found, it lists where it looked and any other Godot
+versions it saw, and exits with code 1.
+
 The first run imports all assets into `.godot/` (a few minutes). You can do it up front:
 
 ```powershell
-..\tools\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path . --import
+$godot = .\Play_BREACH.cmd --find-godot
+& $godot --headless --path . --import | Out-Host
 ```
 
 ## Run
@@ -47,7 +66,8 @@ Force a graphics preset with `.\Play_BREACH.cmd --quality=0` (Low) through `3`
 Install the official Godot 4.7.2 export templates, then:
 
 ```powershell
-..\tools\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path . --export-release "Windows Release" dist/BREACH_0.4.5/Breach.exe
+$godot = .\Play_BREACH.cmd --find-godot
+& $godot --headless --path . --export-release "Windows Release" dist/BREACH_0.4.5/Breach.exe | Out-Host
 ```
 
 Presets are in `export_presets.cfg` ("Windows Release", "Windows Validation").
